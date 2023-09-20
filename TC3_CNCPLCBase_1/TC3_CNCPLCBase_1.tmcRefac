@@ -1,0 +1,10 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Refactors>
+  <Renames>
+    <RenamedType>
+      <Type guid="6999fa0a-7018-49a8-8abf-6191cce609df">F_PARTISPRESENT_1</Type>
+      <From>F_PartIsPresent_1</From>
+      <To>F_PartIsPresentAndClamped</To>
+    </RenamedType>
+  </Renames>
+</Refactors>

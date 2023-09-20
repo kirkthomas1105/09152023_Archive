@@ -157,6 +157,9 @@
     <Compile Include="Machine System\FUNCTIONS\F_PartIsClamped.TcPOU">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="Machine System\FUNCTIONS\F_PartIsPresentAndClamped.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="Machine System\FUNCTIONS\F_PartPickupSuccess.TcPOU">
       <SubType>Code</SubType>
     </Compile>

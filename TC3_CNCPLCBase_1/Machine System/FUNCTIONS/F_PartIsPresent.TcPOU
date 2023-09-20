@@ -9,16 +9,15 @@ VAR
 END_VAR
 ]]></Declaration>
     <Implementation>
-      <ST><![CDATA[IF WX.A.bPP1_Input AND WX.A.bPP2_Input AND WX.B.bPP1_Input AND WX.A.bPP2_Input THEN
+      <ST><![CDATA[IF (WX.A.bPP1_Input AND WX.A.bPP2_Input AND WX.B.bPP1_Input AND WX.A.bPP2_Input) OR NOT(WX.bEnabled) THEN
 	F_PartIsPresent := 1;
 	ELSE
 		F_PartIsPresent := 0;
-END_IF]]></ST>
+END_IF
+]]></ST>
     </Implementation>
     <LineIds Name="F_PartIsPresent">
-      <LineId Id="7" Count="0" />
-      <LineId Id="12" Count="0" />
-      <LineId Id="14" Count="1" />
+      <LineId Id="22" Count="4" />
       <LineId Id="10" Count="0" />
     </LineIds>
   </POU>

@@ -280,435 +280,129 @@ END_IF
 
 CASE SD1.iStep OF
 	
-(*
-	DRY-RUN Sequencer -- 
-		-> This sequencer starts with the arms waiting at the 'PrePickup Position' in traverse position, and ends with the arm homing step.
-	The homing can happen any time after the 'Tool Put Down' step.
-	This sequencer should be driven by the position of the SD1 axis.
-	
-	0: //Default
-		Do nothing mode. (This means you can't have things that rely on being called EVERY cycle)
-		
-	10: //Move non-disabled arms into load position
-		IF every available load position for the WX is filled:
-		-> Move the respective arms into load position
-		-> iStep := 20;
-	
-	20: //Drive SD to 'Pickup Position'
-		-> Move the SD axis into the pickup position, then, when in position,
-		-> iStep := 30;
-	
-	30: //Clamp tool
-		-> Clamp tool, then when done (IF bMoveDone AND bClamped THEN), then
-		-> iStep := 40;
-	
-	40: //Move arms to lifted position
-		-> Move arms to lifted position, when done
-		-> iStep := 50;
-	
-	50: //Move arms to Spray Position A
-		-> Move arms to Spray Position A, when done
-		-> iStep := 60;
-	60: //Jog SD axis to spray position
-		-> Move SD axis to spray position (This should just be the pickup postion, but whatevs), when done
-		-> iStep := 70;
-	
-	70: //Spray the part!!!!
-		-> just go to the next step, after like 5 seconds, for the dry run.
-		-> iStep := 80;
-	
-	80: //Jog SD axis to Roll Position
-		-> Jog SD axis to Roll Position, then, when done 
-		-> iStep := 90;
-	
-	90: //Roll the Part!!!
-		-> just go to the next step, after like 5 seconds, for the dry run.
-		-> iStep := 100;
-	
-	100: //Jog SD axis to Cure Position
-		-> Jog SD axis to Cure Position, then, when done 
-		-> iStep := 110;
-	
-	110: //Cure the Part!!!
-		-> just go to the next step, after like 5 seconds, for the dry run.
-		-> iStep := 120;
-	
-	120: //Jog SD axis to Put Down Position
-		-> Jog SD axis to Put Down Position, the when done
-		-> iStep := 130;
-	
-	130: //Move arms to lifted position
-		-> Move the non-disabled arms to the lifted position, then
-		-> iStep := 140;
-	
-	140: //Move arms to Put Down Position
-		-> Move the non-disabled arms to the Put Down Position, then
-		-> iStep := 150;
-	
-	150: //Unclamp the tool
-		-> unclamp the tool, then when done
-		-> iStep := 160;
-	
-	160: //Jog SD axis to Post Put Down Position
-		-> Jog SD axis to Post Put Down Position, the when done
-		-> iStep := 170;
-	
-	170: //Move arms to traverse position
-		-> Move arms to traverso position, then when done
-		-> iStep := 180;
-	
-	180: //Jog SD axis to the StartHomingPos
-		-> Jog SD axis to StartHomingPos, the when done
-		-> iStep := 190;
-	
-	190: //Jog SD to EndHomingPos
-		-> Jog SD axis to EndHomingPos
-		-> If there is a part that needs to be sprayed sitting at the closest Load position to the arms, we can start the arm homing sequence here.
-		-> When at EndHoming Pos, iStep := 200;
-	
-	200: //Home arms
-		-> If already homing/homed, wait until done then iStep := 210;
-		-> ELSE If there is a part that needs to be sprayed sitting at the closest Load position to the arms, home the arms, then iStep := 210;
-	
-	210: //Arms to traverse position.
-		-> Move arms to traverse position, then when done
-		-> iStep := 220;
-	
-	220: //Jog SD axis to the PrePickup Position
-		-> Jog SD axis to PrePickup Position, the when done
-		-> iStep := 10; // restart!
-	
-*)
 
 	0: //Default
 		//Do nothing mode. (This means you can't have things that rely on being called EVERY cycle)
 		
-	10: //Move non-disabled arms into load position
-		//IF every available load position for the WX is filled:
-		//-> Move the respective arms into load position
-		//-> iStep := 20;
+	10: //Move arms into load position
 		fbWX2Handler.nMoveState := Load_Position;
-		SD1.iStep := 11;
-	11:
-		IF fbWX2Handler.bMoveComplete THEN
+		IF fbWX2Handler.bMoveComplete THEN		
 			SD1.iStep := 20;
 		END_IF
-	
-	
-	20: //Drive SD to 'Pickup Position'
-		//-> Move the SD axis into the pickup position, then, when in position,
-		//-> iStep := 30;
-		IF SD1.bInPickupPos THEN
-			SD1.iStep := 25;
-		ELSE
-			SD1.PosistionRequestAuto := PickupPos;
-		END_IF
 		
-	25:
-		IF NOT SD1.bInPickupPos THEN
-			SD1.PosistionRequestAuto := PickupPos;
-		ELSE
+	20: //Drive SD to 'Pickup Position'
+		IF SD1.bInPickupPos THEN
 			SD1.iStep := 30;
+		ELSE
+			SD1.PosistionRequestAuto := PickupPos;
 		END_IF
 	
 	30: //Clamp tool
-		//-> Clamp tool, then when done (IF bMoveDone AND bClamped THEN), then
-		//-> iStep := 40;
-		fbWX2Handler.nMoveState := CLAMP;
-		SD1.iStep := 31;
-	
-	31:
-		IF fbWX2Handler.bMoveComplete THEN
+		IF GVL_CONVEYORS.GL6.PP_Load_Pos_1_Is_On AND GVL_HMI.WX1Enable THEN
+			//wx1 clamp
+		END_IF
+		IF GVL_CONVEYORS.GL6.PP_Load_Pos_2_Is_On AND GVL_HMI.WX2Enable THEN
+			fbWX2Handler.nMoveState := CLAMP;
+		END_IF
+		
+		IF F_PartIsPresentAndClamped(GVL_IO.WX1) AND F_PartIsPresentAndClamped(GVL_IO.WX2)  THEN 
 			SD1.iStep := 40;
 		END_IF
-	
-	40: //Move arms to lifted position
-		//-> Move arms to lifted position, when done
-		//-> iStep := 50;
-		fbWX2Handler.nMoveState := LIFTED_POSITION;
-		SD1.iStep := 41;
 		
-	41:
+	40: //Move arms to lifted position
+		fbWX2Handler.nMoveState := LIFTED_POSITION;
 		IF fbWX2Handler.bMoveComplete THEN
 			SD1.iStep := 50;
 		END_IF
-	
-	50: //Move arms to Spray Position A
-		//-> Move arms to Spray Position A, when done
-		//-> iStep := 60;
-		fbWX2Handler.nMoveState := SPRAY_POSITION_A;
-		SD1.iStep := 51;
-	
-	51:
-		IF fbWX2Handler.bMoveComplete THEN
-			SD1.iStep := 60;
-		END_IF
 		
-		
-	60: //Jog SD axis to spray position
-		//-> Move SD axis to spray position (This should just be the pickup postion, but whatevs), when done
-		//-> iStep := 70;
-		IF SD1.bInPutdownPos THEN
-			SD1.iStep := 130;
+	50: //Jog SD axis to spray position
+		IF SD1.bInSprayPos THEN
+			SD1.iStep := 70;
 		ELSE
-			SD1.PosistionRequestAuto := PutdownPos;
-		END_IF		
-		
-	130: //Move arms to lifted position
-		//-> Move the non-disabled arms to the lifted position, then
-		//-> iStep := 140;
-		fbWX2Handler.nMoveState := LIFTED_POSITION;
-		SD1.iStep := 131;
-	
-	131:
-		IF fbWX2Handler.bMoveComplete THEN
-			SD1.iStep := 140;
-		END_IF
-	
-	140: //Move arms to Put Down Position
-		//-> Move the non-disabled arms to the Put Down Position, then
-		//-> iStep := 150;
-		fbWX2Handler.nMoveState := UNLOAD_POSITION;
-		SD1.iStep := 141;
-	
-	141:
-		IF fbWX2Handler.bMoveComplete THEN
-			SD1.iStep := 150;
-		END_IF		
-	
-	150: //Unclamp the tool
-		//-> unclamp the tool, then when done
-		//-> iStep := 160;
-		fbWX2Handler.nMoveState := UNCLAMP;
-		SD1.iStep := 151;
-	
-	151:
-		IF fbWX2Handler.bMoveComplete THEN
-			SD1.iStep := 160;
-		END_IF
-	
-	160: //Jog SD axis to Post Put Down Position
-		//-> Jog SD axis to Post Put Down Position, the when done
-		//-> iStep := 170;
-		IF SD1.bInPostPutDownPos THEN
-			SD1.iStep := 170;
-		ELSE
-			SD1.PosistionRequestAuto := PutDownPos;
-		END_IF
-	
-	170: //Move arms to traverse position
-		//-> Move arms to traverse position, then when done
-		//-> iStep := 180;
-		fbWX2Handler.nMoveState := TRAVERSE_POSITION;
-		SD1.iStep := 171;
-	
-	171:
-		IF fbWX2Handler.bMoveComplete THEN
-			SD1.iStep := 220;
-		END_IF
-	
-	180: //Jog SD axis to the StartHomingPos
-		//-> Jog SD axis to StartHomingPos, the when done
-		//-> iStep := 190;
-		// SKIP!
-	
-	190: //Jog SD to EndHomingPos
-		//-> Jog SD axis to EndHomingPos
-		//-> If there is a part that needs to be sprayed sitting at the closest Load position to the arms, we can start the arm homing sequence here.
-		//-> When at EndHoming Pos, iStep := 200;
-		// SKIP!
-		
-	200: //Home arms
-		//-> If already homing/homed, wait until done then iStep := 210;
-		//-> ELSE If there is a part that needs to be sprayed sitting at the closest Load position to the arms, home the arms, then iStep := 210;
-		// SKIP!
-		
-	210: //Arms to traverse position.
-		//-> Move arms to traverse position, then when done
-		//-> iStep := 220;
-		// SKIP!
-		
-	220: //Jog SD axis to the PrePickup Position
-		//-> Jog SD axis to PrePickup Position, the when done
-		//-> iStep := 10; // restart!
-		IF SD1.bInPrePickupPos THEN
-			SD1.iStep := 0; // 0 for dry run
-		ELSE
-			SD1.PosistionRequestAuto := PrePickupPos;
-		END_IF
-
-(*
-
-	0: 	//default
-	
-//////////////////////////////////////// Should add error handling, like a timer for waiting on motor movements, and alse the errors from FB_AutoMovementHandler.
-	(* Arms To Load ------------------------------------------------------------------------------------------------------------------------------------------*)
-	
-	3:	//Check that WX1 and WX2 are empty and do not contain a mold, then rotate arms to Load Orientation
-		IF (NOT fbWX2Handler.partPresent()) AND SD1.bInPrePickupPos THEN
-			IF NOT fbWX2Handler.nMoveState = LOAD_POSITION THEN
-				fbWX2Handler.nMoveState := LOAD_POSITION;
-				SD1.iStep := 4;
-			END_IF
-		END_IF
-	4: // Waiting for arm to be in load position.
-		IF NOT fbWX2Handler.nMoveState = LOAD_POSITION AND fbWX2Handler.bMoveComplete THEN
-			SD1.iStep := 5;
-		END_IF
-	
-	(* Arms Clamping Tool -----------------------------------------------------------------------------------------------*)
-		
-	5: // Move the Traverse to the mold, then clamp
-		IF SD1.bInPrePickupPos THEN
-			SD1.PosistionRequestAuto := PickupPos;
-		END_IF
-		
-		IF SD1.bInPickupPos THEN
-			IF NOT fbWX2Handler.nMoveState = CLAMP THEN
-				fbWX2Handler.nMoveState := CLAMP;
-				SD1.iStep := 6;
-			END_IF
-		END_IF
-	6: // Waiting for the arms to be clamped.
-		IF NOT fbWX2Handler.nMoveState = CLAMP AND fbWX2Handler.bMoveComplete AND fbWX2Handler.bClamped THEN
-			SD1.iStep := 7;
-		END_IF
-		
-	(* Picking The Tool Up ---------------------------------------------------------------------------------------------*)
-		
-	7: // Move to the lifted position.
-		IF NOT fbWX2Handler.bBusy AND SD1.bInPickupPos THEN
-			fbWX2Handler.nMoveState := LIFTED_POSITION;
-			SD1.iStep := 8;
-		END_IF
-	8: // Wait for arms to be in position
-		IF NOT fbWX2Handler.nMoveState = LIFTED_POSITION AND fbWX2Handler.bMoveComplete THEN
-			SD1.iStep := 10;
-		END_IF
-		
-	(* Spray Side A ----------------------------------------------------------------------------------------------------*)
-		
-	10: //Move to Spray Pos WX Side A & SD
-		IF SD1.bInPickupPos AND NOT fbWX2Handler.bBusy THEN
 			SD1.PosistionRequestAuto := SprayPos;
-			fbWX2Handler.nMoveState := SPRAY_POSITION_A;
-			SD1.iStep := 11;
 		END_IF
-	11: // wait for the motor movements to finish
-		IF SD1.bInSprayPos AND (NOT fbWX2Handler.nMoveState = SPRAY_POSITION_A AND fbWX2Handler.bMoveComplete) THEN
-			SD1.iStep := 20;
+(*Side A ----------------------------------------------------------------*)		
+	60: //Call Side A Spray
+		IF PRG_CNCChannelHandler.CNCChannel[0].currentmode = 3 THEN
+			PLCMachineMode[0].MDIString := WSTRING_TO_STRING("L C://CNC/TestSpray");
+			PLCMachineMode[0].Start := TRUE;
+			SD1.bSpray_A_Complete := 0;
 		END_IF
-	
-
-(*		This should not be done here, and atleast not at this part in the sequence
-
-								17: //Add Files to Que
-									IF F_PartIsPresent(WX1) THEN
-										//Get mold id and Database data and put into WX1.CurrentJob
-										//Load files for WX1 
-										WX1.CurrentJob.AKeyFile := 'test.nc';
-									END_IF
-									IF F_PartIsPresent(WX2) THEN
-										//Load files for WX2
-										WX2.CurrentJob.AKeyFile := 'test2.nc';
-										//Get mold id and Database data and put into WX2.CurrentJob
-									END_IF
-									//check if files present and loaded
-									IF F_CheckMoldData(WX1.CurrentJob.MoldID,GVL_HMI.WX1Enable) AND F_CheckMoldData(WX1.CurrentJob.MoldID,GVL_HMI.WX1Enable) THEN
-										SD1.iStep := 20;
-										ELSE
-											//Mold Data missing or incorrect
-									END_IF
-*)
-	20: //Side A Spray
 		IF SD1.bSpray_A_Complete THEN
-			SD1.iStep := 25;
+			SD1.iStep := 70;
 		END_IF
-		
-	(* Roll Side A ----------------------------------------------------------------------------------------------*)
-		
-	25:	//Move to Roll	
+			
+	70:	//Move to Roll	
 		SD1.PosistionRequestAuto := RollPos;
 		IF SD1.bInRollPos THEN 	
-			SD1.iStep := 30;
+			SD1.iStep := 80;
 		END_IF
 		
-	30: //Side A Roll
+	80: //Side A Roll
 		IF SD1.bRoll_A_Complete  THEN
-			SD1.iStep := 40;
+			SD1.iStep := 90;
 		END_IF
-		
-	(* Rib? Side A ----------------------------------------------------------------------------------------------*)
-		
-	40: //Side A Place
-			// Check wether ribs are required or not. It's a database check. From the data in the data structure in the PLC.
+			
+	90: //Side A Place Ribs if required It's a database check. From the data in the data structure in the PLC.
 		IF SD1.bPlace_A_Complete THEN 
-			SD1.iStep := 45;
+			SD1.iStep := 100;
 		END_IF
-	
-	(* Cure Side A ----------------------------------------------------------------------------------------------*)
-		
-	45: //Move to Cure
+
+	100: //Move to Cure
 		SD1.PosistionRequestAuto := CurePos;
 		IF SD1.bInCurePos THEN
-		 	SD1.iStep := 50;
+		 	SD1.iStep := 110;
 		END_IF	
 
-		
-	50: //Side A Cure 
+	110: //Side A Cure
+		//Start Heater here 
 		IF SD1.bCure_A_Complete THEN
-		 	SD1.iStep := 55;
+		 	SD1.iStep := 120;
 		END_IF
 		
-	(* Spray Side B -----------------------------------------------------------------------------------------------*)
+(*Side B -----------------------------------------------------------*)
 		
-	55: //Move to Spray WX Side B & SD
-		IF NOT SD1.bInSprayPos THEN
-			SD1.PosistionRequestAuto := SprayPos;
-			fbWX2Handler.nMoveState := SPRAY_POSITION_B;
-			SD1.iStep := 56;
-		END_IF
-	56: // Wait for motor movement to completion
-		IF SD1.bInSprayPos AND (NOT fbWX2Handler.nMoveState = SPRAY_POSITION_B AND fbWX2Handler.bMoveComplete) THEN
-			SD1.iStep := 120;
-		END_IF
-		
-	120: //Side B Spray
-		IF SD1.bSpray_B_Complete THEN
-			SD1.iStep := 125;
-		END_IF
-		
-	(* Roll Side B --------------------------------------------------------------------------------------------------*)
-		
-	125: //Move to Roll
-		SD1.PosistionRequestAuto := RollPos;
-		IF SD1.bInRollPos THEN 
+	120: //Move to Spray WX Side B & SD
+		SD1.PosistionRequestAuto := SprayPos;
+		IF SD1.bInSprayPos THEN
 			SD1.iStep := 130;
 		END_IF
 		
-	130: //Side B Roll
-		IF SD1.bRoll_B_Complete  THEN
+	130: //Side B Spray
+		IF PRG_CNCChannelHandler.CNCChannel[0].currentmode = 3 THEN
+			PLCMachineMode[0].MDIString := WSTRING_TO_STRING("L C://CNC/TestSpray");
+			PLCMachineMode[0].Start := TRUE;
+			SD1.bSpray_B_Complete := 0;
+		END_IF
+		IF SD1.bSpray_B_Complete THEN
+			SD1.iStep := 135;
+		END_IF
+			
+	135: //Move to Roll
+		SD1.PosistionRequestAuto := RollPos;
+		IF SD1.bInRollPos THEN 
 			SD1.iStep := 140;
 		END_IF
 		
-	(* Rib? Side B ----------------------------------------------------------------------------------------------------*)
-		
-	140: //Side B Place
-		IF SD1.bPlace_B_Complete THEN 
-			SD1.iStep := 145;
-		END_IF
-	
-	(* Cure Side B ------------------------------------------------------------------------------------------------------*)
-		
-	145: //Move to Cure
-		SD1.PosistionRequestAuto := CurePos;
-		IF SD1.bInCurePos THEN 
+	140: //Side B Roll
+		IF SD1.bRoll_B_Complete  THEN
 			SD1.iStep := 150;
 		END_IF
+			
+	150: //Side B Place
+		IF SD1.bPlace_B_Complete THEN 
+			SD1.iStep := 160;
+		END_IF
 		
-	150: //Side B Cure
+	160: //Move to Cure
+		SD1.PosistionRequestAuto := CurePos;
+		IF SD1.bInCurePos THEN 
+			SD1.iStep := 170;
+		END_IF
+		
+	170: //Side B Cure
 		IF SD1.bCure_B_Complete  THEN
-			SD1.iStep := 165;
+			SD1.iStep := 180;
 		END_IF
 (*
 		When the cure is complete, and the putdown zone is not clear, then we need to have a space to keep the arms that is not under the heaters.
@@ -719,13 +413,13 @@ CASE SD1.iStep OF
 
 	(* Move To Putdown & Lifted Position -------------------------------------------------------------------------------------*)
 	
-	165:	//move to PutDownPos
+	180:	//move to PutDownPos
 		IF SD1.bPutDownZoneClear AND fbWX2Handler.nMoveState = STANDBY THEN
 			SD1.PosistionRequestAuto := PutDownPos;
 			fbWX2Handler.nMoveState := LIFTED_POSITION;
-			SD1.iStep := 166;
+			SD1.iStep := 190;
 		END_IF
-	166: // Waiting for motor movement completion
+	190: // Waiting for motor movement completion
 		IF SD1.bInPutDownPos AND (NOT fbWX2Handler.nMoveState = LIFTED_POSITION AND fbWX2Handler.bMoveComplete) THEN
 			SD1.iStep := 170;
 		END_IF
@@ -786,9 +480,9 @@ CASE SD1.iStep OF
 		END_IF
 		
 		IF SD1.bSDError THEN
-			SD1.bSDError := TRUE; // ik this does nothing.
+			SD1.bSDError := TRUE; 
 		END_IF
-*)
+		
 END_CASE]]></ST>
       </Implementation>
     </Action>
@@ -809,10 +503,7 @@ END_IF]]></ST>
     </Action>
     <Action Name="SD1_Status" Id="{1b07a2fa-13c4-4bb9-b5b3-dc03f57afcf1}" FolderPath="SD1\">
       <Implementation>
-        <ST><![CDATA[//JosephBartonChange1-11-2023 THIS ENTIRE FILE IS EMPTY
-// I COPIED EXACTLY WHATS IN Bogie.SD2_Status EXCEPT REPLACED ALL
-// SD2s WITH SD1s
-//Position Window Variables
+        <ST><![CDATA[//Position Window Variables
 
 	SD1.fSprayPosWindowMin		:= SprayPos - SD1.fPosTolerance;
 	SD1.fSprayPosWindowMax		:= SprayPos + SD1.fPosTolerance;
@@ -868,13 +559,21 @@ END_IF]]></ST>
 	END_IF
 
 //Conveyor Inputs
-GVL_IO.WX1.ConveyorLoadPos := GVL_CONVEYORS.GL8.PP_LOAD_POS_1_IS_ON; //JosephBartonChange1-11-2023  I changed this to GL8 from gl6 Because thats what it says is the drawing.
-GVL_IO.WX2.ConveyorLoadPos := GVL_CONVEYORS.GL8.PP_LOAD_POS_2_IS_ON; //JosephBartonChange1-11-2023 
+GVL_IO.WX1.ConveyorLoadPos := GVL_CONVEYORS.GL6.PP_LOAD_POS_1_IS_ON; 
+GVL_IO.WX2.ConveyorLoadPos := GVL_CONVEYORS.GL6.PP_LOAD_POS_2_IS_ON; 
 
 //HMI Inputs to Bogie Structure
 GVL_IO.WX1.bEnabled := GVL_HMI.WX1Enable;
 GVL_IO.WX2.bEnabled := GVL_HMI.WX2Enable;
 
+//Status from CNC
+SD1.bSpray_A_Complete 	:= CNCSystem.Channel[0].M[570].bState_rw; 
+SD1.bRoll_A_Complete 	:= CNCSystem.Channel[0].M[571].bState_rw;
+SD1.bPlace_A_Complete 	:= CNCSystem.Channel[0].M[572].bState_rw;
+
+SD1.bSpray_B_Complete 	:= CNCSystem.Channel[0].M[573].bState_rw; 
+SD1.bRoll_B_Complete 	:= CNCSystem.Channel[0].M[574].bState_rw;
+SD1.bPlace_B_Complete 	:= CNCSystem.Channel[0].M[575].bState_rw;
 ]]></ST>
       </Implementation>
     </Action>
@@ -1389,10 +1088,7 @@ GVL_IO.WX4.bEnabled := GVL_HMI.WX4Enable; //JosephBartonChange1-11-2023
       <LineId Id="1" Count="0" />
     </LineIds>
     <LineIds Name="Bogie.SD1_Sequence">
-      <LineId Id="374" Count="129" />
-      <LineId Id="945" Count="6" />
-      <LineId Id="505" Count="42" />
-      <LineId Id="609" Count="335" />
+      <LineId Id="1562" Count="209" />
       <LineId Id="63" Count="0" />
     </LineIds>
     <LineIds Name="Bogie.SD1_SetDown">
@@ -1400,9 +1096,7 @@ GVL_IO.WX4.bEnabled := GVL_HMI.WX4Enable; //JosephBartonChange1-11-2023
       <LineId Id="1" Count="0" />
     </LineIds>
     <LineIds Name="Bogie.SD1_Status">
-      <LineId Id="81" Count="1" />
-      <LineId Id="84" Count="0" />
-      <LineId Id="86" Count="62" />
+      <LineId Id="149" Count="70" />
       <LineId Id="85" Count="0" />
     </LineIds>
     <LineIds Name="Bogie.SD2_ArmsToLoadOrientation">

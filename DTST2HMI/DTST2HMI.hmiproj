@@ -8,7 +8,7 @@
     <HmiTitle>DuraTrench</HmiTitle>
     <HmiVerboseLevel>2</HmiVerboseLevel>
     <HmiVersion>1.0.0.0</HmiVersion>
-    <HmiCommunicationServerPort>3003</HmiCommunicationServerPort>
+    <HmiCommunicationServerPort>3004</HmiCommunicationServerPort>
     <HmiLogTcHmiServerMessages>false</HmiLogTcHmiServerMessages>
     <HmiLogDesignerModeComMessages>false</HmiLogDesignerModeComMessages>
     <HmiServerVersion>Latest</HmiServerVersion>
@@ -18,8 +18,8 @@
     <TargetFramework>native1.12-tchmi</TargetFramework>
     <AzureFunctionsVersion>v2</AzureFunctionsVersion>
     <Name>DTST2HMI</Name>
-    <HmiCommunicationRouterPort>10137</HmiCommunicationRouterPort>
-    <HmiCommunicationServerAuthPort>13002</HmiCommunicationServerAuthPort>
+    <HmiCommunicationRouterPort>10138</HmiCommunicationRouterPort>
+    <HmiCommunicationServerAuthPort>13003</HmiCommunicationServerAuthPort>
     <HmiInitial>1.12.752.0</HmiInitial>
     <HmiRecent>1.12.760.44</HmiRecent>
     <HmiServerNodeAdvancedView>False</HmiServerNodeAdvancedView>

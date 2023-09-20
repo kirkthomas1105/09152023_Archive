@@ -18,7 +18,8 @@ STRUCT
 	bEnabled : BOOL;
 	
 	//Conveyor Signals
-	ConveyorLoadPos : BOOL;
+	ConveyorLoadPos : BOOL;	
+	bClampedBothSides : BOOL;
 
 END_STRUCT
 END_TYPE

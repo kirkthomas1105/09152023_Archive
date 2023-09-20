@@ -5,8 +5,8 @@
   <Children>
     <Node>
       <Title>YT Scope Project</Title>
-      <Expanded>True</Expanded>
-      <FileName>C:\Workspace\DTST2 CNC9-15-23\TwinCAT MeasurementPID\YT Scope Project.tcscopex</FileName>
+      <Expanded>False</Expanded>
+      <FileName>C:\Users\Brian\Source\Repos\09152023_Archive\TwinCAT MeasurementPID\YT Scope Project.tcscopex</FileName>
       <Children>
         <Node>
           <Title>DataPool</Title>
@@ -35,12 +35,12 @@
         </Node>
         <Node>
           <Title>YT Chart</Title>
-          <Expanded>True</Expanded>
+          <Expanded>False</Expanded>
           <FileName></FileName>
           <Children>
             <Node>
               <Title>Axis Process Value</Title>
-              <Expanded>True</Expanded>
+              <Expanded>False</Expanded>
               <FileName></FileName>
               <Children>
                 <Node>
@@ -59,7 +59,7 @@
             </Node>
             <Node>
               <Title>Axis PID Ctrl Output</Title>
-              <Expanded>True</Expanded>
+              <Expanded>False</Expanded>
               <FileName></FileName>
               <Children>
                 <Node>

@@ -9,14 +9,15 @@ VAR
 END_VAR
 ]]></Declaration>
     <Implementation>
-      <ST><![CDATA[IF WX.A.bClamped AND WX.B.bClamped THEN
+      <ST><![CDATA[IF (WX.A.bClamped AND WX.B.bClamped) OR NOT(WX.bEnabled) THEN
 	F_PartIsClamped := 1;
 	ELSE
 		F_PartIsClamped := 0;
-END_IF]]></ST>
+END_IF
+]]></ST>
     </Implementation>
     <LineIds Name="F_PartIsClamped">
-      <LineId Id="20" Count="3" />
+      <LineId Id="30" Count="4" />
       <LineId Id="10" Count="0" />
     </LineIds>
   </POU>

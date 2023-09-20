@@ -1,0 +1,23 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+  <POU Name="F_PartIsPresentAndClamped" Id="{6999fa0a-7018-49a8-8abf-6191cce609df}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION F_PartIsPresentAndClamped : BOOL
+VAR_INPUT
+	WX : sBogie;
+END_VAR
+VAR
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[IF (WX.A.bPP1_Input AND WX.A.bPP2_Input AND WX.B.bPP1_Input AND WX.A.bPP2_Input AND WX.A.bClamped AND WX.B.bClamped) OR NOT(WX.bEnabled) THEN
+	F_PartIsPresentAndClamped := 1;
+	ELSE
+		F_PartIsPresentAndClamped := 0;
+END_IF]]></ST>
+    </Implementation>
+    <LineIds Name="F_PartIsPresentAndClamped">
+      <LineId Id="33" Count="3" />
+      <LineId Id="10" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>
