@@ -1,0 +1,36 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.0">
+  <DUT Name="ST_CNCVirtualHBA" Id="{bc9270d6-ce69-4518-8bad-824f25bf6d3e}">
+    <Declaration><![CDATA[TYPE ST_CNCVirtualHBA :
+STRUCT
+	KeyTipp: ST_CNCVirtualHBAKey;
+	KeyJog: ST_CNCVirtualHBAKey;
+	KeyHW: ST_CNCVirtualHBAKey;
+	KeyJS: ST_CNCVirtualHBAKey;
+	KeyNeg: ST_CNCVirtualHBAKey;
+	KeyPos: ST_CNCVirtualHBAKey;
+	KeyRapid: ST_CNCVirtualHBAKey;
+	nJogInc: UDINT;
+	nLogAxisId: UINT;
+	nLogAxisId2: UINT;
+	nHandwheelInc: DINT;
+	nSpeed: UINT;
+	nOverride: UINT;
+	strInitParameter: STRING;
+	nJoystickValue1: DINT;
+	nJoystickValue2: DINT;
+	/// Handwheel and Joystick Settings 
+	nHandwheelResolution: DINT;
+	/// static signal : Analog Min Value 
+	nAnalogValueMin: DINT;
+	/// static signal : Analog Max Value 
+	nAnalogValueMax: DINT;
+	/// Dead Band for Zero Value 
+	nAnalogValueZeroDeadBand: DINT;
+	/// Status 
+	nStatusManualType: UINT;
+END_STRUCT
+END_TYPE
+]]></Declaration>
+  </DUT>
+</TcPlcObject>

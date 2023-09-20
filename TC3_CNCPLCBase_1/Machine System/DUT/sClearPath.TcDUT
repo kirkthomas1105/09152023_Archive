@@ -1,0 +1,23 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.9">
+  <DUT Name="sClearPath" Id="{fb26debe-db77-47b8-aac8-7593c0df4d85}">
+    <Declaration><![CDATA[TYPE sClearPath :
+STRUCT
+	(* Use these for the MCPV increment position mode of clearpath  Consult manual to use other structure*)
+	Enable	AT %Q* :	BOOL;	//Green Output to enable motor
+	A		AT %Q* :	BOOL;	//Input A to send hi signal to clearpath to begin increment (triggers on hi trigger)
+	B		AT %Q* :	BOOL;	//Input B to send hi signal to clearpath to choose incremtent direction (false = CW , True = CCW)
+	HLFB	AT %I* :	BOOL;	//PPR from Clearpath encoder signal 
+	
+	// power the signals from card instead 
+	EnableCom 	AT %I*	: 	BOOL;
+	ACom		AT %I*	:	BOOL;
+	BCom		AT %I*	: 	BOOL;
+	HLFB24		AT %Q*	: 	BOOL;
+	
+	
+END_STRUCT
+END_TYPE
+]]></Declaration>
+  </DUT>
+</TcPlcObject>

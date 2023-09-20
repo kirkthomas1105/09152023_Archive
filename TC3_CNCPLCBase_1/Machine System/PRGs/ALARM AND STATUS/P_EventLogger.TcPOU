@@ -1,0 +1,783 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+  <POU Name="P_EventLogger" Id="{1c0dc68c-1178-4d47-927e-3ea5c6090747}" SpecialFunc="None">
+    <Declaration><![CDATA[PROGRAM P_EventLogger
+VAR
+	fbEventlogger		: FB_TcEventlogger;
+	bClearAlarms		: BOOL;
+	bConfirmAlarms 		: BOOL; 
+	bClearLoggedEvents 	: BOOL; 
+	bExportLoggedEvents : BOOL; 
+	fbRtExport			: R_TRIG; 
+	fbCsvExportSetting  : FB_TcEventCsvExportSettings; 
+	fbExportFilter 		: FB_TcEventFilter; 
+	sExportFileName 	: STRING := 'C:\temp\Eventlogger-export.csv';
+	
+	fbEventAlarm		: ARRAY[0..500] OF FB_EventAlarm;
+	aClass1Alarm		: ARRAY[0..500] OF BOOL;	
+	aClass2Alarm		: ARRAY[0..500] OF BOOL;	
+	aClass3Alarm		: ARRAY[0..500] OF BOOL;	
+	fbEventWarning 		: ARRAY[0..500] OF FB_EventMessage;
+	aWarning			: ARRAY[0..512] OF BOOL;
+	fbEventInfo 		: ARRAY[0..500] OF FB_EventMessage;
+	aInfo				: ARRAY[0..500] OF BOOL;
+  
+	hr					: HRESULT;
+	hrLastError 		: HRESULT;
+	
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[Event_Calls(); 				// Program to turn Alarms on
+a_010_AlarmsClass1(); 		// alarms class 1, emergency stop, safety doors, power supply, etc.
+a_010_AlarmsClass2(); 		// alarms class 2, movements, drives, pneumatic cylinder, etc.
+a_010_AlarmsClass3(); 		// alarms class 3, process, level, temperature, conductivity, etc.
+
+a_020_Warnings(); 			// warnings, filter change, refilling of tanks, pre-alarms, etc.
+
+a_030_Infos(); 				// messages, audit-trail, etc.
+
+a_040_ConfirmLoggedAlarms();// confirm all logged alarms
+
+(*a_050_ClearLoggedAlarms ();// clear all logged events PLC*)
+
+a_060_ClearLoggedEvents(); // clear all logged events PLC
+
+a_070_ExportLoggedEvents();// export logged events csv file
+
+]]></ST>
+    </Implementation>
+    <Action Name="a_010_AlarmsClass1" Id="{bc2eb226-b468-457d-845d-8513e8dbcec3}">
+      <Implementation>
+        <ST><![CDATA[
+//Alarms Class 1 
+	fbEventAlarm[0](
+		bEvent			:=	aClass1Alarm[0],
+		nEventID		:=	4096,
+		sSource			:=	'TwinSAFE Program'
+	);
+	fbEventAlarm[1](
+		bEvent			:=	aClass1Alarm[1],
+		nEventID		:=	4097,
+		sSource			:=	'GL1 Motor Fault'
+	);
+	fbEventAlarm[2](
+		bEvent			:=	aClass1Alarm[2],
+		nEventID		:=	4098,
+		sSource			:=	'GL2 Motor Fault'
+	);
+	fbEventAlarm[3](
+		bEvent			:=	aClass1Alarm[3],
+		nEventID		:=	4099,
+		sSource			:=	'GL3 Motor Fault'
+	);
+	fbEventAlarm[4](
+		bEvent			:=	aClass1Alarm[4],
+		nEventID		:=	4100,
+		sSource			:=	'GL4 Motor Fault'
+	);
+	fbEventAlarm[5](
+		bEvent			:=	aClass1Alarm[5],
+		nEventID		:=	4101,
+		sSource			:=	'GL5A Motor Fault'
+	);
+	fbEventAlarm[6](
+		bEvent			:=	aClass1Alarm[6],
+		nEventID		:=	4102,
+		sSource			:=	'GL5B Motor Fault'
+	);
+	fbEventAlarm[7](
+		bEvent			:=	aClass1Alarm[7],
+		nEventID		:=	4103,
+		sSource			:=	'GL6 Motor Fault'
+	);
+	fbEventAlarm[8](
+		bEvent			:=	aClass1Alarm[8],
+		nEventID		:=	4104,
+		sSource			:=	'GL7 Motor Fault'
+	);
+	fbEventAlarm[9](
+		bEvent			:=	aClass1Alarm[9],
+		nEventID		:=	4105,
+		sSource			:=	'GL8 Motor Fault'
+	);
+	fbEventAlarm[10](
+		bEvent			:=	aClass1Alarm[10],
+		nEventID		:=	4106,
+		sSource			:=	'GL9 Motor Fault'
+	);
+	fbEventAlarm[11](
+		bEvent			:=	aClass1Alarm[11],
+		nEventID		:=	4107,
+		sSource			:=	'GL10 Motor Fault'
+	);
+	fbEventAlarm[12](
+		bEvent			:=	aClass1Alarm[12],
+		nEventID		:=	4108,
+		sSource			:=	'GL11 Motor Fault'
+	);
+	fbEventAlarm[13](
+		bEvent			:=	aClass1Alarm[13],
+		nEventID		:=	4109,
+		sSource			:=	'GL12 Motor Fault'
+	);]]></ST>
+      </Implementation>
+    </Action>
+    <Action Name="a_010_AlarmsClass2" Id="{8f4b3eaf-33a0-47c7-a89d-9e1db7794c94}">
+      <Implementation>
+        <ST><![CDATA[//Alarms Class 2 
+	fbEventAlarm[14](
+		bEvent			:=	aClass2Alarm[0],
+		nEventID		:=	8192,
+		sSource			:=	'GL1 jam'
+	);
+	fbEventAlarm[15](
+		bEvent			:=	aClass2Alarm[1],
+		nEventID		:=	8193,
+		sSource			:=	'GL2 jam'
+	);
+	fbEventAlarm[16](
+		bEvent			:=	aClass2Alarm[2],
+		nEventID		:=	8194,
+		sSource			:=	'GL3 jam'
+	);
+	fbEventAlarm[17](
+		bEvent			:=	aClass2Alarm[3],
+		nEventID		:=	8195,
+		sSource			:=	'GL4 jam'
+	);
+	fbEventAlarm[18](
+		bEvent			:=	aClass2Alarm[4],
+		nEventID		:=	8196,
+		sSource			:=	'GL5A jam'
+	);
+	fbEventAlarm[19](
+		bEvent			:=	aClass2Alarm[5],
+		nEventID		:=	8197,
+		sSource			:=	'GL5B jam'
+	);
+	fbEventAlarm[20](
+		bEvent			:=	aClass2Alarm[6],
+		nEventID		:=	8198,
+		sSource			:=	'GL6 jam'
+	);
+	fbEventAlarm[21](
+		bEvent			:=	aClass2Alarm[7],
+		nEventID		:=	8199,
+		sSource			:=	'GL7 jam'
+	);
+	fbEventAlarm[22](
+		bEvent			:=	aClass2Alarm[8],
+		nEventID		:=	8200,
+		sSource			:=	'GL8 jam'
+	);
+	fbEventAlarm[23](
+		bEvent			:=	aClass2Alarm[9],
+		nEventID		:=	8201,
+		sSource			:=	'GL9 jam'
+	);
+	fbEventAlarm[24](
+		bEvent			:=	aClass2Alarm[10],
+		nEventID		:=	8202,
+		sSource			:=	'GL10 jam'
+	);
+	fbEventAlarm[25](
+		bEvent			:=	aClass2Alarm[11],
+		nEventID		:=	8203,
+		sSource			:=	'GL11 jam'
+	);
+	fbEventAlarm[26](
+		bEvent			:=	aClass2Alarm[12],
+		nEventID		:=	8204,
+		sSource			:=	'GL12 jam'
+	);]]></ST>
+      </Implementation>
+    </Action>
+    <Action Name="a_010_AlarmsClass3" Id="{59e8190c-79c7-41bb-8438-1fa5d75e8707}">
+      <Implementation>
+        <ST><![CDATA[//Alarms Class 3 
+	fbEventAlarm[30](
+		bEvent			:=	aClass3Alarm[0],
+		nEventID		:=	4116,
+		sSource			:=	'Air Filter'
+	);
+	fbEventAlarm[31](
+		bEvent			:=	aClass3Alarm[1],
+		nEventID		:=	4117,
+		sSource			:=	'Air Filter'
+	);
+	fbEventAlarm[32](
+		bEvent			:=	aClass3Alarm[2],
+		nEventID		:=	4118,
+		sSource			:=	'Styrene'
+	);
+	fbEventAlarm[33](
+		bEvent			:=	aClass3Alarm[3],
+		nEventID		:=	4119,
+		sSource			:=	'Class3Alarm 3'
+	);
+	fbEventAlarm[34](
+		bEvent			:=	aClass3Alarm[4],
+		nEventID		:=	4120,
+		sSource			:=	'Class3Alarm 4'
+	);
+	fbEventAlarm[35](
+		bEvent			:=	aClass3Alarm[5],
+		nEventID		:=	4121,
+		sSource			:=	'Class3Alarm 5'
+	);
+	fbEventAlarm[36](
+		bEvent			:=	aClass3Alarm[6],
+		nEventID		:=	4122,
+		sSource			:=	'Class3Alarm 6'
+	);
+	fbEventAlarm[37](
+		bEvent			:=	aClass3Alarm[7],
+		nEventID		:=	4123,
+		sSource			:=	'Class3Alarm 7'
+	);
+	fbEventAlarm[38](
+		bEvent			:=	aClass3Alarm[8],
+		nEventID		:=	4124,
+		sSource			:=	'Class3Alarm 8'
+	);
+	fbEventAlarm[39](
+		bEvent			:=	aClass3Alarm[9],
+		nEventID		:=	4125,
+		sSource			:=	'Class3Alarm 9'
+	);]]></ST>
+      </Implementation>
+    </Action>
+    <Action Name="a_020_Warnings" Id="{275d74ec-dfce-49ce-8c14-5b44cda81bb0}">
+      <Implementation>
+        <ST><![CDATA[// Warning 
+	fbEventWarning[0](
+		bEvent 		:= 	aWarning[0],
+		nEventID	:=	1280,
+		sSource		:=	'Styrene Level'
+	);
+	fbEventWarning[1](
+		bEvent 		:= 	aWarning[1],
+		nEventID	:=	1281,
+		sSource		:=	'Roll Door 1'
+	);
+	fbEventWarning[2](
+		bEvent 		:= 	aWarning[2],
+		nEventID	:=	1282,
+		sSource		:=	'Roll Door 2'
+	);
+	fbEventWarning[3](
+		bEvent 		:= 	aWarning[3],
+		nEventID	:=	1283,
+		sSource		:=	'Roll Door 3'
+	);
+	fbEventWarning[4](
+		bEvent 		:= 	aWarning[4],
+		nEventID	:=	1284,
+		sSource		:=	'Warning 4'
+	);
+	fbEventWarning[5](
+		bEvent 		:= 	aWarning[5],
+		nEventID	:=	1285,
+		sSource		:=	'Warning 5'
+	);
+	fbEventWarning[6](
+		bEvent 		:= 	aWarning[6],
+		nEventID	:=	1286,
+		sSource		:=	'Warning 6'
+	);
+	fbEventWarning[7](
+		bEvent 		:= 	aWarning[7],
+		nEventID	:=	1287,
+		sSource		:=	'Warning 7'
+	);
+	fbEventWarning[8](
+		bEvent 		:= 	aWarning[8],
+		nEventID	:=	1288,
+		sSource		:=	'Warning 8'
+	);
+	fbEventWarning[9](
+		bEvent 		:= 	aWarning[9],
+		nEventID	:=	1289,
+		sSource		:=	'Warning 9'
+	);
+	fbEventWarning[10](
+		bEvent 		:= 	aWarning[10],
+		nEventID	:=	1290,
+		sSource		:=	'Warning 10'
+	);
+	fbEventWarning[11](
+		bEvent 		:= 	aWarning[11],
+		nEventID	:=	1291,
+		sSource		:=	'Warning 11'
+	);
+	fbEventWarning[12](
+		bEvent 		:= 	aWarning[12],
+		nEventID	:=	1292,
+		sSource		:=	'Warning 12'
+	);
+	fbEventWarning[13](
+		bEvent 		:= 	aWarning[13],
+		nEventID	:=	1293,
+		sSource		:=	'Warning 13'
+	);
+	fbEventWarning[14](
+		bEvent 		:= 	aWarning[14],
+		nEventID	:=	1294,
+		sSource		:=	'Warning 14'
+	);
+	fbEventWarning[15](
+		bEvent 		:= 	aWarning[15],
+		nEventID	:=	1295,
+		sSource		:=	'Warning 15'
+	);
+	fbEventWarning[16](
+		bEvent 		:= 	aWarning[16],
+		nEventID	:=	1296,
+		sSource		:=	'Warning 16'
+	);
+	fbEventWarning[17](
+		bEvent 		:= 	aWarning[17],
+		nEventID	:=	1297,
+		sSource		:=	'Warning 17'
+	);
+	fbEventWarning[18](
+		bEvent 		:= 	aWarning[18],
+		nEventID	:=	1298,
+		sSource		:=	'Warning 18'
+	);
+	fbEventWarning[19](
+		bEvent 		:= 	aWarning[19],
+		nEventID	:=	1299,
+		sSource		:=	'Warning 19'
+	);
+]]></ST>
+      </Implementation>
+    </Action>
+    <Action Name="a_030_Infos" Id="{15f2cf0d-9e92-4c45-aa1d-27815d7466ac}">
+      <Implementation>
+        <ST><![CDATA[// Info 
+	fbEventInfo[0](
+		bEvent 		:= 	aInfo[0],
+		nEventID	:=	0,
+		sSource		:=	'Info 0'
+	);
+	fbEventInfo[1](
+		bEvent 		:= 	aInfo[1],
+		nEventID	:=	1,
+		sSource		:=	'Info 1'
+	);
+	fbEventInfo[2](
+		bEvent 		:= 	aInfo[2],
+		nEventID	:=	2,
+		sSource		:=	'Info 2'
+	);
+	fbEventInfo[3](
+		bEvent 		:= 	aInfo[3],
+		nEventID	:=	3,
+		sSource		:=	'Info 3'
+	);
+	fbEventInfo[4](
+		bEvent 		:= 	aInfo[4],
+		nEventID	:=	4,
+		sSource		:=	'Info 4'
+	);
+	fbEventInfo[5](
+		bEvent 		:= 	aInfo[5],
+		nEventID	:=	5,
+		sSource		:=	'Info 5'
+	);
+	fbEventInfo[6](
+		bEvent 		:= 	aInfo[6],
+		nEventID	:=	6,
+		sSource		:=	'Info 6'
+	);
+	fbEventInfo[7](
+		bEvent 		:= 	aInfo[7],
+		nEventID	:=	7,
+		sSource		:=	'Info 7'
+	);
+	fbEventInfo[8](
+		bEvent 		:= 	aInfo[8],
+		nEventID	:=	8,
+		sSource		:=	'Info 8'
+	);
+	fbEventInfo[9](
+		bEvent 		:= 	aInfo[9],
+		nEventID	:=	9,
+		sSource		:=	'Info 9'
+	);
+	fbEventInfo[10](
+		bEvent 		:= 	aInfo[10],
+		nEventID	:=	10,
+		sSource		:=	'Info 10'
+	);
+	fbEventInfo[11](
+		bEvent 		:= 	aInfo[11],
+		nEventID	:=	11,
+		sSource		:=	'Info 11'
+	);
+	fbEventInfo[12](
+		bEvent 		:= 	aInfo[12],
+		nEventID	:=	12,
+		sSource		:=	'Info 12'
+	);
+	fbEventInfo[13](
+		bEvent 		:= 	aInfo[13],
+		nEventID	:=	13,
+		sSource		:=	'Info 13'
+	);
+	fbEventInfo[14](
+		bEvent 		:= 	aInfo[14],
+		nEventID	:=	14,
+		sSource		:=	'Info 14'
+	);
+	fbEventInfo[15](
+		bEvent 		:= 	aInfo[15],
+		nEventID	:=	15,
+		sSource		:=	'Info 15'
+	);
+	fbEventInfo[16](
+		bEvent 		:= 	aInfo[16],
+		nEventID	:=	16,
+		sSource		:=	'Info 16'
+	);
+	fbEventInfo[17](
+		bEvent 		:= 	aInfo[17],
+		nEventID	:=	17,
+		sSource		:=	'Info 17'
+	);
+	fbEventInfo[18](
+		bEvent 		:= 	aInfo[18],
+		nEventID	:=	18,
+		sSource		:=	'Info 18'
+	);
+	fbEventInfo[19](
+		bEvent 		:= 	aInfo[19],
+		nEventID	:=	19,
+		sSource		:=	'Info 19'
+	);
+]]></ST>
+      </Implementation>
+    </Action>
+    <Action Name="a_040_ConfirmLoggedAlarms" Id="{86de825a-6035-41cb-9880-8f10da06152a}">
+      <Implementation>
+        <ST><![CDATA[// confirmation of all alarms	
+
+	IF bConfirmAlarms THEN
+			hr:= fbEventLogger.ConfirmAllAlarms(0);
+			IF FAILED(hr) THEN
+				hrLastError := hr;
+			END_IF
+	END_IF]]></ST>
+      </Implementation>
+    </Action>
+    <Action Name="a_050_ClearLoggedAlarms" Id="{df23a85a-3b46-4072-a423-60fe2ed1b6db}">
+      <Implementation>
+        <ST><![CDATA[// reset ALL Alarms 
+// must not be used!!! I reset the alarms in the corresponding instances
+
+	(*IF bClearAlarms THEN
+			hr := fbEventlogger.ClearAllAlarms(0,FALSE);
+			IF FAILED(hr) THEN
+					hrLastError := hr;
+			END_IF
+	END_IF*)]]></ST>
+      </Implementation>
+    </Action>
+    <Action Name="a_060_ClearLoggedEvents" Id="{7d222371-1f6f-44bd-9217-b9d3847641a9}">
+      <Implementation>
+        <ST><![CDATA[// clear all logged events PLC Cache
+	IF bClearLoggedEvents THEN
+		bClearLoggedEvents := FALSE;
+		fbEventlogger.ClearLoggedEvents(0);
+	END_IF]]></ST>
+      </Implementation>
+    </Action>
+    <Action Name="a_070_ExportLoggedEvents" Id="{b7a1077f-4677-4502-aa4d-e0f3c47a3fe4}">
+      <Implementation>
+        <ST><![CDATA[// create file name
+	sExportFileName := CONCAT(CONCAT('C:\Temp\',P_Timer.sDateTime), '.csv');
+	
+// CSV export logged events. Without filter all logged events will be exported. 
+// CSV file will be overvritten, an opened file fires an error
+	fbRtExport (CLK:= bExportLoggedEvents); 
+	IF bExportLoggedEvents THEN 
+		IF fbRtExport.Q THEN
+			fbCsvExportSetting.Clear(); 
+			fbCsvExportSetting.AddLanguage(1031, 'German'); 
+		//	fbCsvExportSetting. AddFilter (fbExportFilter);
+		//	fbExportFilter.Clear().IsAlarm()AND_OP().EventClass.EqualTO (TC_EVENTS.myAlarmEventClass.x1000.uuidEventClass); 
+		END_IF 
+		IF fbEventLogger.ExportLoggedEvents(sExportFileName,fbCsvExportSetting, hrErrorCode=> hr) THEN
+			bExportLoggedEvents:= FALSE; 
+		END_IF 
+	END_IF]]></ST>
+      </Implementation>
+    </Action>
+    <Action Name="Event_Calls" Id="{ff784dbe-6033-408e-ad39-fabc224ca5c0}">
+      <Implementation>
+        <ST><![CDATA[
+
+// alarms class 1, emergency stop, safety doors, power supply, etc.
+	IF NOT gvl_saf.SafetyOk THEN aClass1Alarm[0] := 1; ELSE aClass1Alarm[0] := 0; END_IF
+		
+/////////////////////////// CONVEYOR MOTOR FAULTS
+	
+	
+	IF GVL_Conveyors.GL1.Motor_Fault THEN aClass1Alarm[1] := 1; ELSE aClass1Alarm[1] := 0; END_IF // GL1 MOTOR FAULT
+	
+	IF GVL_Conveyors.GL2.Motor_Fault THEN aClass1Alarm[2] := 1; ELSE aClass1Alarm[2] := 0; END_IF // GL2 MOTOR FAULT
+		
+	IF GVL_Conveyors.GL3.Motor_Fault THEN aClass1Alarm[3] := 1; ELSE aClass1Alarm[3] := 0; END_IF // GL3 MOTOR FAULT
+	
+	IF GVL_Conveyors.GL4.Motor_Fault THEN aClass1Alarm[4] := 1; ELSE aClass1Alarm[4] := 0; END_IF // GL4 MOTOR FAULT
+	
+	IF GVL_Conveyors.GL5A.Motor_Fault THEN aClass1Alarm[5] := 1; ELSE aClass1Alarm[5] := 0; END_IF // GL5A MOTOR FAULT
+	
+	IF GVL_Conveyors.GL5B.Motor_Fault THEN aClass1Alarm[6] := 1; ELSE aClass1Alarm[5] := 0; END_IF // GL5B MOTOR FAULT
+		
+	IF GVL_Conveyors.GL6.Motor_Fault THEN aClass1Alarm[7] := 1; ELSE aClass1Alarm[7] := 0; END_IF // GL6 MOTOR FAULT
+	
+	IF GVL_Conveyors.GL7.Motor_Fault THEN aClass1Alarm[8] := 1; ELSE aClass1Alarm[8] := 0; END_IF // GL7 MOTOR FAULT
+	
+	IF GVL_Conveyors.GL8.Motor_Fault THEN aClass1Alarm[9] := 1; ELSE aClass1Alarm[9] := 0; END_IF // GL8 MOTOR FAULT
+	
+	IF GVL_Conveyors.GL9.Motor_Fault THEN aClass1Alarm[10] := 1; ELSE aClass1Alarm[10] := 0; END_IF // GL9 MOTOR FAULT
+		
+	IF GVL_Conveyors.GL10.Motor_Fault THEN aClass1Alarm[11] := 1; ELSE aClass1Alarm[11] := 0; END_IF // GL10 MOTOR FAULT
+	
+	IF GVL_Conveyors.GL11.Motor_Fault THEN aClass1Alarm[12] := 1; ELSE aClass1Alarm[12] := 0; END_IF // GL11 MOTOR FAULT
+	
+	IF GVL_Conveyors.GL12.Motor_Fault THEN aClass1Alarm[13] := 1; ELSE aClass1Alarm[13] := 0; END_IF // GL12 MOTOR FAULT
+	
+	
+	//////////////////////////////CONVEYOR JAM FAULTS
+	// alarms class 2, movements, drives, pneumatic cylinder, etc.
+	
+	IF GVL_Conveyors.GL1.Jam_Fault 	THEN aClass2Alarm[0] := 1; ELSE aClass2Alarm[0] := 0; END_IF // GL1 JAM FAULT
+		
+	IF GVL_Conveyors.GL2.Jam_Fault 	THEN aClass2Alarm[1] := 1; ELSE aClass2Alarm[1] := 0; END_IF // GL2 JAM FAULT
+	
+	IF GVL_Conveyors.GL3.Jam_Fault 	THEN aClass2Alarm[2] := 1; ELSE aClass2Alarm[2] := 0; END_IF // GL3 JAM FAULT
+	
+	IF GVL_Conveyors.GL4.Jam_Fault 	THEN aClass2Alarm[3] := 1; ELSE aClass2Alarm[3] := 0; END_IF // GL4 JAM FAULT
+	
+	IF GVL_Conveyors.GL5A.Jam_Fault	THEN aClass2Alarm[4] := 1; ELSE aClass2Alarm[4] := 0; END_IF // GL5A JAM FAULT
+
+	IF GVL_Conveyors.GL5B.Jam_Fault	THEN aClass2Alarm[5] := 1; ELSE aClass2Alarm[5] := 0; END_IF // GL5B JAM FAULT
+		
+	IF GVL_Conveyors.GL6.Jam_Fault	THEN aClass2Alarm[6] := 1; ELSE aClass2Alarm[6] := 0; END_IF // GL6 JAM FAULT
+
+	IF GVL_Conveyors.GL7.Jam_Fault	THEN aClass2Alarm[7] := 1; ELSE aClass2Alarm[7] := 0; END_IF // GL7 JAM FAULT
+		
+	IF GVL_Conveyors.GL8.Jam_Fault	THEN aClass2Alarm[8] := 1; ELSE aClass2Alarm[8] := 0; END_IF // GL8 JAM FAULT
+		
+	IF GVL_Conveyors.GL9.Jam_Fault	THEN aClass2Alarm[9] := 1; ELSE aClass2Alarm[9] := 0; END_IF // GL9 JAM FAULT
+	
+	IF GVL_Conveyors.GL10.Jam_Fault	THEN aClass2Alarm[10] := 1; ELSE aClass2Alarm[10] := 0; END_IF // GL10 JAM FAULT
+		
+	IF GVL_Conveyors.GL11.Jam_Fault	THEN aClass2Alarm[11] := 1; ELSE aClass2Alarm[11] := 0; END_IF // GL11 JAM FAULT
+	
+	IF GVL_Conveyors.GL12.Jam_Fault	THEN aClass2Alarm[12] := 1; ELSE aClass2Alarm[12] := 0; END_IF // GL12 JAM FAULT
+	
+	
+
+// alarms class 3, process, level, temperature, conductivity, etc.
+
+	IF Ventilation.FILTER_CHANGE_NEEDED		THEN aClass3Alarm[0] := 1; ELSE aClass3Alarm[0] := 0; END_IF
+	
+	IF Ventilation.FILTER_OBSTRUCTED_FAULT THEN aClass3Alarm[1] := 1; ELSE aClass3Alarm[1] := 0; END_IF
+		
+	IF Ventilation.gasSensorFaulted		THEN aClass3Alarm[2] := 1; ELSE aClass3Alarm[2] := 0; END_IF
+	
+		
+	//IF NewBatch.ResinTote.ActualScaleWeight < NewBatch.ResinTote.EmptyScaleWeight
+	//									THEN aClass3Alarm[2] := 1; ELSE aClass3Alarm[2] := 0; END_IF
+		
+	//IF GVL.FiltersNeedChangeOutMain		THEN aClass3Alarm[3] := 1; ELSE aClass3Alarm[3] := 0; END_IF
+		
+	//IF GVL.FiltersNeedChangeOutSpecial	THEN aClass3Alarm[4] := 1; ELSE aClass3Alarm[4] := 0; END_IF
+		
+	//IF NewBatch.MixerCaseStep = 900		THEN aClass3Alarm[5] := 1; ELSE aClass3Alarm[5] := 0; END_IF
+		
+	//IF NewBatch.HoldTank.ActualScaleWeight > NewBatch.HoldTank.FullScaleWeight   						
+	//									THEN aClass3Alarm[6] := 1; ELSE aClass3Alarm[6] := 0; END_IF
+	
+		
+// warnings, filter change, refilling of tanks, pre-alarms, etc.
+
+	//IF Ventilation.FILTER_OBSTRUCTED_FAULT	THEN aWarning[0] := 1; ELSE aWarning[0] := 0; END_IF
+		
+	//IF HMI.Filter2.ChangeOutNeededAlarm = 1		THEN aWarning[1] := 1; ELSE aWarning[1] := 0; END_IF
+		
+	//IF HMI.Filter3.ChangeOutNeededAlarm = 1		THEN aWarning[2] := 1; ELSE aWarning[2] := 0; END_IF
+		
+	//IF HMI.Filter4.ChangeOutNeededAlarm = 1		THEN aWarning[3] := 1; ELSE aWarning[3] := 0; END_IF
+		
+	//IF NewBatch.IngredientsReady = 0			THEN aWarning[4] := 1; ELSE aWarning[4] := 0; END_IF
+		
+	
+// Infos
+
+	IF GVL_Conveyors.ALL_CONVEYORS_IN_CYCLE AND  GVL_CONVEYORS.MOTOR_FAULT_WORD = 0 AND GVL_CONVEYORS.JAM_FAULT_WORD =0 THEN aInfo[0] := 1; ELSE aInfo[0] := 0; END_IF
+		
+	IF NOT GVL_Conveyors.ALL_CONVEYORS_IN_CYCLE AND  GVL_CONVEYORS.MOTOR_FAULT_WORD = 0 AND GVL_CONVEYORS.JAM_FAULT_WORD =0 THEN aInfo[1] := 1; ELSE aInfo[1] := 0; END_IF
+		
+	//IF HMI.Filter2.ChangeOutCompleted THEN aInfo[1] := 1; ELSE aInfo[1] := 0; END_IF
+
+		
+	
+	]]></ST>
+      </Implementation>
+    </Action>
+    <LineIds Name="P_EventLogger">
+      <LineId Id="84" Count="16" />
+      <LineId Id="5" Count="0" />
+    </LineIds>
+    <LineIds Name="P_EventLogger.a_010_AlarmsClass1">
+      <LineId Id="211" Count="0" />
+      <LineId Id="119" Count="49" />
+      <LineId Id="59" Count="0" />
+      <LineId Id="192" Count="3" />
+      <LineId Id="191" Count="0" />
+      <LineId Id="270" Count="3" />
+      <LineId Id="269" Count="0" />
+      <LineId Id="275" Count="3" />
+      <LineId Id="274" Count="0" />
+      <LineId Id="280" Count="3" />
+      <LineId Id="279" Count="0" />
+    </LineIds>
+    <LineIds Name="P_EventLogger.a_010_AlarmsClass2">
+      <LineId Id="169" Count="49" />
+      <LineId Id="59" Count="0" />
+      <LineId Id="220" Count="3" />
+      <LineId Id="219" Count="0" />
+      <LineId Id="225" Count="3" />
+      <LineId Id="224" Count="0" />
+      <LineId Id="230" Count="3" />
+      <LineId Id="229" Count="0" />
+    </LineIds>
+    <LineIds Name="P_EventLogger.a_010_AlarmsClass3">
+      <LineId Id="269" Count="49" />
+      <LineId Id="59" Count="0" />
+    </LineIds>
+    <LineIds Name="P_EventLogger.a_020_Warnings">
+      <LineId Id="525" Count="100" />
+      <LineId Id="116" Count="0" />
+    </LineIds>
+    <LineIds Name="P_EventLogger.a_030_Infos">
+      <LineId Id="204" Count="100" />
+      <LineId Id="1" Count="0" />
+    </LineIds>
+    <LineIds Name="P_EventLogger.a_040_ConfirmLoggedAlarms">
+      <LineId Id="1" Count="0" />
+      <LineId Id="3" Count="0" />
+      <LineId Id="2" Count="0" />
+      <LineId Id="4" Count="0" />
+      <LineId Id="6" Count="2" />
+      <LineId Id="5" Count="0" />
+    </LineIds>
+    <LineIds Name="P_EventLogger.a_050_ClearLoggedAlarms">
+      <LineId Id="1" Count="1" />
+      <LineId Id="4" Count="0" />
+      <LineId Id="3" Count="0" />
+      <LineId Id="5" Count="0" />
+      <LineId Id="7" Count="2" />
+      <LineId Id="6" Count="0" />
+    </LineIds>
+    <LineIds Name="P_EventLogger.a_060_ClearLoggedEvents">
+      <LineId Id="1" Count="2" />
+      <LineId Id="5" Count="0" />
+      <LineId Id="4" Count="0" />
+    </LineIds>
+    <LineIds Name="P_EventLogger.a_070_ExportLoggedEvents">
+      <LineId Id="2" Count="1" />
+      <LineId Id="11" Count="0" />
+      <LineId Id="4" Count="0" />
+      <LineId Id="12" Count="0" />
+      <LineId Id="5" Count="0" />
+      <LineId Id="13" Count="2" />
+      <LineId Id="17" Count="1" />
+      <LineId Id="7" Count="0" />
+      <LineId Id="19" Count="2" />
+      <LineId Id="23" Count="1" />
+    </LineIds>
+    <LineIds Name="P_EventLogger.Event_Calls">
+      <LineId Id="112" Count="0" />
+      <LineId Id="105" Count="0" />
+      <LineId Id="20" Count="0" />
+      <LineId Id="1" Count="0" />
+      <LineId Id="224" Count="0" />
+      <LineId Id="226" Count="0" />
+      <LineId Id="225" Count="0" />
+      <LineId Id="5" Count="0" />
+      <LineId Id="16" Count="0" />
+      <LineId Id="22" Count="0" />
+      <LineId Id="192" Count="1" />
+      <LineId Id="195" Count="2" />
+      <LineId Id="199" Count="0" />
+      <LineId Id="209" Count="5" />
+      <LineId Id="200" Count="1" />
+      <LineId Id="215" Count="5" />
+      <LineId Id="202" Count="6" />
+      <LineId Id="194" Count="0" />
+      <LineId Id="23" Count="0" />
+      <LineId Id="221" Count="0" />
+      <LineId Id="223" Count="0" />
+      <LineId Id="222" Count="0" />
+      <LineId Id="28" Count="0" />
+      <LineId Id="39" Count="0" />
+      <LineId Id="41" Count="0" />
+      <LineId Id="227" Count="0" />
+      <LineId Id="229" Count="0" />
+      <LineId Id="228" Count="0" />
+      <LineId Id="45" Count="0" />
+      <LineId Id="230" Count="0" />
+      <LineId Id="232" Count="0" />
+      <LineId Id="231" Count="0" />
+      <LineId Id="44" Count="0" />
+      <LineId Id="233" Count="0" />
+      <LineId Id="235" Count="1" />
+      <LineId Id="238" Count="0" />
+      <LineId Id="237" Count="0" />
+      <LineId Id="239" Count="1" />
+      <LineId Id="242" Count="3" />
+      <LineId Id="241" Count="0" />
+      <LineId Id="43" Count="0" />
+      <LineId Id="42" Count="0" />
+      <LineId Id="47" Count="0" />
+      <LineId Id="49" Count="0" />
+      <LineId Id="251" Count="1" />
+      <LineId Id="50" Count="0" />
+      <LineId Id="250" Count="0" />
+      <LineId Id="249" Count="0" />
+      <LineId Id="75" Count="0" />
+      <LineId Id="77" Count="0" />
+      <LineId Id="90" Count="0" />
+      <LineId Id="79" Count="7" />
+      <LineId Id="91" Count="0" />
+      <LineId Id="60" Count="0" />
+      <LineId Id="54" Count="0" />
+      <LineId Id="56" Count="0" />
+      <LineId Id="62" Count="0" />
+      <LineId Id="61" Count="0" />
+      <LineId Id="63" Count="0" />
+      <LineId Id="65" Count="0" />
+      <LineId Id="69" Count="0" />
+      <LineId Id="71" Count="3" />
+      <LineId Id="67" Count="1" />
+      <LineId Id="92" Count="1" />
+      <LineId Id="95" Count="0" />
+      <LineId Id="97" Count="0" />
+      <LineId Id="102" Count="0" />
+      <LineId Id="104" Count="0" />
+      <LineId Id="247" Count="0" />
+      <LineId Id="246" Count="0" />
+      <LineId Id="103" Count="0" />
+      <LineId Id="99" Count="0" />
+      <LineId Id="101" Count="0" />
+      <LineId Id="100" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

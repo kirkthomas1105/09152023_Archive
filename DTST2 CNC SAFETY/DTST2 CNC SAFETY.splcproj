@@ -1,0 +1,88 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project Crc="420492162" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003" ToolsVersion="4.0">
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <SchemaVersion>2.0</SchemaVersion>
+    <ProjectGuid>{c7e5b93d-c83f-41e3-91ef-70d27ce3e5e8}</ProjectGuid>
+    <OutputType>Exe</OutputType>
+    <RootNamespace>TwinCAT3SafePlcProject</RootNamespace>
+    <AssemblyName>TwinCAT3SafePlcProject</AssemblyName>
+    <FileUpgradeFlags />
+    <UpgradeBackupLocation />
+    <OldToolsVersion>2.0</OldToolsVersion>
+    <TargetSystem>EL6900</TargetSystem>
+    <ProgrammingLanguage>Graphical Editor</ProgrammingLanguage>
+    <Worker>jacob</Worker>
+    <IntProjName>Untitled3</IntProjName>
+    <IsNewCreated>false</IsNewCreated>
+    <SPlcProjVersion>1.7.0.0</SPlcProjVersion>
+    <NextSdsId>162</NextSdsId>
+    <Name>DTST2 CNC SAFETY</Name>
+    <DocuEditor>Brian</DocuEditor>
+    <PlotDate>2022-12-28</PlotDate>
+    <CompanyName>Beckhoff Automation &amp; Co. KG</CompanyName>
+    <CompanyLogo>Beckhoff Automation &amp; Co. KG</CompanyLogo>
+    <FbPerPage>0</FbPerPage>
+    <AddUserAdministrationPages>False</AddUserAdministrationPages>
+    <AddProjectVersionHistoryPages>False</AddProjectVersionHistoryPages>
+    <AddCustomPages>False</AddCustomPages>
+    <TextBox />
+    <AddMultiSettingDocuments>False</AddMultiSettingDocuments>
+    <AddHashValueTablePages>False</AddHashValueTablePages>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
+    <DebugSymbols>false</DebugSymbols>
+    <OutputPath>bin\Release\</OutputPath>
+    <EnableUnmanagedDebugging>false</EnableUnmanagedDebugging>
+    <CodeAnalysisRuleSet>AllRules.ruleset</CodeAnalysisRuleSet>
+  </PropertyGroup>
+  <ItemGroup>
+    <None Include="GVLs\GVL1.sgvl" />
+    <None Include="TargetSystemConfig.xml">
+      <Visible>false</Visible>
+    </None>
+    <None Include="TwinSafeGroup1\Alias Devices\C1 _ SD5 %28R88D-1SN30F-ECT%29 - Module 1 %28Safety Process Data%29.sds" />
+    <None Include="TwinSafeGroup1\Alias Devices\C2 _ SD11 %28R88D-1SN55F-ECT%29 %28Safety Process Data%29.sds" />
+    <None Include="TwinSafeGroup1\Alias Devices\C6_SI1-EL1918, 8 digital input.sds" />
+    <None Include="TwinSafeGroup1\Alias Devices\SafetyOk_DigitalOutput.sds" />
+    <None Include="TwinSafeGroup1\Alias Devices\DeadmanEnable.sds" />
+    <None Include="TwinSafeGroup1\Alias Devices\C1 _ SD6 %28R88D-1SN55F-ECT%29 - Module 1 %28Safety Process Data%29.sds" />
+    <None Include="TwinSafeGroup1\Alias Devices\C1 _ SD7 %28R88D-1SN30F-ECT%29 - Module 1 %28Safety Process Data%29.sds" />
+    <None Include="TwinSafeGroup1\Alias Devices\C1 _ SD8 %28R88D-1SN02L-ECT%29 - Module 1 %28Safety Process Data%29.sds" />
+    <None Include="TwinSafeGroup1\Alias Devices\C1 _ SD9 %28R88D-1SN02L-ECT%29 - Module 1 %28Safety Process Data%29.sds" />
+    <None Include="TwinSafeGroup1\Alias Devices\C2 _ SD10 %28R88D-1SN30F-ECT%29 - Module 1 %28Safety Process Data%29.sds" />
+    <None Include="TwinSafeGroup1\Alias Devices\C2 _ SD12 %28R88D-1SN30F-ECT%29 - Module 1 %28Safety Process Data%29.sds" />
+    <None Include="TwinSafeGroup1\Alias Devices\C2 _ SD13 %28R88D-1SN30F-ECT%29 - Module 1 %28Safety Process Data%29.sds" />
+    <None Include="TwinSafeGroup1\Alias Devices\C2 _ SD15 %28R88D-1SN02L-ECT%29 - Module 1 %28Safety Process Data%29.sds" />
+    <None Include="TwinSafeGroup1\Alias Devices\C3 _ SD1 %28R88D-1SN55F-ECT%29 - Module 1 %28Safety Process Data%29.sds" />
+    <None Include="TwinSafeGroup1\Alias Devices\C3 _ SD2 %28R88D-1SN55F-ECT%29 - Module 1 %28Safety Process Data%29.sds" />
+    <None Include="TwinSafeGroup1\Alias Devices\C3 _ Si1 %28EL1918%29 - Module 1 %28FSOE%29.sds" />
+    <None Include="TwinSafeGroup1\Alias Devices\C3 _ So1 %28EL2904%29 - Module 1 %28FSOES%29.sds" />
+    <None Include="TwinSafeGroup1\Alias Devices\EDM_Error_C4.sds" />
+    <None Include="TwinSafeGroup1\Alias Devices\EDM_Error_C5.sds" />
+    <None Include="TwinSafeGroup1\Alias Devices\EStopError1.sds" />
+    <None Include="TwinSafeGroup1\Alias Devices\EStopError2.sds" />
+    <None Include="TwinSafeGroup1\Alias Devices\EStopOK.sds" />
+    <None Include="TwinSafeGroup1\Alias Devices\InRun.sds" />
+    <None Include="TwinSafeGroup1\Alias Devices\WX_On.sds" />
+    <None Include="TwinSafeGroup1\Alias Devices\C1_SI1 EL1918, 8 digital input.sds" />
+    <None Include="TwinSafeGroup1\Alias Devices\EStopError.sds" />
+    <None Include="TwinSafeGroup1\Alias Devices\MCR.sds" />
+    <None Include="TwinSafeGroup1\Alias Devices\EStopReset.sds" />
+    <None Include="TwinSafeGroup1\Alias Devices\FbErr.sds" />
+    <None Include="TwinSafeGroup1\Alias Devices\ComErr.sds" />
+    <None Include="TwinSafeGroup1\Alias Devices\ErrorAcknowledgement.sds" />
+    <None Include="TwinSafeGroup1\Alias Devices\Run.sds" />
+    <None Include="TwinSafeGroup1\TwinSafeGroup1.sal" />
+    <None Include="TwinSafeGroup1\TwinSafeGroup1.sal.diagram">
+      <Visible>false</Visible>
+      <DependentUpon>TwinSafeGroup1\TwinSafeGroup1.sal</DependentUpon>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="GVLs" />
+    <Folder Include="TwinSafeGroup1" />
+    <Folder Include="TwinSafeGroup1\Alias Devices" />
+  </ItemGroup>
+  <ProjectExtensions />
+</Project>

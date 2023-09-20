@@ -1,0 +1,12 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.0">
+  <DUT Name="ST_CNCVirtualHBAKey" Id="{9274092b-4624-4851-a847-eda9b5215425}">
+    <Declaration><![CDATA[TYPE ST_CNCVirtualHBAKey :
+STRUCT
+	bKey: BOOL;
+	bLED: BOOL;
+END_STRUCT
+END_TYPE
+]]></Declaration>
+  </DUT>
+</TcPlcObject>

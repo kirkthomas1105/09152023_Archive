@@ -1,0 +1,25 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+  <POU Name="F_PartIsPresent" Id="{4ae60c69-55ae-4f4e-8d5c-b51adb5bfc7c}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION F_PartIsPresent : BOOL
+VAR_INPUT
+	WX : sBogie;
+END_VAR
+VAR
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[IF WX.A.bPP1_Input AND WX.A.bPP2_Input AND WX.B.bPP1_Input AND WX.A.bPP2_Input THEN
+	F_PartIsPresent := 1;
+	ELSE
+		F_PartIsPresent := 0;
+END_IF]]></ST>
+    </Implementation>
+    <LineIds Name="F_PartIsPresent">
+      <LineId Id="7" Count="0" />
+      <LineId Id="12" Count="0" />
+      <LineId Id="14" Count="1" />
+      <LineId Id="10" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

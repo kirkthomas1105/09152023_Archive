@@ -1,0 +1,22 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.11">
+  <POU Name="myHMIPLCRECIPE" Id="{a878a368-56fe-42e8-81de-5612b07feebd}" SpecialFunc="None">
+    <Declaration><![CDATA[PROGRAM myHMIPLCRECIPE
+VAR
+	cyc : st_manual;
+	bCTest1 : BOOL;
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[IF cyc.cyl1 = 1 THEN
+	bCTest1 := TRUE;
+	ELSE bCTest1 := FALSE;
+END_IF]]></ST>
+    </Implementation>
+    <LineIds Name="myHMIPLCRECIPE">
+      <LineId Id="5" Count="1" />
+      <LineId Id="8" Count="0" />
+      <LineId Id="7" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

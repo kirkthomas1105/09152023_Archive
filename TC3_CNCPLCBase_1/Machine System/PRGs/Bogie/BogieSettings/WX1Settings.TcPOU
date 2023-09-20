@@ -1,0 +1,50 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+  <POU Name="WX1Settings" Id="{c471891a-d4a5-42cc-ba75-387a707e1042}" SpecialFunc="None">
+    <Declaration><![CDATA[PROGRAM WX1Settings
+VAR
+	WX1A_CP1_Send : HMI_Setting_GVL;
+	WX1A_CP2_Send : HMI_Setting_GVL;
+	WX1A_CP3_Send : HMI_Setting_GVL;
+	
+	WX1B_CP1_Send : HMI_Setting_GVL;
+	WX1B_CP2_Send : HMI_Setting_GVL;
+	WX1B_CP3_Send : HMI_Setting_GVL;
+	WX1Saving 	: BOOL;
+	WX1Save 	: BOOL;
+	
+END_VAR
+VAR PERSISTENT
+	WX1A_CP1_HMI : CPABS_CI;
+	WX1A_CP2_HMI : CPABS_CI;
+	WX1A_CP3_HMI : CPABS_CI;
+	
+	WX1B_CP1_HMI : CPABS_CI;
+	WX1B_CP2_HMI : CPABS_CI;
+	WX1B_CP3_HMI : CPABS_CI;
+	
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[//saves hmi persistent input into the GVL on save
+IF WX1Save THEN
+	WX1Saving:=1;
+	WX1Save:=0;
+END_IF
+
+IF WX1Saving THEN
+	WX1A_CP1_Send(In:=WX1A_CP1_HMI, Out=>GVL_CP.WX1A_CP1_CIn);
+	WX1A_CP2_Send(In:=WX1A_CP2_HMI, Out=>GVL_CP.WX1A_CP2_CIn);
+	WX1A_CP3_Send(IN:=WX1A_CP3_HMI, (*Out=>GVL_CP.WX1A_CP3_CI*));
+	
+	WX1B_CP1_Send(IN:=WX1B_CP1_HMI, Out=>GVL_CP.WX1B_CP1_CIn);
+	WX1B_CP2_Send(In:=WX1B_CP2_HMI, Out=>GVL_CP.WX1B_CP2_CI);
+	WX1B_CP3_Send(IN:=WX1B_CP3_HMI, (*Out=>GVL_CP.WX1B_CP3_CI*));
+	WX1Saving :=0;
+END_IF]]></ST>
+    </Implementation>
+    <LineIds Name="WX1Settings">
+      <LineId Id="156" Count="14" />
+      <LineId Id="85" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

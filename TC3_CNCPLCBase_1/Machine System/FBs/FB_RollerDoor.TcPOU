@@ -1,0 +1,76 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+  <POU Name="FB_RollerDoor" Id="{0c8919ff-7e11-4bc8-ba75-d10e0a4bf504}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION_BLOCK FB_RollerDoor
+VAR_INPUT
+	AutoMode : BOOL;
+	ManualMode : BOOL;
+	ManualDoorOpenRequest : BOOL;
+	ManualDoorCloseRequest : BOOL;
+	AutoDoorOpenRequest : BOOL;
+	AutoDoorCloseRequest : BOOL;
+	test:bool;
+END_VAR
+VAR_OUTPUT
+	DoorOpenCommand : BOOL;
+	DoorCloseCommand : BOOL;
+END_VAR
+VAR
+	ManualDoorOpenRequestRTRIG : R_TRIG;
+	ManualDoorCloseRequestRTRIG : R_TRIG;
+	AutoDoorOpenRequestRTRIG : R_TRIG;
+	AutoDoorCloseRequestRTRIG : R_TRIG;
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[IF AutoMode THEN
+	
+	AutoDoorOpenRequestRTRIG(CLK := AutoDoorOpenRequest);
+	AutoDoorCloseRequestRTRIG(CLK := AutoDoorCloseRequest);
+	
+	IF AutoDoorOpenRequestRTRIG.Q THEN
+		DoorOpenCommand := 1;
+		DoorCloseCommand := 0;
+	ELSIF AutoDoorCloseRequestRTRIG.Q THEN
+		DoorCloseCommand := 1;
+		DoorOpenCommand := 0;
+	END_IF
+END_IF
+
+IF ManualMode THEN
+	
+	ManualDoorOpenRequestRTRIG(CLK := ManualDoorOpenRequest);
+	ManualDoorCloseRequestRTRIG(CLK := ManualDoorCloseRequest);
+	
+	IF ManualDoorOpenRequestRTRIG.Q THEN
+		DoorOpenCommand := 1;
+		DoorCloseCommand := 0;
+	ELSIF ManualDoorCloseRequestRTRIG.Q THEN
+		DoorCloseCommand := 1;
+		DoorOpenCommand := 0;
+	END_IF
+END_IF]]></ST>
+    </Implementation>
+    <LineIds Name="FB_RollerDoor">
+      <LineId Id="9" Count="0" />
+      <LineId Id="98" Count="0" />
+      <LineId Id="76" Count="1" />
+      <LineId Id="99" Count="0" />
+      <LineId Id="25" Count="0" />
+      <LineId Id="29" Count="0" />
+      <LineId Id="33" Count="0" />
+      <LineId Id="30" Count="0" />
+      <LineId Id="32" Count="0" />
+      <LineId Id="34" Count="0" />
+      <LineId Id="28" Count="0" />
+      <LineId Id="26" Count="0" />
+      <LineId Id="36" Count="1" />
+      <LineId Id="74" Count="0" />
+      <LineId Id="71" Count="0" />
+      <LineId Id="73" Count="0" />
+      <LineId Id="75" Count="0" />
+      <LineId Id="38" Count="6" />
+      <LineId Id="35" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

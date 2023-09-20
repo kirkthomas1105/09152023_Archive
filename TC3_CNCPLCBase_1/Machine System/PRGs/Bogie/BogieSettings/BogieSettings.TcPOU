@@ -1,0 +1,26 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.11">
+  <POU Name="BogieSettings" Id="{c604125a-4431-4137-b92c-3fee28a2ef37}" SpecialFunc="None">
+    <Declaration><![CDATA[PROGRAM BogieSettings
+VAR
+	SaveButtonReq : BOOL;
+	Saving : bool;		
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[//set var global via hmi and keep persistient persistient
+
+	WX1Settings();
+	WX2Settings();
+	WX3Settings();
+	WX4Settings();
+]]></ST>
+    </Implementation>
+    <LineIds Name="BogieSettings">
+      <LineId Id="5" Count="0" />
+      <LineId Id="360" Count="0" />
+      <LineId Id="363" Count="2" />
+      <LineId Id="361" Count="1" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

@@ -1,0 +1,214 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+  <POU Name="Ventilation" Id="{b4aea558-2bcb-4770-bd86-d8fd91ee6144}" SpecialFunc="None">
+    <Declaration><![CDATA[PROGRAM Ventilation
+VAR_INPUT
+	SettingsArray :  ARRAY[1..2] OF sDatagridVFD;
+END_VAR
+VAR
+	
+	VentAreaRequest : BOOL;
+	VentAreaTimer 	: TON;
+	
+	TrenchFanMtr : sVFD;
+	FilterBankFanMtr : sVFD;
+	
+	
+	gasSensorNormal  : BOOL;
+	gasSensorHigh  : BOOL;
+	gasSensorFaulted  : BOOL;
+	
+
+	FILTER_CHANGE_NEEDED : BOOL;
+	FILTER_OBSTRUCTED_FAULT : BOOL;
+	FILTER_OK : BOOL;
+
+	filterCheck : UINT;
+	StyreneCheck : UINT;
+	ScaledManometer : REAL;
+	ScaledStyrene : REAL;
+	Results: real;
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[
+//setting of the ID strings for the settings page
+SettingsArray[1].NameVFD := 'Filter Bank';
+SettingsArray[2].NameVFD := 'Trench';
+
+//outputing speed to settings page
+SettingsArray[1].CurrentSpeed := FilterBankFanMtr.CurrentSpeed;
+SettingsArray[2].CurrentSpeed := TrenchFanMtr.CurrentSpeed;
+
+
+// Run Vfd Controlled Vent Fans At Optimal Speed Unless Gas Sensor Reads High
+IF NOT gasSensorNormal THEN 
+	TrenchFanMtr.RunRequest 	:= 1; 
+	FilterBankFanMtr.RunRequest := 1; 
+    TrenchFanMtr.SpeedRequested 	:= SettingsArray[2].SpeedSetpointLow;
+	FilterBankFanMtr.SpeedRequested := SettingsArray[1].SpeedSetpointLow;
+	ELSE
+	TrenchFanMtr.RunRequest 	:= 1; 
+	FilterBankFanMtr.RunRequest := 1; 
+    TrenchFanMtr.SpeedRequested 	:= SettingsArray[2].SpeedSetpointHigh;
+	FilterBankFanMtr.SpeedRequested := SettingsArray[1].SpeedSetpointHigh;
+END_IF
+
+
+// Manometer for air filters. Analog scaled to 0-100
+						
+ScaledManometer := ((INT_TO_REAL(GVL_IO.FilterManometer) / 32767 - 0.0)* 100); //* 20; // SCALE OF ANALOG INPUT 0-100
+
+IF ScaledManometer <  49 THEN // ScaledManomter is scaled value from Manometer 0-100. Check that its not to halfway of full range yet.
+	filterCheck := 1;
+END_IF
+
+IF ScaledManometer >  50 AND ScaledManometer < 80 THEN // ScaledManometer is scaled value from Manometer 0-100. Check if its over halfway of full range yet.
+	filterCheck := 2;
+END_IF
+
+IF ScaledManometer >  80 OR ScaledManometer < 0 THEN // ScaledManometer is scaled value from Manometer 0-100. Check if its over 80% of full range yet.
+	filterCheck := 3;
+END_IF
+	
+
+CASE filterCheck OF 
+     1 : FILTER_OK := TRUE; 
+         FILTER_CHANGE_NEEDED := FALSE;
+		 FILTER_OBSTRUCTED_FAULT := FALSE; 
+
+     2 : FILTER_CHANGE_NEEDED := TRUE; 
+         FILTER_OK := FALSE; 
+		 FILTER_OBSTRUCTED_FAULT := FALSE;
+
+	 3 : FILTER_OK := FALSE; 
+         FILTER_OBSTRUCTED_FAULT:= TRUE;
+		 FILTER_CHANGE_NEEDED := FALSE;
+ELSE 
+	 FILTER_OK := FALSE;
+	 FILTER_OBSTRUCTED_FAULT := FALSE;
+	 FILTER_CHANGE_NEEDED := FALSE;
+END_CASE;
+
+
+// Styrene Gas Sensor. Analog scaled to 0-100
+//gasSensor := 16000;				
+ScaledStyrene := ((INT_TO_REAL(GVL_IO.GasSensor) / 32767 - 0.0)* 100); // SCALE OF ANALOG INPUT 0-100
+
+IF ScaledStyrene <  49 THEN // ScaledStyrene is scaled value from Styrene gas sensor 0-100.  Check that its not to halfway of full range yet.
+	StyreneCheck := 1;
+END_IF
+
+IF ScaledStyrene >  50 AND ScaledStyrene < 80 THEN // ScaledStyrene is scaled value from Styrene gas sensor 0-100.  Check if its over halfway of full range yet.
+	StyreneCheck := 2;
+END_IF
+
+IF ScaledStyrene >  80 OR ScaledStyrene < 0 THEN // ScaledStyrene is scaled value from Styrene gas sensor 0-100. Check if its over 80% of full range yet.
+	StyreneCheck := 3;
+END_IF
+	
+
+CASE StyreneCheck OF 
+     1 : gasSensorNormal := TRUE; 
+         gasSensorHigh := FALSE;
+		 gasSensorFaulted := FALSE; 
+
+     2 : gasSensorNormal := FALSE; 
+	 	 gasSensorHigh := TRUE;
+		 gasSensorFaulted := FALSE;
+
+	 3 : gasSensorNormal := FALSE; 
+         gasSensorHigh := FALSE;
+		 gasSensorFaulted:= TRUE;
+ELSE 
+	 gasSensorNormal := FALSE;
+	 gasSensorHigh := FALSE;
+	 gasSensorFaulted := FALSE;
+END_CASE;
+
+// Fault Reset from HMI
+	IF  gvl_conveyors.FAULT_RESET	THEN 
+		FILTER_OBSTRUCTED_FAULT := FALSE;
+		gasSensorFaulted := FALSE;
+	END_IF
+
+//timer for a user requested 10 minutes of venting air
+//VentAreaRequest := FALSE;
+IF VentAreaRequest (*OR gasSensorFaulted OR gasSensorHigh*) THEN // added styrene sensor to conditions to start evacuation of spray area when levels are too high. KT
+	VentAreaTimer(IN:=TRUE,PT:=T#10M);
+	TrenchFanMtr.RunRequest 	:= 1;
+	FilterBankFanMtr.RunRequest := 1;
+	TrenchFanMtr.SpeedRequested 	:= SettingsArray[2].SpeedSetpointHigh;
+	FilterBankFanMtr.SpeedRequested := SettingsArray[1].SpeedSetpointHigh;
+END_IF
+IF VentAreaTimer.Q THEN
+	VentAreaTimer(IN:=FALSE);
+	VentAreaRequest := 0;
+END_IF]]></ST>
+    </Implementation>
+    <LineIds Name="Ventilation">
+      <LineId Id="242" Count="0" />
+      <LineId Id="187" Count="0" />
+      <LineId Id="206" Count="0" />
+      <LineId Id="188" Count="0" />
+      <LineId Id="241" Count="0" />
+      <LineId Id="208" Count="0" />
+      <LineId Id="207" Count="0" />
+      <LineId Id="210" Count="0" />
+      <LineId Id="209" Count="0" />
+      <LineId Id="189" Count="0" />
+      <LineId Id="164" Count="0" />
+      <LineId Id="5" Count="0" />
+      <LineId Id="59" Count="1" />
+      <LineId Id="31" Count="1" />
+      <LineId Id="62" Count="0" />
+      <LineId Id="161" Count="2" />
+      <LineId Id="30" Count="0" />
+      <LineId Id="29" Count="0" />
+      <LineId Id="70" Count="0" />
+      <LineId Id="116" Count="0" />
+      <LineId Id="115" Count="0" />
+      <LineId Id="113" Count="1" />
+      <LineId Id="253" Count="0" />
+      <LineId Id="250" Count="1" />
+      <LineId Id="249" Count="0" />
+      <LineId Id="252" Count="0" />
+      <LineId Id="112" Count="0" />
+      <LineId Id="244" Count="0" />
+      <LineId Id="247" Count="0" />
+      <LineId Id="254" Count="2" />
+      <LineId Id="248" Count="0" />
+      <LineId Id="246" Count="0" />
+      <LineId Id="245" Count="0" />
+      <LineId Id="91" Count="2" />
+      <LineId Id="108" Count="0" />
+      <LineId Id="94" Count="2" />
+      <LineId Id="109" Count="0" />
+      <LineId Id="97" Count="2" />
+      <LineId Id="107" Count="0" />
+      <LineId Id="103" Count="3" />
+      <LineId Id="71" Count="0" />
+      <LineId Id="262" Count="24" />
+      <LineId Id="302" Count="0" />
+      <LineId Id="288" Count="3" />
+      <LineId Id="303" Count="0" />
+      <LineId Id="293" Count="3" />
+      <LineId Id="261" Count="0" />
+      <LineId Id="309" Count="0" />
+      <LineId Id="298" Count="1" />
+      <LineId Id="304" Count="0" />
+      <LineId Id="306" Count="0" />
+      <LineId Id="305" Count="0" />
+      <LineId Id="191" Count="0" />
+      <LineId Id="190" Count="0" />
+      <LineId Id="338" Count="0" />
+      <LineId Id="194" Count="1" />
+      <LineId Id="213" Count="1" />
+      <LineId Id="211" Count="1" />
+      <LineId Id="196" Count="0" />
+      <LineId Id="199" Count="1" />
+      <LineId Id="202" Count="0" />
+      <LineId Id="201" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

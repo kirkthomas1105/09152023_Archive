@@ -1,0 +1,17 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+  <DUT Name="eSD_Positions" Id="{fb9cce7d-5a19-47f7-b1bf-7b1774d1f593}">
+    <Declaration><![CDATA[TYPE eSD_Positions :
+(//DO NOT CHANGE THESE VALUES unless you want to change the stopping positions of SD
+	SprayPos		:= 838,		//	
+	PrePickupPos	:= 43747,	
+	PickupPos       := 2113,
+	RollPos			:= 200000,	//300500;		
+	CurePos			:= 490500,	//		
+	PostPutDownPos 	:= 378235,		
+	PutDownPos 		:= 335897
+) LINT; 
+END_TYPE
+]]></Declaration>
+  </DUT>
+</TcPlcObject>

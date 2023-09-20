@@ -1,0 +1,33 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+  <POU Name="SafetyConnect" Id="{a2692ae3-b110-463e-a0c5-0930afb08b49}" SpecialFunc="None">
+    <Declaration><![CDATA[PROGRAM SafetyConnect
+VAR
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[IF GVL_HMI.MCR THEN
+	IF GVL_Saf.InRun = 0 THEN
+		GVL_Saf.Run := 0;
+		GVL_Saf.ErrorAcknowledgment :=1;
+	ELSE
+		GVL_Saf.EStopReset := 1;
+	END_IF	
+ELSE
+	GVL_Saf.EStopReset := 0;
+	GVL_Saf.ErrorAcknowledgment :=0;
+	GVL_Saf.Run := 1;
+END_IF
+]]></ST>
+    </Implementation>
+    <LineIds Name="SafetyConnect">
+      <LineId Id="35" Count="2" />
+      <LineId Id="61" Count="1" />
+      <LineId Id="38" Count="0" />
+      <LineId Id="41" Count="1" />
+      <LineId Id="60" Count="0" />
+      <LineId Id="44" Count="2" />
+      <LineId Id="11" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

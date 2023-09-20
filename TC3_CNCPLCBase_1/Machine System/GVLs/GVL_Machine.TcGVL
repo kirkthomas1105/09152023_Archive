@@ -1,0 +1,32 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+  <GVL Name="GVL_Machine" Id="{65c1365c-dcd0-441b-8da8-b9ffbec397f8}">
+    <Declaration><![CDATA[VAR_GLOBAL
+	pX: POINTER TO HIGH_LEVEL_INTERFACE_AX;
+	pY: POINTER TO HIGH_LEVEL_INTERFACE_AX;
+	pZ: POINTER TO HIGH_LEVEL_INTERFACE_AX;
+	pCh0: POINTER TO HIGH_LEVEL_INTERFACE_CH;
+	rX_ActPos : LREAL;
+	rY_ActPos : LREAL;
+	rZ_ActPos : LREAL;
+	bAllAxisOkToEnable 	: BOOL;	
+	bPLC_ForceEstop 	: BOOL;
+	nCommandedRPM		: DINT;
+	stVirtualHBA		: ARRAY[0..1] OF ST_CNCVirtualHBA;
+	HeaterOnRequest		: LREAL;
+	fSetpointValueToScope: LREAL;
+	fActualValueToScope	 : LREAL;
+	fOutToScope			: LREAL;
+	fPIDLoop1ControlValue : LREAL;
+	fPIDLoop1ProcessValue : LREAL;
+	HeatOnRequest : BOOL;
+	
+END_VAR
+
+VAR_GLOBAL CONSTANT
+	MAX_CSV_ROWS 			: UDINT := 250;
+	MAX_CSV_COLUMNS 		: UDINT := 1;
+	MAX_CSV_FIELD_LENGTH	: UDINT := 100;
+END_VAR]]></Declaration>
+  </GVL>
+</TcPlcObject>

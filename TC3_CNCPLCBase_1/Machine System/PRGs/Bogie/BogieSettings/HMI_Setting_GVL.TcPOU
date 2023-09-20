@@ -1,0 +1,58 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+  <POU Name="HMI_Setting_GVL" Id="{e264e3dd-5e6d-4bb3-88c0-bfa6bb1fd46e}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION_BLOCK HMI_Setting_GVL
+VAR_INPUT
+	In : CPABS_CI;
+	Save : BOOL;
+END_VAR
+VAR_OUTPUT
+	Out : CpABS_CI;
+	Saving : bool;
+END_VAR
+VAR
+	
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[//WX1A_CP1
+IF Save THEN
+	Saving:=1;
+	Save:=0;
+END_IF
+IF Saving THEN
+	Out.MotorName			:= In.MotorName;
+	OUt.ABSEncoderScaler_CI := In.ABSEncoderScaler_CI;
+	Out.ABSEncoderZero_CI 	:= In.ABSEncoderZero_CI;
+	Out.cntPulseSet_CI 		:= In.cntPulseSet_CI;
+	Out.DisPerFPulley_CI 	:= In.DisPerFPulley_CI;
+	Out.DisPerPulse_CI 		:= IN.DisPerPulse_CI;
+	OUt.DistPerMRev_CI 		:= In.DistPerMRev_CI;
+	Out.GearRatio_CI 		:= In.GearRatio_CI;
+	Out.HomingSet_CI 		:= In.HomingSet_CI;
+	Out.InputFilter_CI 		:= IN.InputFilter_CI;
+	Out.Lead_CI 			:= In.Lead_CI;
+	Out.Limit_NC_NO_CI 		:= In.Limit_NC_NO_CI;
+	OUt.MechDriveType_CI 	:= In.MechDriveType_CI;
+	Out.MoveABSTol_CI 		:= IN.MoveABSTol_CI;
+	Out.PPRset_CI 			:= In.PPRset_CI;
+	Out.SWLimit_Hi_CI 		:= In.SWLimit_Hi_CI;
+	Out.SWLimit_Lo_CI 		:= In.SWLimit_Lo_CI;
+	
+	Saving:=0;
+END_IF]]></ST>
+    </Implementation>
+    <LineIds Name="HMI_Setting_GVL">
+      <LineId Id="12" Count="0" />
+      <LineId Id="30" Count="0" />
+      <LineId Id="52" Count="3" />
+      <LineId Id="68" Count="0" />
+      <LineId Id="13" Count="1" />
+      <LineId Id="31" Count="0" />
+      <LineId Id="17" Count="0" />
+      <LineId Id="33" Count="10" />
+      <LineId Id="9" Count="0" />
+      <LineId Id="48" Count="2" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

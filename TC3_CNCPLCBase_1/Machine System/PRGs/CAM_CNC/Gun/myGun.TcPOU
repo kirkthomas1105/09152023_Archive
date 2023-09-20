@@ -1,0 +1,41 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.11">
+  <POU Name="myGun" Id="{c52171cb-a448-4d07-a1b3-a884d4516d10}" SpecialFunc="None">
+    <Declaration><![CDATA[PROGRAM myGun
+VAR
+	iFiberPres AT %Q* : UINT;
+	bFiberOn : BOOL;
+	bManualChop : BOOL;
+	iFiberScale : UINT;
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[iFiberScale := PLCSpindleOverride;
+
+IF GVL_IO.bSprayOn = TRUE AND bFiberOn THEN
+	iFiberPres :=32000 *iFiberScale/100;
+	ELSIF bFiberOn = TRUE AND bManualChop = TRUE THEN
+		iFiberPres :=32000*iFiberScale/100;
+		ELSE iFiberPres :=0;
+END_IF
+IF bFiberOn = FALSE THEN
+	iFiberPres :=0;
+END_IF
+IF bManualChop = TRUE AND bFiberOn= TRUE THEN
+	iFiberPres :=32000*iFiberScale/100;
+END_IF]]></ST>
+    </Implementation>
+    <LineIds Name="myGun">
+      <LineId Id="25" Count="1" />
+      <LineId Id="5" Count="0" />
+      <LineId Id="10" Count="0" />
+      <LineId Id="21" Count="0" />
+      <LineId Id="23" Count="0" />
+      <LineId Id="12" Count="0" />
+      <LineId Id="11" Count="0" />
+      <LineId Id="13" Count="0" />
+      <LineId Id="15" Count="1" />
+      <LineId Id="18" Count="2" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

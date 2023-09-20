@@ -1,0 +1,37 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+  <POU Name="FirstScan" Id="{683fc16c-20e6-46fc-9410-100e55b17f2b}" SpecialFunc="None">
+    <Declaration><![CDATA[PROGRAM FirstScan
+VAR
+	SkipFirstScan : BOOL; // You guessed it, this skips the after first scan!
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[IF SkipFirstScan = FALSE THEN
+	
+	//Default values for Ventalation
+	Ventilation.SettingsArray[2].SpeedSetpointLow 	:= 3000;
+	Ventilation.SettingsArray[1].SpeedSetpointLow 	:= 3000;
+	Ventilation.SettingsArray[2].SpeedSetpointHigh 	:= 6000;
+	Ventilation.SettingsArray[1].SpeedSetpointHigh 	:= 6000;
+	
+	
+	
+	SkipFirstScan := TRUE; // keep at bottom
+	
+END_IF]]></ST>
+    </Implementation>
+    <LineIds Name="FirstScan">
+      <LineId Id="6" Count="1" />
+      <LineId Id="25" Count="0" />
+      <LineId Id="29" Count="1" />
+      <LineId Id="34" Count="0" />
+      <LineId Id="28" Count="0" />
+      <LineId Id="26" Count="0" />
+      <LineId Id="40" Count="1" />
+      <LineId Id="27" Count="0" />
+      <LineId Id="35" Count="0" />
+      <LineId Id="5" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

@@ -1,0 +1,3254 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "definitions": {
+    "BogieRail": {
+      "frameworkControlNamespace": "TcHmi.Controls.Beckhoff",
+      "frameworkControlType": "TcHmi.Controls.System.TcHmiUserControl",
+      "frameworkInstanceOf": "TcHmi.Controls.System.TcHmiControl",
+      "frameworkUserControlConfig": "Pages\\StartPage\\BogieRail.usercontrol.json",
+      "id": "tchmi:project#/definitions/BogieRail",
+      "type": "object"
+    },
+    "CPABS_Set": {
+      "frameworkControlNamespace": "TcHmi.Controls.Beckhoff",
+      "frameworkControlType": "TcHmi.Controls.System.TcHmiUserControl",
+      "frameworkInstanceOf": "TcHmi.Controls.System.TcHmiControl",
+      "frameworkUserControlConfig": "Pages\\UserControls\\CPABS_Set.usercontrol.json",
+      "id": "tchmi:project#/definitions/CPABS_Set",
+      "type": "object"
+    },
+    "GLSelect": {
+      "properties": {},
+      "type": "object",
+      "frameworkControlNamespace": "TcHmi.Controls.Beckhoff",
+      "frameworkControlType": "TcHmi.Controls.System.TcHmiUserControl",
+      "frameworkInstanceOf": "TcHmi.Controls.System.TcHmiControl",
+      "frameworkUserControlConfig": "Pages\\StartPage\\GLSelect.usercontrol.json",
+      "id": "tchmi:project#/definitions/GLSelect"
+    },
+    "GLSelector": {
+      "properties": {},
+      "type": "object",
+      "frameworkControlNamespace": "TcHmi.Controls.Beckhoff",
+      "frameworkControlType": "TcHmi.Controls.System.TcHmiUserControl",
+      "frameworkInstanceOf": "TcHmi.Controls.System.TcHmiControl",
+      "frameworkUserControlConfig": "Pages\\StartPage\\GLSelector.usercontrol.json",
+      "id": "tchmi:project#/definitions/GLSelector"
+    },
+    "HMI_Axis": {
+      "properties": {},
+      "type": "object",
+      "frameworkControlNamespace": "TcHmi.Controls.Beckhoff",
+      "frameworkControlType": "TcHmi.Controls.System.TcHmiUserControl",
+      "frameworkInstanceOf": "TcHmi.Controls.System.TcHmiControl",
+      "frameworkUserControlConfig": "Pages\\StartPage\\HMI_Axis.usercontrol.json",
+      "id": "tchmi:project#/definitions/HMI_Axis"
+    },
+    "PLC1.BogieComboWX": {
+      "properties": {
+        "A_Select_VI": {
+          "allOf": [
+            {
+              "$ref": "tchmi:general#/definitions/BOOL"
+            },
+            {
+              "comment": "A selected"
+            }
+          ]
+        },
+        "AxisSel_VI": {
+          "allOf": [
+            {
+              "$ref": "tchmi:general#/definitions/INT"
+            },
+            {
+              "comment": "selection of Axis for jog[0=none, 1=Vert_Sync, 2=Rot_Sync, 3=Clamp_Sync, 4=Vert_A, 5=Vert_B, 6=Rot_A, 7=Rot_B, 8=Clamp_A, 9=Clamp_B]"
+            }
+          ]
+        },
+        "B_Select_VI": {
+          "allOf": [
+            {
+              "$ref": "tchmi:general#/definitions/BOOL"
+            },
+            {
+              "comment": "B selectd"
+            }
+          ]
+        },
+        "CW_VI": {
+          "allOf": [
+            {
+              "$ref": "tchmi:general#/definitions/BOOL"
+            },
+            {
+              "comment": "Set Direction for requested move (does not apply to absolute move) True = Clockwise"
+            }
+          ]
+        },
+        "ClampDisReq_PI": {
+          "$ref": "tchmi:general#/definitions/INT"
+        },
+        "Clamp_A": {
+          "$ref": "tchmi:project#/definitions/PLC1.ClearpathPositionABS"
+        },
+        "Clamp_A_CI": {
+          "$ref": "tchmi:project#/definitions/PLC1.CpABS_CI"
+        },
+        "Clamp_B": {
+          "$ref": "tchmi:project#/definitions/PLC1.ClearpathPositionABS"
+        },
+        "Clamp_B_CI": {
+          "$ref": "tchmi:project#/definitions/PLC1.CpABS_CI"
+        },
+        "ErrorMsg_VO": {
+          "allOf": [
+            {
+              "$ref": "tchmi:general#/definitions/STRING%2880%29"
+            },
+            {
+              "comment": "Visualization Outputs"
+            }
+          ]
+        },
+        "HomeWithPartStart_PI": {
+          "allOf": [
+            {
+              "$ref": "tchmi:general#/definitions/BOOL"
+            },
+            {
+              "comment": "set this true in program with oneshot to start homing, do not hold true in program as FB.Home() will continue to start at step 1"
+            }
+          ]
+        },
+        "Homed_PO": {
+          "allOf": [
+            {
+              "$ref": "tchmi:general#/definitions/BOOL"
+            },
+            {
+              "comment": "Program OutPuts"
+            }
+          ]
+        },
+        "JogClampAExecute_VI": {
+          "allOf": [
+            {
+              "$ref": "tchmi:general#/definitions/BOOL"
+            },
+            {
+              "comment": "Call manual Clamp move method if true"
+            }
+          ]
+        },
+        "JogClampBExecute_VI": {
+          "allOf": [
+            {
+              "$ref": "tchmi:general#/definitions/BOOL"
+            },
+            {
+              "comment": "Call manual Clamp move method if true"
+            }
+          ]
+        },
+        "JogRotAExecute_VI": {
+          "allOf": [
+            {
+              "$ref": "tchmi:general#/definitions/BOOL"
+            },
+            {
+              "comment": "Call manual Rot Move method if true"
+            }
+          ]
+        },
+        "JogRotBExecute_VI": {
+          "allOf": [
+            {
+              "$ref": "tchmi:general#/definitions/BOOL"
+            },
+            {
+              "comment": "Call manual Rot Move method if true"
+            }
+          ]
+        },
+        "JogSeparate_VI": {
+          "allOf": [
+            {
+              "$ref": "tchmi:general#/definitions/BOOL"
+            },
+            {
+              "comment": "Jog Separate"
+            }
+          ]
+        },
+        "JogSlow_VI": {
+          "allOf": [
+            {
+              "$ref": "tchmi:general#/definitions/BOOL"
+            },
+            {
+              "comment": "slow manual move"
+            }
+          ]
+        },
+        "JogVertAExecute_VI": {
+          "allOf": [
+            {
+              "$ref": "tchmi:general#/definitions/BOOL"
+            },
+            {
+              "comment": "Call manual vert move method if true"
+            }
+          ]
+        },
+        "JogVertBExecute_VI": {
+          "allOf": [
+            {
+              "$ref": "tchmi:general#/definitions/BOOL"
+            },
+            {
+              "comment": "Call manual vert move method if true"
+            }
+          ]
+        },
+        "Msg": {
+          "allOf": [
+            {
+              "$ref": "tchmi:general#/definitions/STRING%2880%29"
+            },
+            {
+              "comment": "debug message"
+            }
+          ]
+        },
+        "PartPres_A_Hi": {
+          "allOf": [
+            {
+              "$ref": "tchmi:general#/definitions/BOOL"
+            },
+            {
+              "comment": "Field Inputs"
+            }
+          ]
+        },
+        "PartPres_A_Lo": {
+          "$ref": "tchmi:general#/definitions/BOOL"
+        },
+        "PartPres_B_Hi": {
+          "$ref": "tchmi:general#/definitions/BOOL"
+        },
+        "PartPres_B_Lo": {
+          "$ref": "tchmi:general#/definitions/BOOL"
+        },
+        "PowerOn_PI": {
+          "$ref": "tchmi:general#/definitions/BOOL"
+        },
+        "ReSync_PI": {
+          "allOf": [
+            {
+              "$ref": "tchmi:general#/definitions/BOOL"
+            },
+            {
+              "comment": "trigger this to begin a resync process [used after slippage or after individual jogging]"
+            }
+          ]
+        },
+        "Reset_VI": {
+          "allOf": [
+            {
+              "$ref": "tchmi:general#/definitions/BOOL"
+            },
+            {
+              "comment": "reset button"
+            }
+          ]
+        },
+        "RotDegReq_PI": {
+          "$ref": "tchmi:general#/definitions/INT"
+        },
+        "Rot_A": {
+          "allOf": [
+            {
+              "$ref": "tchmi:project#/definitions/PLC1.ClearpathPositionABS"
+            },
+            {
+              "comment": "may need to change to a degree based system"
+            }
+          ]
+        },
+        "Rot_A_CI": {
+          "$ref": "tchmi:project#/definitions/PLC1.CpABS_CI"
+        },
+        "Rot_B": {
+          "allOf": [
+            {
+              "$ref": "tchmi:project#/definitions/PLC1.ClearpathPositionABS"
+            },
+            {
+              "comment": "may need to change to a degree based system"
+            }
+          ]
+        },
+        "Rot_B_CI": {
+          "$ref": "tchmi:project#/definitions/PLC1.CpABS_CI"
+        },
+        "Stop_PI": {
+          "allOf": [
+            {
+              "$ref": "tchmi:general#/definitions/BOOL"
+            },
+            {
+              "comment": "stop command from program"
+            }
+          ]
+        },
+        "SuperJogMode_VI": {
+          "allOf": [
+            {
+              "$ref": "tchmi:general#/definitions/BOOL"
+            },
+            {
+              "comment": "Superjog mode enable bit"
+            }
+          ]
+        },
+        "SyncAbsDisReq_PI": {
+          "$ref": "tchmi:general#/definitions/REAL"
+        },
+        "SyncClampJogExecute_VI": {
+          "$ref": "tchmi:general#/definitions/BOOL"
+        },
+        "SyncRotJogExecute_VI": {
+          "$ref": "tchmi:general#/definitions/BOOL"
+        },
+        "SyncSuperJogExecute_VI": {
+          "allOf": [
+            {
+              "$ref": "tchmi:general#/definitions/BOOL"
+            },
+            {
+              "comment": "sync superjog manual move action bit"
+            }
+          ]
+        },
+        "SyncVertJogExecute_VI": {
+          "$ref": "tchmi:general#/definitions/BOOL"
+        },
+        "VertASuperJog_VI": {
+          "$ref": "tchmi:general#/definitions/BOOL"
+        },
+        "VertBSuperJog_VI": {
+          "$ref": "tchmi:general#/definitions/BOOL"
+        },
+        "VertDisReq_PI": {
+          "$ref": "tchmi:general#/definitions/INT"
+        },
+        "VertSyncTolerance_CI": {
+          "allOf": [
+            {
+              "$ref": "tchmi:general#/definitions/INT"
+            },
+            {
+              "comment": "Configuration Inputs"
+            }
+          ]
+        },
+        "Vert_A": {
+          "$ref": "tchmi:project#/definitions/PLC1.ClearpathPositionABS"
+        },
+        "Vert_A_CI": {
+          "$ref": "tchmi:project#/definitions/PLC1.CpABS_CI"
+        },
+        "Vert_B": {
+          "$ref": "tchmi:project#/definitions/PLC1.ClearpathPositionABS"
+        },
+        "Vert_B_CI": {
+          "$ref": "tchmi:project#/definitions/PLC1.CpABS_CI"
+        },
+        "synctestbit": {
+          "$ref": "tchmi:general#/definitions/BOOL"
+        },
+        "JogNeg_VI": {
+          "$ref": "tchmi:general#/definitions/BOOL"
+        },
+        "JogPos_VI": {
+          "$ref": "tchmi:general#/definitions/BOOL"
+        },
+        "ReSync_VI": {
+          "$ref": "tchmi:general#/definitions/BOOL"
+        },
+        "SJogNeg_VI": {
+          "$ref": "tchmi:general#/definitions/BOOL"
+        },
+        "SJogPos_VI": {
+          "$ref": "tchmi:general#/definitions/BOOL"
+        },
+        "SyncVertSuperJogExecute_VI": {
+          "$ref": "tchmi:general#/definitions/BOOL"
+        },
+        "SyncRotSuperJogExecute_VI": {
+          "$ref": "tchmi:general#/definitions/BOOL"
+        },
+        "SyncClampSuperJogExecute_VI": {
+          "$ref": "tchmi:general#/definitions/BOOL"
+        }
+      },
+      "type": "object"
+    },
+    "PLC1.ClearpathPosition": {
+      "properties": {
+        "ASG": {
+          "allOf": [
+            {
+              "$ref": "tchmi:general#/definitions/BOOL"
+            },
+            {
+              "comment": "all systems go clearpath (if using asg)"
+            }
+          ]
+        },
+        "ATrig": {
+          "allOf": [
+            {
+              "$ref": "tchmi:project#/definitions/PLC1.Tc2_Standard.R_TRIG"
+            },
+            {
+              "comment": "counter/trigger to track how many increments of a output have been commanded"
+            }
+          ]
+        },
+        "AltSpeedCase": {
+          "allOf": [
+            {
+              "$ref": "tchmi:general#/definitions/INT"
+            },
+            {
+              "comment": "case tracker altspeed()"
+            }
+          ]
+        },
+        "AltSpeedReq": {
+          "allOf": [
+            {
+              "$ref": "tchmi:general#/definitions/BOOL"
+            },
+            {
+              "comment": "turn altspeed method on"
+            }
+          ]
+        },
+        "AxisType_CI": {
+          "allOf": [
+            {
+              "$ref": "tchmi:general#/definitions/INT"
+            },
+            {
+              "comment": "1 = Rotary axis;  2 = Linear axis;"
+            }
+          ]
+        },
+        "BDC_PO": {
+          "$ref": "tchmi:general#/definitions/BOOL"
+        },
+        "CCW90_PO": {
+          "$ref": "tchmi:general#/definitions/BOOL"
+        },
+        "CW": {
+          "allOf": [
+            {
+              "$ref": "tchmi:general#/definitions/BOOL"
+            },
+            {
+              "comment": "direction of motor rotation: CW is true;  CCW is false;"
+            }
+          ]
+        },
+        "CW90_PO": {
+          "$ref": "tchmi:general#/definitions/BOOL"
+        },
+        "CW_VI": {
+          "allOf": [
+            {
+              "$ref": "tchmi:general#/definitions/BOOL"
+            },
+            {
+              "comment": "Set Direction for requested move (does not apply to absolute move)"
+            }
+          ]
+        },
+        "Cancelled": {
+          "allOf": [
+            {
+              "$ref": "tchmi:general#/definitions/BOOL"
+            },
+            {
+              "comment": "move was cancelled requires reset"
+            }
+          ]
+        },
+        "ConfigMSG_VO": {
+          "allOf": [
+            {
+              "$ref": "tchmi:general#/definitions/STRING%2880%29"
+            },
+            {
+              "comment": "comment for config settings"
+            }
+          ]
+        },
+        "DegPerMRev": {
+          "$ref": "tchmi:general#/definitions/INT"
+        },
+        "DegPerMRev_CI": {
+          "allOf": [
+            {
+              "$ref": "tchmi:general#/definitions/INT"
+            },
+            {
+              "comment": "degrees traveled per rev\t\t(Calculate your own pitch and lead w/gearbox combo must set MechDriveType_CI to 8 to bypass internal calc)"
+            }
+          ]
+        },
+        "DegPerPulse": {
+          "allOf": [
+            {
+              "$ref": "tchmi:general#/definitions/INT"
+            },
+            {
+              "comment": "degrees per pulse based on configuration inputs"
+            }
+          ]
+        },
+        "DegreePosReq_PI": {
+          "allOf": [
+            {
+              "$ref": "tchmi:general#/definitions/REAL"
+            },
+            {
+              "comment": "degree position request from the program (input in absolute position and valid after homing)"
+            }
+          ]
+        },
+        "DegreePos_PO": {
+          "$ref": "tchmi:general#/definitions/REAL"
+        },
+        "DegreesToGo": {
+          "allOf": [
+            {
+              "$ref": "tchmi:general#/definitions/REAL"
+            },
+            {
+              "comment": "difference in degrees from current position and requested position.  used to determine rotary direction"
+            }
+          ]
+        },
+        "DisPerFPulley_CI": {
+          "allOf": [
+            {
+              "$ref": "tchmi:general#/definitions/INT"
+            },
+            {
+              "comment": "distance traveled per rev of final pulley (mm)"
+            }
+          ]
+        },
+        "DisPerPulse": {
+          "allOf": [
+            {
+              "$ref": "tchmi:general#/definitions/INT"
+            },
+            {
+              "comment": "distance per pulse based on configuration inputs"
+            }
+          ]
+        },
+        "DistPerMRev": {
+          "$ref": "tchmi:general#/definitions/INT"
+        },
+        "DistPerMRev_CI": {
+          "allOf": [
+            {
+              "$ref": "tchmi:general#/definitions/INT"
+            },
+            {
+              "comment": "distance traveled per rev\t\t(Calculate your own pitch and lead w/gearbox combo must set MechDriveType_CI to 8 to bypass internal calc)"
+            }
+          ]
+        },
+        "DistancePosReq_PI": {
+          "allOf": [
+            {
+              "$ref": "tchmi:general#/definitions/REAL"
+            },
+            {
+              "comment": "distanct position request from the program (input in absolute position and valid after homing)"
+            }
+          ]
+        },
+        "DistancePos_PO": {
+          "$ref": "tchmi:general#/definitions/REAL"
+        },
+        "DistanceToGo": {
+          "allOf": [
+            {
+              "$ref": "tchmi:general#/definitions/REAL"
+            },
+            {
+              "comment": "difference in distance from current position and requested position.  used to determine linear direction"
+            }
+          ]
+        },
+        "EnableOut_FO": {
+          "allOf": [
+            {
+              "$ref": "tchmi:general#/definitions/BOOL"
+            },
+            {
+              "TcAddressType": "Output",
+              "comment": "enables the clearpath motor"
+            }
+          ]
+        },
+        "EncoderPos_PO": {
+          "$ref": "tchmi:general#/definitions/INT"
+        },
+        "GearRatio_CI": {
+          "allOf": [
+            {
+              "$ref": "tchmi:general#/definitions/INT"
+            },
+            {
+              "comment": "GearRatio motor to moving part (XX:1) (gearbox and lead included in calc for vert axis) (use this for pulleys as well)j"
+            }
+          ]
+        },
+        "HLFB24V_FO": {
+          "allOf": [
+            {
+              "$ref": "tchmi:general#/definitions/BOOL"
+            },
+            {
+              "TcAddressType": "Output",
+              "comment": "high level feedback 24v power if needed to used el2008 //default set to true so that hlfb is fucntional"
+            }
+          ]
+        },
+        "HLFB_CI": {
+          "allOf": [
+            {
+              "$ref": "tchmi:general#/definitions/INT"
+            },
+            {
+              "comment": "HLFB configuration settings in cp (1:PPR   , 2:ASG Pos   , 3:ASG...   , 4:   , 5:  )"
+            }
+          ]
+        },
+        "HLFB_FI": {
+          "allOf": [
+            {
+              "$ref": "tchmi:general#/definitions/BOOL"
+            },
+            {
+              "TcAddressType": "Input",
+              "comment": "high level feedback sensors"
+            }
+          ]
+        },
+        "HomeCase": {
+          "allOf": [
+            {
+              "$ref": "tchmi:general#/definitions/INT"
+            },
+            {
+              "comment": "case tracker home()"
+            }
+          ]
+        },
+        "HomeTrig": {
+          "allOf": [
+            {
+              "$ref": "tchmi:project#/definitions/PLC1.Tc2_Standard.R_TRIG"
+            },
+            {
+              "comment": "trigger position capture when homing ends"
+            }
+          ]
+        },
+        "Homed_PO": {
+          "allOf": [
+            {
+              "$ref": "tchmi:general#/definitions/BOOL"
+            },
+            {
+              "comment": "Program Outputs"
+            }
+          ]
+        },
+        "HomingSet_CI": {
+          "allOf": [
+            {
+              "$ref": "tchmi:general#/definitions/INT"
+            },
+            {
+              "comment": "CP_FB homing settings - 0: disabled; 1: Home to low switch 2: home to hi switch 3: home with CP Drive and asg"
+            }
+          ]
+        },
+        "InputAOut_FO": {
+          "allOf": [
+            {
+              "$ref": "tchmi:general#/definitions/BOOL"
+            },
+            {
+              "TcAddressType": "Output",
+              "comment": "input A of clearpath motor, output from plc"
+            }
+          ]
+        },
+        "InputBOut_FO": {
+          "allOf": [
+            {
+              "$ref": "tchmi:general#/definitions/BOOL"
+            },
+            {
+              "TcAddressType": "Output",
+              "comment": "input B of clearpath motor, output from plc"
+            }
+          ]
+        },
+        "InputFilter_CI": {
+          "allOf": [
+            {
+              "$ref": "tchmi:general#/definitions/INT"
+            },
+            {
+              "comment": "0: default and will not work (CP defaults to 20ms filter)  7: set filter to less than scan time to be sure to catch all pulses for a chained move"
+            }
+          ]
+        },
+        "Lead_CI": {
+          "allOf": [
+            {
+              "$ref": "tchmi:general#/definitions/INT"
+            },
+            {
+              "comment": "Lead of Screw if used (mm)\t\t\t(gearbox and lead included in calc for vert axis)"
+            }
+          ]
+        },
+        "ManSlow_VI": {
+          "allOf": [
+            {
+              "$ref": "tchmi:general#/definitions/BOOL"
+            },
+            {
+              "comment": "slow manual move"
+            }
+          ]
+        },
+        "ManualCase": {
+          "allOf": [
+            {
+              "$ref": "tchmi:general#/definitions/INT"
+            },
+            {
+              "comment": "case tracker Manual()"
+            }
+          ]
+        },
+        "ManualMove_PI": {
+          "allOf": [
+            {
+              "$ref": "tchmi:general#/definitions/BOOL"
+            },
+            {
+              "comment": "Call manual move method if true"
+            }
+          ]
+        },
+        "ManualMove_VI": {
+          "allOf": [
+            {
+              "$ref": "tchmi:general#/definitions/BOOL"
+            },
+            {
+              "comment": "Call manual move method if true"
+            }
+          ]
+        },
+        "MechDriveType_CI": {
+          "allOf": [
+            {
+              "$ref": "tchmi:general#/definitions/INT"
+            },
+            {
+              "comment": "0: motor only(rot), 1: Motor and gear(rot), 2: Motor w/gear and screw(lin), 3: Motor w/screw only(lin), 4: Motor w/gear and pulley(lin),  5: Motor w/pulley(lin), 8: bypass mode"
+            }
+          ]
+        },
+        "MechTypeMsg_VO": {
+          "allOf": [
+            {
+              "$ref": "tchmi:general#/definitions/STRING%2880%29"
+            },
+            {
+              "comment": "comment for mech config type"
+            }
+          ]
+        },
+        "MoveComplete": {
+          "allOf": [
+            {
+              "$ref": "tchmi:general#/definitions/BOOL"
+            },
+            {
+              "comment": "all ppr accounted for after move command"
+            }
+          ]
+        },
+        "PPRset_CI": {
+          "allOf": [
+            {
+              "$ref": "tchmi:general#/definitions/INT"
+            },
+            {
+              "comment": "ppr setting in clearpath"
+            }
+          ]
+        },
+        "PowerOn_PI": {
+          "allOf": [
+            {
+              "$ref": "tchmi:general#/definitions/BOOL"
+            },
+            {
+              "comment": "enable motor command from program"
+            }
+          ]
+        },
+        "PulseCount": {
+          "allOf": [
+            {
+              "$ref": "tchmi:general#/definitions/INT"
+            },
+            {
+              "comment": "current Pulse Count"
+            }
+          ]
+        },
+        "PulseQue": {
+          "allOf": [
+            {
+              "$ref": "tchmi:general#/definitions/INT"
+            },
+            {
+              "comment": "int counter to hold the number of pulses left to send"
+            }
+          ]
+        },
+        "PulseQueSet": {
+          "allOf": [
+            {
+              "$ref": "tchmi:general#/definitions/BOOL"
+            },
+            {
+              "comment": "start pulses for move"
+            }
+          ]
+        },
+        "PulsesEnabled": {
+          "allOf": [
+            {
+              "$ref": "tchmi:general#/definitions/BOOL"
+            },
+            {
+              "comment": "enable absolute move method to command pulses"
+            }
+          ]
+        },
+        "Quadrant": {
+          "allOf": [
+            {
+              "$ref": "tchmi:general#/definitions/INT"
+            },
+            {
+              "comment": "quadrants 1-4; Quadrant 0 is unknown position;"
+            }
+          ]
+        },
+        "Reset_VI": {
+          "allOf": [
+            {
+              "$ref": "tchmi:general#/definitions/BOOL"
+            },
+            {
+              "comment": "reset button"
+            }
+          ]
+        },
+        "SWLimit_Hi_CI": {
+          "allOf": [
+            {
+              "$ref": "tchmi:general#/definitions/INT"
+            },
+            {
+              "comment": "software limit switch high (best to make this a retained or persistent variable) mm/deg"
+            }
+          ]
+        },
+        "SWLimit_Lo_CI": {
+          "allOf": [
+            {
+              "$ref": "tchmi:general#/definitions/INT"
+            },
+            {
+              "comment": "Software limit switch low (best to make this a retained or persistent variable) mm/deg"
+            }
+          ]
+        },
+        "SensorCheck_CI": {
+          "allOf": [
+            {
+              "$ref": "tchmi:general#/definitions/BOOL"
+            },
+            {
+              "comment": "True if using the rotary sensor check feature (true sets Sensorcheck_PO =2; only use this if are using hardstops and dont need sensors;  Also check this homing method"
+            }
+          ]
+        },
+        "SensorCheck_PO": {
+          "allOf": [
+            {
+              "$ref": "tchmi:general#/definitions/INT"
+            },
+            {
+              "comment": "checking if at least 2 of the rotary switches are working.  stops movement if false for bogie (how many sensors are on) 2 should be on at all times"
+            }
+          ]
+        },
+        "Stop_PI": {
+          "allOf": [
+            {
+              "$ref": "tchmi:general#/definitions/BOOL"
+            },
+            {
+              "comment": "stop command from program"
+            }
+          ]
+        },
+        "TDC_PO": {
+          "$ref": "tchmi:general#/definitions/BOOL"
+        },
+        "bHigh_FI": {
+          "allOf": [
+            {
+              "$ref": "tchmi:general#/definitions/BOOL"
+            },
+            {
+              "TcAddressType": "Input",
+              "comment": "Linear Homing Variables"
+            }
+          ]
+        },
+        "bHomeStart_PI": {
+          "allOf": [
+            {
+              "$ref": "tchmi:general#/definitions/BOOL"
+            },
+            {
+              "comment": "begin Homing sequence"
+            }
+          ]
+        },
+        "bHome_FI": {
+          "allOf": [
+            {
+              "$ref": "tchmi:general#/definitions/BOOL"
+            },
+            {
+              "TcAddressType": "Input"
+            }
+          ]
+        },
+        "bInputBCom_FI": {
+          "allOf": [
+            {
+              "$ref": "tchmi:general#/definitions/BOOL"
+            },
+            {
+              "TcAddressType": "Input",
+              "comment": "check sum for inputb signal\t(double check that direction is actually signaled to motor)"
+            }
+          ]
+        },
+        "bLow_FI": {
+          "allOf": [
+            {
+              "$ref": "tchmi:general#/definitions/BOOL"
+            },
+            {
+              "TcAddressType": "Input"
+            }
+          ]
+        },
+        "bRotBot_FI": {
+          "allOf": [
+            {
+              "$ref": "tchmi:general#/definitions/BOOL"
+            },
+            {
+              "TcAddressType": "Input"
+            }
+          ]
+        },
+        "bRotCCW90_FI": {
+          "allOf": [
+            {
+              "$ref": "tchmi:general#/definitions/BOOL"
+            },
+            {
+              "TcAddressType": "Input"
+            }
+          ]
+        },
+        "bRotCW90_FI": {
+          "allOf": [
+            {
+              "$ref": "tchmi:general#/definitions/BOOL"
+            },
+            {
+              "TcAddressType": "Input"
+            }
+          ]
+        },
+        "bRotTop_FI": {
+          "allOf": [
+            {
+              "$ref": "tchmi:general#/definitions/BOOL"
+            },
+            {
+              "TcAddressType": "Input",
+              "comment": "Rotation 4 sensor cam homing Variables"
+            }
+          ]
+        },
+        "bSensorCheck_PO": {
+          "allOf": [
+            {
+              "$ref": "tchmi:general#/definitions/BOOL"
+            },
+            {
+              "comment": "check if at least 2 rotary sensors are working for limit stop purposes"
+            }
+          ]
+        },
+        "busy": {
+          "allOf": [
+            {
+              "$ref": "tchmi:general#/definitions/BOOL"
+            },
+            {
+              "comment": "move in progress"
+            }
+          ]
+        },
+        "cntPulseSet_CI": {
+          "allOf": [
+            {
+              "$ref": "tchmi:general#/definitions/INT"
+            },
+            {
+              "comment": "cnts per pulse clearpath setting"
+            }
+          ]
+        },
+        "error": {
+          "allOf": [
+            {
+              "$ref": "tchmi:general#/definitions/INT"
+            },
+            {
+              "comment": "5: increment error"
+            }
+          ]
+        },
+        "expectedPulse": {
+          "allOf": [
+            {
+              "$ref": "tchmi:general#/definitions/INT"
+            },
+            {
+              "comment": "expected pulses from commanded movements at set PPR"
+            }
+          ]
+        },
+        "isConfigured": {
+          "allOf": [
+            {
+              "$ref": "tchmi:general#/definitions/BOOL"
+            },
+            {
+              "comment": "turns on or off the configuration settings method so it only runs on first scan"
+            }
+          ]
+        },
+        "lastQuad": {
+          "allOf": [
+            {
+              "$ref": "tchmi:general#/definitions/INT"
+            },
+            {
+              "comment": "Last known quadrant 1-4; Quadrant 0 is unknown position;"
+            }
+          ]
+        },
+        "pulseCounter": {
+          "$ref": "tchmi:project#/definitions/PLC1.Tc2_Standard.R_TRIG"
+        },
+        "testBOol": {
+          "allOf": [
+            {
+              "$ref": "tchmi:general#/definitions/BOOL"
+            },
+            {
+              "comment": "tester"
+            }
+          ]
+        },
+        "testR": {
+          "$ref": "tchmi:general#/definitions/INT"
+        },
+        "testlimit": {
+          "$ref": "tchmi:general#/definitions/INT"
+        },
+        "testpulsecnt": {
+          "allOf": [
+            {
+              "$ref": "tchmi:general#/definitions/INT"
+            },
+            {
+              "comment": "testing flot vs int"
+            }
+          ]
+        }
+      },
+      "type": "object"
+    },
+    "PLC1.ClearpathPositionABS": {
+      "properties": {
+        "ABSEncoder_FI": {
+          "allOf": [
+            {
+              "$ref": "tchmi:general#/definitions/DINT"
+            },
+            {
+              "TcAddressType": "Input",
+              "comment": "absoulte multiturn encoder"
+            }
+          ]
+        },
+        "ASG": {
+          "allOf": [
+            {
+              "$ref": "tchmi:general#/definitions/BOOL"
+            },
+            {
+              "comment": "all systems go clearpath (if using asg)"
+            }
+          ]
+        },
+        "ATrig": {
+          "allOf": [
+            {
+              "$ref": "tchmi:project#/definitions/PLC1.Tc2_Standard.R_TRIG"
+            },
+            {
+              "comment": "counter/trigger to track how many increments of a output have been commanded"
+            }
+          ]
+        },
+        "AltSpeedCase": {
+          "allOf": [
+            {
+              "$ref": "tchmi:general#/definitions/INT"
+            },
+            {
+              "comment": "case tracker altspeed()"
+            }
+          ]
+        },
+        "AltSpeedReq": {
+          "allOf": [
+            {
+              "$ref": "tchmi:general#/definitions/BOOL"
+            },
+            {
+              "comment": "turn altspeed method on"
+            }
+          ]
+        },
+        "CW": {
+          "allOf": [
+            {
+              "$ref": "tchmi:general#/definitions/BOOL"
+            },
+            {
+              "comment": "direction of motor rotation: CW is true;  CCW is false;"
+            }
+          ]
+        },
+        "CW_VI": {
+          "allOf": [
+            {
+              "$ref": "tchmi:general#/definitions/BOOL"
+            },
+            {
+              "comment": "Set Direction for requested move (does not apply to absolute move) True = Clockwise"
+            }
+          ]
+        },
+        "Cancelled": {
+          "allOf": [
+            {
+              "$ref": "tchmi:general#/definitions/BOOL"
+            },
+            {
+              "comment": "move was cancelled requires reset"
+            }
+          ]
+        },
+        "DisPerPulse": {
+          "allOf": [
+            {
+              "$ref": "tchmi:general#/definitions/INT"
+            },
+            {
+              "comment": "distance per pulse based on configuration inputs"
+            }
+          ]
+        },
+        "DistPerMRev": {
+          "$ref": "tchmi:general#/definitions/INT"
+        },
+        "DistancePosReq_PI": {
+          "allOf": [
+            {
+              "$ref": "tchmi:general#/definitions/REAL"
+            },
+            {
+              "comment": "distanct position request from the program (input in absolute position and valid after homing)"
+            }
+          ]
+        },
+        "DistanceToGo": {
+          "allOf": [
+            {
+              "$ref": "tchmi:general#/definitions/REAL"
+            },
+            {
+              "comment": "difference in distance from current position and requested position.  used to determine linear direction"
+            }
+          ]
+        },
+        "EnableOut_FO": {
+          "allOf": [
+            {
+              "$ref": "tchmi:general#/definitions/BOOL"
+            },
+            {
+              "TcAddressType": "Output",
+              "comment": "enables the clearpath motor"
+            }
+          ]
+        },
+        "HLFB24V_FO": {
+          "allOf": [
+            {
+              "$ref": "tchmi:general#/definitions/BOOL"
+            },
+            {
+              "TcAddressType": "Output",
+              "comment": "high level feedback 24v power if needed to used el2008 //default set to true so that hlfb is fucntional"
+            }
+          ]
+        },
+        "HLFB_FI": {
+          "allOf": [
+            {
+              "$ref": "tchmi:general#/definitions/BOOL"
+            },
+            {
+              "TcAddressType": "Input",
+              "comment": "high level feedback sensors"
+            }
+          ]
+        },
+        "HomeCase": {
+          "allOf": [
+            {
+              "$ref": "tchmi:general#/definitions/INT"
+            },
+            {
+              "comment": "case tracker home()"
+            }
+          ]
+        },
+        "HomeTrig": {
+          "allOf": [
+            {
+              "$ref": "tchmi:project#/definitions/PLC1.Tc2_Standard.R_TRIG"
+            },
+            {
+              "comment": "trigger position capture when homing ends"
+            }
+          ]
+        },
+        "IN": {
+          "allOf": [
+            {
+              "$ref": "tchmi:project#/definitions/PLC1.CpABS_CI"
+            },
+            {
+              "comment": "PI (Program Inputs)"
+            }
+          ]
+        },
+        "InputAOut_FO": {
+          "allOf": [
+            {
+              "$ref": "tchmi:general#/definitions/BOOL"
+            },
+            {
+              "TcAddressType": "Output",
+              "comment": "input A of clearpath motor, output from plc"
+            }
+          ]
+        },
+        "InputBOut_FO": {
+          "allOf": [
+            {
+              "$ref": "tchmi:general#/definitions/BOOL"
+            },
+            {
+              "TcAddressType": "Output",
+              "comment": "input B of clearpath motor, output from plc"
+            }
+          ]
+        },
+        "JogCase": {
+          "allOf": [
+            {
+              "$ref": "tchmi:general#/definitions/INT"
+            },
+            {
+              "comment": "case tracker Jog()"
+            }
+          ]
+        },
+        "JogExecute_VI": {
+          "allOf": [
+            {
+              "$ref": "tchmi:general#/definitions/BOOL"
+            },
+            {
+              "comment": "Call manual move method if true"
+            }
+          ]
+        },
+        "JogFTrig": {
+          "allOf": [
+            {
+              "$ref": "tchmi:project#/definitions/PLC1.Tc2_Standard.F_TRIG"
+            },
+            {
+              "comment": "Jog Cancel Trigger"
+            }
+          ]
+        },
+        "JogRTrig": {
+          "allOf": [
+            {
+              "$ref": "tchmi:project#/definitions/PLC1.Tc2_Standard.R_TRIG"
+            },
+            {
+              "comment": "jog execute trigger"
+            }
+          ]
+        },
+        "JogSlow_VI": {
+          "allOf": [
+            {
+              "$ref": "tchmi:general#/definitions/BOOL"
+            },
+            {
+              "comment": "slow manual move"
+            }
+          ]
+        },
+        "ManualMove_PI": {
+          "allOf": [
+            {
+              "$ref": "tchmi:general#/definitions/BOOL"
+            },
+            {
+              "comment": "Call manual move method if true"
+            }
+          ]
+        },
+        "MoveComplete": {
+          "allOf": [
+            {
+              "$ref": "tchmi:general#/definitions/BOOL"
+            },
+            {
+              "comment": "all ppr accounted for after move command"
+            }
+          ]
+        },
+        "Out": {
+          "allOf": [
+            {
+              "$ref": "tchmi:project#/definitions/PLC1.CpABS_Out"
+            },
+            {
+              "comment": "Program Outputs"
+            }
+          ]
+        },
+        "PowerOn_PI": {
+          "allOf": [
+            {
+              "$ref": "tchmi:general#/definitions/BOOL"
+            },
+            {
+              "comment": "enable motor command from program"
+            }
+          ]
+        },
+        "PulseCount": {
+          "allOf": [
+            {
+              "$ref": "tchmi:general#/definitions/INT"
+            },
+            {
+              "comment": "current Pulse Count"
+            }
+          ]
+        },
+        "PulseQue": {
+          "allOf": [
+            {
+              "$ref": "tchmi:general#/definitions/INT"
+            },
+            {
+              "comment": "int counter to hold the number of pulses left to send"
+            }
+          ]
+        },
+        "PulseQueSet": {
+          "allOf": [
+            {
+              "$ref": "tchmi:general#/definitions/BOOL"
+            },
+            {
+              "comment": "start pulses for move"
+            }
+          ]
+        },
+        "PulsesEnabled": {
+          "allOf": [
+            {
+              "$ref": "tchmi:general#/definitions/BOOL"
+            },
+            {
+              "comment": "enable absolute move method to command pulses"
+            }
+          ]
+        },
+        "Reset_VI": {
+          "allOf": [
+            {
+              "$ref": "tchmi:general#/definitions/BOOL"
+            },
+            {
+              "comment": "reset button"
+            }
+          ]
+        },
+        "Stop_PI": {
+          "allOf": [
+            {
+              "$ref": "tchmi:general#/definitions/BOOL"
+            },
+            {
+              "comment": "stop command from program"
+            }
+          ]
+        },
+        "SuperJogCase": {
+          "allOf": [
+            {
+              "$ref": "tchmi:general#/definitions/INT"
+            },
+            {
+              "comment": "case tracker SuperJog()"
+            }
+          ]
+        },
+        "SuperJogExecute_VI": {
+          "allOf": [
+            {
+              "$ref": "tchmi:general#/definitions/BOOL"
+            },
+            {
+              "comment": "call super manual move method if true"
+            }
+          ]
+        },
+        "bHigh_FI": {
+          "allOf": [
+            {
+              "$ref": "tchmi:general#/definitions/BOOL"
+            },
+            {
+              "TcAddressType": "Input",
+              "comment": "Linear Homing Variables"
+            }
+          ]
+        },
+        "bHomeStart_PI": {
+          "allOf": [
+            {
+              "$ref": "tchmi:general#/definitions/BOOL"
+            },
+            {
+              "comment": "begin Homing sequence"
+            }
+          ]
+        },
+        "bHome_FI": {
+          "allOf": [
+            {
+              "$ref": "tchmi:general#/definitions/BOOL"
+            },
+            {
+              "TcAddressType": "Input"
+            }
+          ]
+        },
+        "bInputBCom_FI": {
+          "allOf": [
+            {
+              "$ref": "tchmi:general#/definitions/BOOL"
+            },
+            {
+              "TcAddressType": "Input",
+              "comment": "check sum for inputb signal\t(double check that direction is actually signaled to motor)"
+            }
+          ]
+        },
+        "bLow_FI": {
+          "allOf": [
+            {
+              "$ref": "tchmi:general#/definitions/BOOL"
+            },
+            {
+              "TcAddressType": "Input"
+            }
+          ]
+        },
+        "busy": {
+          "allOf": [
+            {
+              "$ref": "tchmi:general#/definitions/BOOL"
+            },
+            {
+              "comment": "move in progress"
+            }
+          ]
+        },
+        "error": {
+          "allOf": [
+            {
+              "$ref": "tchmi:general#/definitions/INT"
+            },
+            {
+              "comment": "5: increment error"
+            }
+          ]
+        },
+        "expectedPulse": {
+          "allOf": [
+            {
+              "$ref": "tchmi:general#/definitions/INT"
+            },
+            {
+              "comment": "expected pulses from commanded movements at set PPR"
+            }
+          ]
+        },
+        "isConfigured": {
+          "allOf": [
+            {
+              "$ref": "tchmi:general#/definitions/BOOL"
+            },
+            {
+              "comment": "turns on or off the configuration settings method so it only runs on first scan"
+            }
+          ]
+        },
+        "pulseCounter": {
+          "$ref": "tchmi:project#/definitions/PLC1.Tc2_Standard.R_TRIG"
+        },
+        "testBOol": {
+          "allOf": [
+            {
+              "$ref": "tchmi:general#/definitions/BOOL"
+            },
+            {
+              "comment": "tester"
+            }
+          ]
+        },
+        "testR": {
+          "$ref": "tchmi:general#/definitions/INT"
+        },
+        "testlimit": {
+          "$ref": "tchmi:general#/definitions/INT"
+        },
+        "testpulsecnt": {
+          "allOf": [
+            {
+              "$ref": "tchmi:general#/definitions/INT"
+            },
+            {
+              "comment": "testing flot vs int"
+            }
+          ]
+        }
+      },
+      "type": "object"
+    },
+    "PLC1.ClearpathPositionLinPPR": {
+      "properties": {
+        "ASG": {
+          "allOf": [
+            {
+              "$ref": "tchmi:general#/definitions/BOOL"
+            },
+            {
+              "comment": "all systems go clearpath (if using asg)"
+            }
+          ]
+        },
+        "ATrig": {
+          "allOf": [
+            {
+              "$ref": "tchmi:project#/definitions/PLC1.Tc2_Standard.R_TRIG"
+            },
+            {
+              "comment": "counter/trigger to track how many increments of a output have been commanded"
+            }
+          ]
+        },
+        "AltSpeedCase": {
+          "allOf": [
+            {
+              "$ref": "tchmi:general#/definitions/INT"
+            },
+            {
+              "comment": "case tracker altspeed()"
+            }
+          ]
+        },
+        "AltSpeedReq": {
+          "allOf": [
+            {
+              "$ref": "tchmi:general#/definitions/BOOL"
+            },
+            {
+              "comment": "turn altspeed method on"
+            }
+          ]
+        },
+        "CW": {
+          "allOf": [
+            {
+              "$ref": "tchmi:general#/definitions/BOOL"
+            },
+            {
+              "comment": "direction of motor rotation: CW is true;  CCW is false;"
+            }
+          ]
+        },
+        "CW_VI": {
+          "allOf": [
+            {
+              "$ref": "tchmi:general#/definitions/BOOL"
+            },
+            {
+              "comment": "Set Direction for requested move (does not apply to absolute move) True = Clockwise"
+            }
+          ]
+        },
+        "Cancelled": {
+          "allOf": [
+            {
+              "$ref": "tchmi:general#/definitions/BOOL"
+            },
+            {
+              "comment": "move was cancelled requires reset"
+            }
+          ]
+        },
+        "DisPerPulse": {
+          "allOf": [
+            {
+              "$ref": "tchmi:general#/definitions/INT"
+            },
+            {
+              "comment": "distance per pulse based on configuration inputs"
+            }
+          ]
+        },
+        "DistPerMRev": {
+          "$ref": "tchmi:general#/definitions/INT"
+        },
+        "DistancePosReq_PI": {
+          "allOf": [
+            {
+              "$ref": "tchmi:general#/definitions/REAL"
+            },
+            {
+              "comment": "distanct position request from the program (input in absolute position and valid after homing)"
+            }
+          ]
+        },
+        "DistanceToGo": {
+          "allOf": [
+            {
+              "$ref": "tchmi:general#/definitions/REAL"
+            },
+            {
+              "comment": "difference in distance from current position and requested position.  used to determine linear direction"
+            }
+          ]
+        },
+        "EnableOut_FO": {
+          "allOf": [
+            {
+              "$ref": "tchmi:general#/definitions/BOOL"
+            },
+            {
+              "TcAddressType": "Output",
+              "comment": "enables the clearpath motor"
+            }
+          ]
+        },
+        "HLFB24V_FO": {
+          "allOf": [
+            {
+              "$ref": "tchmi:general#/definitions/BOOL"
+            },
+            {
+              "TcAddressType": "Output",
+              "comment": "high level feedback 24v power if needed to used el2008 //default set to true so that hlfb is fucntional"
+            }
+          ]
+        },
+        "HLFB_FI": {
+          "allOf": [
+            {
+              "$ref": "tchmi:general#/definitions/BOOL"
+            },
+            {
+              "TcAddressType": "Input",
+              "comment": "high level feedback sensors"
+            }
+          ]
+        },
+        "HomeCase": {
+          "allOf": [
+            {
+              "$ref": "tchmi:general#/definitions/INT"
+            },
+            {
+              "comment": "case tracker home()"
+            }
+          ]
+        },
+        "HomeTrig": {
+          "allOf": [
+            {
+              "$ref": "tchmi:project#/definitions/PLC1.Tc2_Standard.R_TRIG"
+            },
+            {
+              "comment": "trigger position capture when homing ends"
+            }
+          ]
+        },
+        "IN": {
+          "allOf": [
+            {
+              "$ref": "tchmi:project#/definitions/PLC1.LinPPR_CI"
+            },
+            {
+              "comment": "PI (Program Inputs)"
+            }
+          ]
+        },
+        "InputAOut_FO": {
+          "allOf": [
+            {
+              "$ref": "tchmi:general#/definitions/BOOL"
+            },
+            {
+              "TcAddressType": "Output",
+              "comment": "input A of clearpath motor, output from plc"
+            }
+          ]
+        },
+        "InputBOut_FO": {
+          "allOf": [
+            {
+              "$ref": "tchmi:general#/definitions/BOOL"
+            },
+            {
+              "TcAddressType": "Output",
+              "comment": "input B of clearpath motor, output from plc"
+            }
+          ]
+        },
+        "JogCase": {
+          "allOf": [
+            {
+              "$ref": "tchmi:general#/definitions/INT"
+            },
+            {
+              "comment": "case tracker Jog()"
+            }
+          ]
+        },
+        "JogExecute_VI": {
+          "allOf": [
+            {
+              "$ref": "tchmi:general#/definitions/BOOL"
+            },
+            {
+              "comment": "Call manual move method if true"
+            }
+          ]
+        },
+        "JogFTrig": {
+          "allOf": [
+            {
+              "$ref": "tchmi:project#/definitions/PLC1.Tc2_Standard.F_TRIG"
+            },
+            {
+              "comment": "Jog Cancel Trigger"
+            }
+          ]
+        },
+        "JogRTrig": {
+          "allOf": [
+            {
+              "$ref": "tchmi:project#/definitions/PLC1.Tc2_Standard.R_TRIG"
+            },
+            {
+              "comment": "jog execute trigger"
+            }
+          ]
+        },
+        "JogSlow_VI": {
+          "allOf": [
+            {
+              "$ref": "tchmi:general#/definitions/BOOL"
+            },
+            {
+              "comment": "slow manual move"
+            }
+          ]
+        },
+        "ManualMove_PI": {
+          "allOf": [
+            {
+              "$ref": "tchmi:general#/definitions/BOOL"
+            },
+            {
+              "comment": "Call manual move method if true"
+            }
+          ]
+        },
+        "MoveComplete": {
+          "allOf": [
+            {
+              "$ref": "tchmi:general#/definitions/BOOL"
+            },
+            {
+              "comment": "all ppr accounted for after move command"
+            }
+          ]
+        },
+        "Out": {
+          "allOf": [
+            {
+              "$ref": "tchmi:project#/definitions/PLC1.LinPPR_Out"
+            },
+            {
+              "comment": "Program Outputs"
+            }
+          ]
+        },
+        "PowerOn_PI": {
+          "allOf": [
+            {
+              "$ref": "tchmi:general#/definitions/BOOL"
+            },
+            {
+              "comment": "enable motor command from program"
+            }
+          ]
+        },
+        "PulseCount": {
+          "allOf": [
+            {
+              "$ref": "tchmi:general#/definitions/INT"
+            },
+            {
+              "comment": "current Pulse Count"
+            }
+          ]
+        },
+        "PulseQue": {
+          "allOf": [
+            {
+              "$ref": "tchmi:general#/definitions/INT"
+            },
+            {
+              "comment": "int counter to hold the number of pulses left to send"
+            }
+          ]
+        },
+        "PulseQueSet": {
+          "allOf": [
+            {
+              "$ref": "tchmi:general#/definitions/BOOL"
+            },
+            {
+              "comment": "start pulses for move"
+            }
+          ]
+        },
+        "PulsesEnabled": {
+          "allOf": [
+            {
+              "$ref": "tchmi:general#/definitions/BOOL"
+            },
+            {
+              "comment": "enable absolute move method to command pulses"
+            }
+          ]
+        },
+        "Reset_VI": {
+          "allOf": [
+            {
+              "$ref": "tchmi:general#/definitions/BOOL"
+            },
+            {
+              "comment": "reset button"
+            }
+          ]
+        },
+        "Stop_PI": {
+          "allOf": [
+            {
+              "$ref": "tchmi:general#/definitions/BOOL"
+            },
+            {
+              "comment": "stop command from program"
+            }
+          ]
+        },
+        "SuperJogCase": {
+          "allOf": [
+            {
+              "$ref": "tchmi:general#/definitions/INT"
+            },
+            {
+              "comment": "case tracker SuperJog()"
+            }
+          ]
+        },
+        "SuperJogExecute_VI": {
+          "allOf": [
+            {
+              "$ref": "tchmi:general#/definitions/BOOL"
+            },
+            {
+              "comment": "call super manual move method if true"
+            }
+          ]
+        },
+        "bHigh_FI": {
+          "allOf": [
+            {
+              "$ref": "tchmi:general#/definitions/BOOL"
+            },
+            {
+              "TcAddressType": "Input",
+              "comment": "Linear Homing Variables"
+            }
+          ]
+        },
+        "bHomeStart_PI": {
+          "allOf": [
+            {
+              "$ref": "tchmi:general#/definitions/BOOL"
+            },
+            {
+              "comment": "begin Homing sequence"
+            }
+          ]
+        },
+        "bHome_FI": {
+          "allOf": [
+            {
+              "$ref": "tchmi:general#/definitions/BOOL"
+            },
+            {
+              "TcAddressType": "Input"
+            }
+          ]
+        },
+        "bInputBCom_FI": {
+          "allOf": [
+            {
+              "$ref": "tchmi:general#/definitions/BOOL"
+            },
+            {
+              "TcAddressType": "Input",
+              "comment": "check sum for inputb signal\t(double check that direction is actually signaled to motor)"
+            }
+          ]
+        },
+        "bLow_FI": {
+          "allOf": [
+            {
+              "$ref": "tchmi:general#/definitions/BOOL"
+            },
+            {
+              "TcAddressType": "Input"
+            }
+          ]
+        },
+        "busy": {
+          "allOf": [
+            {
+              "$ref": "tchmi:general#/definitions/BOOL"
+            },
+            {
+              "comment": "move in progress"
+            }
+          ]
+        },
+        "error": {
+          "allOf": [
+            {
+              "$ref": "tchmi:general#/definitions/INT"
+            },
+            {
+              "comment": "5: increment error"
+            }
+          ]
+        },
+        "expectedPulse": {
+          "allOf": [
+            {
+              "$ref": "tchmi:general#/definitions/INT"
+            },
+            {
+              "comment": "expected pulses from commanded movements at set PPR"
+            }
+          ]
+        },
+        "isConfigured": {
+          "allOf": [
+            {
+              "$ref": "tchmi:general#/definitions/BOOL"
+            },
+            {
+              "comment": "turns on or off the configuration settings method so it only runs on first scan"
+            }
+          ]
+        },
+        "pulseCounter": {
+          "$ref": "tchmi:project#/definitions/PLC1.Tc2_Standard.R_TRIG"
+        },
+        "testBOol": {
+          "allOf": [
+            {
+              "$ref": "tchmi:general#/definitions/BOOL"
+            },
+            {
+              "comment": "tester"
+            }
+          ]
+        },
+        "testR": {
+          "$ref": "tchmi:general#/definitions/INT"
+        },
+        "testlimit": {
+          "$ref": "tchmi:general#/definitions/INT"
+        },
+        "testpulsecnt": {
+          "allOf": [
+            {
+              "$ref": "tchmi:general#/definitions/INT"
+            },
+            {
+              "comment": "testing flot vs int"
+            }
+          ]
+        }
+      },
+      "type": "object"
+    },
+    "PLC1.CNC_HMI_HLI_Added_Code": {
+      "properties": {
+        "R1_A": {
+          "$ref": "tchmi:project#/definitions/PLC1.fb_HMI_AX"
+        },
+        "R1_C": {
+          "$ref": "tchmi:project#/definitions/PLC1.fb_HMI_AX"
+        },
+        "R1_X": {
+          "$ref": "tchmi:project#/definitions/PLC1.fb_HMI_AX"
+        },
+        "R1_Y": {
+          "$ref": "tchmi:project#/definitions/PLC1.fb_HMI_AX"
+        },
+        "R1_Z1": {
+          "$ref": "tchmi:project#/definitions/PLC1.fb_HMI_AX"
+        },
+        "R1_Z2": {
+          "$ref": "tchmi:project#/definitions/PLC1.fb_HMI_AX"
+        },
+        "SP1_A": {
+          "$ref": "tchmi:project#/definitions/PLC1.fb_HMI_AX"
+        },
+        "SP1_C": {
+          "$ref": "tchmi:project#/definitions/PLC1.fb_HMI_AX"
+        },
+        "SP1_X": {
+          "$ref": "tchmi:project#/definitions/PLC1.fb_HMI_AX"
+        },
+        "SP1_Y": {
+          "$ref": "tchmi:project#/definitions/PLC1.fb_HMI_AX"
+        },
+        "SP1_Z": {
+          "$ref": "tchmi:project#/definitions/PLC1.fb_HMI_AX"
+        },
+        "Scaler": {
+          "$ref": "tchmi:general#/definitions/INT"
+        },
+        "mdiTest": {
+          "$ref": "tchmi:general#/definitions/STRING(80)"
+        }
+      },
+      "type": "object",
+      "allowMapping": false
+    },
+    "PLC1.CpABS_CI": {
+      "properties": {
+        "ABSEncoderScaler_CI": {
+          "allOf": [
+            {
+              "$ref": "tchmi:general#/definitions/INT"
+            },
+            {
+              "comment": "match motor pulses to encoder counts [Make pos or neg to output if encoder mounted opposite position]"
+            }
+          ]
+        },
+        "ABSEncoderZero_CI": {
+          "allOf": [
+            {
+              "$ref": "tchmi:general#/definitions/DINT"
+            },
+            {
+              "comment": "used to set the axis zero point offset in encoder counts (encoder cnts at axis zero)"
+            }
+          ]
+        },
+        "ABSHiLimit_CI": {
+          "allOf": [
+            {
+              "$ref": "tchmi:general#/definitions/DINT"
+            },
+            {
+              "comment": "value for encoder when at hi limit -- this is checked periodically to look for slippage"
+            }
+          ]
+        },
+        "ABSLoLimit_CI": {
+          "allOf": [
+            {
+              "$ref": "tchmi:general#/definitions/DINT"
+            },
+            {
+              "comment": "value for encoder when at lo limit -- this is checked periodically to look for slippage"
+            }
+          ]
+        },
+        "DisPerFPulley_CI": {
+          "allOf": [
+            {
+              "$ref": "tchmi:general#/definitions/INT"
+            },
+            {
+              "comment": "distance traveled per rev of final pulley (mm)"
+            }
+          ]
+        },
+        "DisPerPulse_CI": {
+          "allOf": [
+            {
+              "$ref": "tchmi:general#/definitions/INT"
+            },
+            {
+              "comment": "distance on abs enc per clearpath pulse"
+            }
+          ]
+        },
+        "DistPerMRev_CI": {
+          "allOf": [
+            {
+              "$ref": "tchmi:general#/definitions/INT"
+            },
+            {
+              "comment": "distance traveled per rev\t\t(Calculate your own pitch and lead w/gearbox combo must set MechDriveType_CI to 8 to bypass internal calc)"
+            }
+          ]
+        },
+        "GearRatio_CI": {
+          "allOf": [
+            {
+              "$ref": "tchmi:general#/definitions/INT"
+            },
+            {
+              "comment": "GearRatio motor to moving part (XX:1) (gearbox and lead included in calc for vert axis) (use this for pulleys as well)j"
+            }
+          ]
+        },
+        "HomingSet_CI": {
+          "allOf": [
+            {
+              "$ref": "tchmi:general#/definitions/INT"
+            },
+            {
+              "comment": "CP_FB homing settings - 0: disabled; 2: Home to low switch 3: home to hi switch"
+            }
+          ]
+        },
+        "InputFilter_CI": {
+          "allOf": [
+            {
+              "$ref": "tchmi:general#/definitions/INT"
+            },
+            {
+              "comment": "0: default and will not work (CP defaults to 20ms filter)  7: set filter to less than scan time to be sure to catch all pulses for a chained move"
+            }
+          ]
+        },
+        "Lead_CI": {
+          "allOf": [
+            {
+              "$ref": "tchmi:general#/definitions/INT"
+            },
+            {
+              "comment": "Lead of Screw if used (mm)\t\t\t(gearbox and lead included in calc for vert axis)"
+            }
+          ]
+        },
+        "Limit_NC_NO_CI": {
+          "allOf": [
+            {
+              "$ref": "tchmi:general#/definitions/BOOL"
+            },
+            {
+              "comment": "Using NC limit switches =0; Using NO Limit switches =1; Not suggested to use NO switches"
+            }
+          ]
+        },
+        "MechDriveType_CI": {
+          "allOf": [
+            {
+              "$ref": "tchmi:general#/definitions/INT"
+            },
+            {
+              "comment": "0: motor only(rot), 1: Motor and gear(rot), 2: Motor w/gear and screw(lin), 3: Motor w/screw only(lin), 4: Motor w/gear and pulley(lin),  5: Motor w/pulley(lin), 8: bypass mode"
+            }
+          ]
+        },
+        "MotorName": {
+          "allOf": [
+            {
+              "$ref": "tchmi:general#/definitions/STRING%2880%29"
+            },
+            {
+              "comment": "**   Inputs   **\r\nCI (configuration input)"
+            }
+          ]
+        },
+        "MoveABSTol_CI": {
+          "allOf": [
+            {
+              "$ref": "tchmi:general#/definitions/REAL"
+            },
+            {
+              "comment": "tolerance for a good absoulte move"
+            }
+          ]
+        },
+        "PPRset_CI": {
+          "allOf": [
+            {
+              "$ref": "tchmi:general#/definitions/INT"
+            },
+            {
+              "comment": "ppr setting in clearpath"
+            }
+          ]
+        },
+        "SWLimit_Hi_CI": {
+          "allOf": [
+            {
+              "$ref": "tchmi:general#/definitions/INT"
+            },
+            {
+              "comment": "software limit switch high (best to make this a retained or persistent variable) mm/deg"
+            }
+          ]
+        },
+        "SWLimit_Lo_CI": {
+          "allOf": [
+            {
+              "$ref": "tchmi:general#/definitions/INT"
+            },
+            {
+              "comment": "Software limit switch low (best to make this a retained or persistent variable) mm/deg"
+            }
+          ]
+        },
+        "cntPulseSet_CI": {
+          "allOf": [
+            {
+              "$ref": "tchmi:general#/definitions/UINT"
+            },
+            {
+              "comment": "cnts per pulse clearpath setting"
+            }
+          ]
+        }
+      },
+      "type": "object"
+    },
+    "PLC1.fb_HMI_AX": {
+      "properties": {
+        "ACS": {
+          "$ref": "tchmi:general#/definitions/LREAL"
+        },
+        "CMD": {
+          "$ref": "tchmi:general#/definitions/STRING(80)"
+        },
+        "Name": {
+          "$ref": "tchmi:general#/definitions/STRING(80)"
+        },
+        "PCS": {
+          "$ref": "tchmi:general#/definitions/STRING(80)"
+        },
+        "PosMax": {
+          "$ref": "tchmi:general#/definitions/LREAL"
+        },
+        "PosMin": {
+          "$ref": "tchmi:general#/definitions/LREAL"
+        },
+        "Scaler": {
+          "$ref": "tchmi:general#/definitions/INT"
+        },
+        "axID": {
+          "$ref": "tchmi:general#/definitions/UINT"
+        },
+        "axLogN": {
+          "$ref": "tchmi:general#/definitions/UINT"
+        },
+        "chAx": {
+          "$ref": "tchmi:general#/definitions/INT"
+        },
+        "chId": {
+          "$ref": "tchmi:general#/definitions/INT"
+        },
+        "chLogN": {
+          "$ref": "tchmi:general#/definitions/UINT"
+        },
+        "m": {
+          "$ref": "tchmi:general#/definitions/INT"
+        },
+        "manualActive": {
+          "$ref": "tchmi:general#/definitions/BOOL"
+        },
+        "selectedAx": {
+          "$ref": "tchmi:general#/definitions/INT"
+        },
+        "viSelectAx": {
+          "$ref": "tchmi:general#/definitions/BOOL"
+        }
+      },
+      "type": "object"
+    },
+    "PLC1.LinPPR_CI": {
+      "properties": {
+        "DisPerFPulley_CI": {
+          "allOf": [
+            {
+              "$ref": "tchmi:general#/definitions/INT"
+            },
+            {
+              "comment": "distance traveled per rev of final pulley (mm)"
+            }
+          ]
+        },
+        "DistPerMRev_CI": {
+          "allOf": [
+            {
+              "$ref": "tchmi:general#/definitions/INT"
+            },
+            {
+              "comment": "distance traveled per rev\t\t(Calculate your own pitch and lead w/gearbox combo must set MechDriveType_CI to 8 to bypass internal calc)"
+            }
+          ]
+        },
+        "GearRatio_CI": {
+          "allOf": [
+            {
+              "$ref": "tchmi:general#/definitions/INT"
+            },
+            {
+              "comment": "GearRatio motor to moving part (XX:1) (gearbox and lead included in calc for vert axis) (use this for pulleys as well)j"
+            }
+          ]
+        },
+        "HomingSet_CI": {
+          "allOf": [
+            {
+              "$ref": "tchmi:general#/definitions/INT"
+            },
+            {
+              "comment": "CP_FB homing settings - 0: disabled; 2: Home to low switch 3: home to hi switch"
+            }
+          ]
+        },
+        "InputFilter_CI": {
+          "allOf": [
+            {
+              "$ref": "tchmi:general#/definitions/INT"
+            },
+            {
+              "comment": "0: default and will not work (CP defaults to 20ms filter)  7: set filter to less than scan time to be sure to catch all pulses for a chained move"
+            }
+          ]
+        },
+        "Lead_CI": {
+          "allOf": [
+            {
+              "$ref": "tchmi:general#/definitions/INT"
+            },
+            {
+              "comment": "Lead of Screw if used (mm)\t\t\t(gearbox and lead included in calc for vert axis)"
+            }
+          ]
+        },
+        "Limit_NC_NO_CI": {
+          "allOf": [
+            {
+              "$ref": "tchmi:general#/definitions/BOOL"
+            },
+            {
+              "comment": "Using NC limit switches =0; Using NO Limit switches =1; Not suggested to use NO switches"
+            }
+          ]
+        },
+        "MechDriveType_CI": {
+          "allOf": [
+            {
+              "$ref": "tchmi:general#/definitions/INT"
+            },
+            {
+              "comment": "0: motor only(rot), 1: Motor and gear(rot), 2: Motor w/gear and screw(lin), 3: Motor w/screw only(lin), 4: Motor w/gear and pulley(lin),  5: Motor w/pulley(lin), 8: bypass mode"
+            }
+          ]
+        },
+        "PPRset_CI": {
+          "allOf": [
+            {
+              "$ref": "tchmi:general#/definitions/INT"
+            },
+            {
+              "comment": "ppr setting in clearpath"
+            }
+          ]
+        },
+        "SWLimit_Hi_CI": {
+          "allOf": [
+            {
+              "$ref": "tchmi:general#/definitions/INT"
+            },
+            {
+              "comment": "software limit switch high (best to make this a retained or persistent variable) mm/deg"
+            }
+          ]
+        },
+        "SWLimit_Lo_CI": {
+          "allOf": [
+            {
+              "$ref": "tchmi:general#/definitions/INT"
+            },
+            {
+              "comment": "Software limit switch low (best to make this a retained or persistent variable) mm/deg"
+            }
+          ]
+        },
+        "cntPulseSet_CI": {
+          "allOf": [
+            {
+              "$ref": "tchmi:general#/definitions/INT"
+            },
+            {
+              "comment": "cnts per pulse clearpath setting"
+            }
+          ]
+        }
+      },
+      "type": "object"
+    },
+    "PLC1.LinPPR_Out": {
+      "properties": {
+        "ConfigMSG_VO": {
+          "allOf": [
+            {
+              "$ref": "tchmi:general#/definitions/STRING%2880%29"
+            },
+            {
+              "comment": "comment for config settings"
+            }
+          ]
+        },
+        "DistancePos_PO": {
+          "allOf": [
+            {
+              "$ref": "tchmi:general#/definitions/REAL"
+            },
+            {
+              "comment": "current position"
+            }
+          ]
+        },
+        "Error2Msg_VO": {
+          "allOf": [
+            {
+              "$ref": "tchmi:general#/definitions/STRING%2880%29"
+            },
+            {
+              "comment": "second message for error description"
+            }
+          ]
+        },
+        "Error3Msg_VO": {
+          "allOf": [
+            {
+              "$ref": "tchmi:general#/definitions/STRING%2880%29"
+            },
+            {
+              "comment": "third message for error description"
+            }
+          ]
+        },
+        "ErrorMsg_VO": {
+          "allOf": [
+            {
+              "$ref": "tchmi:general#/definitions/STRING%2880%29"
+            },
+            {
+              "comment": "message for error description"
+            }
+          ]
+        },
+        "ExpDistancePos_PO": {
+          "allOf": [
+            {
+              "$ref": "tchmi:general#/definitions/REAL"
+            },
+            {
+              "comment": "expected position if all pulses are executed"
+            }
+          ]
+        },
+        "Homed_PO": {
+          "allOf": [
+            {
+              "$ref": "tchmi:general#/definitions/BOOL"
+            },
+            {
+              "comment": "true if axis is homed"
+            }
+          ]
+        },
+        "LastDistancePos_PO": {
+          "allOf": [
+            {
+              "$ref": "tchmi:general#/definitions/REAL"
+            },
+            {
+              "comment": "last position"
+            }
+          ]
+        },
+        "MechTypeMsg_VO": {
+          "allOf": [
+            {
+              "$ref": "tchmi:general#/definitions/STRING%2880%29"
+            },
+            {
+              "comment": "comment for mech config type"
+            }
+          ]
+        }
+      },
+      "type": "object"
+    },
+    "PLC1.Tc2_Standard.F_TRIG": {
+      "properties": {
+        "CLK": {
+          "allOf": [
+            {
+              "$ref": "tchmi:general#/definitions/BOOL"
+            },
+            {
+              "comment": "signal to detect"
+            }
+          ]
+        },
+        "M": {
+          "allOf": [
+            {
+              "$ref": "tchmi:general#/definitions/BOOL"
+            },
+            {
+              "conditionalshow": ""
+            }
+          ]
+        },
+        "Q": {
+          "allOf": [
+            {
+              "$ref": "tchmi:general#/definitions/BOOL"
+            },
+            {
+              "comment": "falling edge at signal detected"
+            }
+          ]
+        }
+      },
+      "type": "object",
+      "conditionalshow_all_locals": ""
+    },
+    "PLC1.Tc2_Standard.R_TRIG": {
+      "properties": {
+        "CLK": {
+          "allOf": [
+            {
+              "$ref": "tchmi:general#/definitions/BOOL"
+            },
+            {
+              "comment": "Signal to detect"
+            }
+          ]
+        },
+        "M": {
+          "allOf": [
+            {
+              "$ref": "tchmi:general#/definitions/BOOL"
+            },
+            {
+              "conditionalshow": ""
+            }
+          ]
+        },
+        "Q": {
+          "allOf": [
+            {
+              "$ref": "tchmi:general#/definitions/BOOL"
+            },
+            {
+              "comment": "rising edge at signal detected"
+            }
+          ]
+        }
+      },
+      "type": "object",
+      "conditionalshow_all_locals": ""
+    },
+    "PLC1.TestCP": {
+      "properties": {
+        "AoutTest": {
+          "allOf": [
+            {
+              "$ref": "tchmi:general#/definitions/BOOL"
+            },
+            {
+              "TcAddressType": "Output"
+            }
+          ]
+        },
+        "BeginHoming": {
+          "$ref": "tchmi:general#/definitions/BOOL"
+        },
+        "BoutTest": {
+          "allOf": [
+            {
+              "$ref": "tchmi:general#/definitions/BOOL"
+            },
+            {
+              "TcAddressType": "Output"
+            }
+          ]
+        },
+        "CPVert1Hi": {
+          "allOf": [
+            {
+              "$ref": "tchmi:general#/definitions/INT"
+            },
+            {
+              "comment": "software limit high"
+            }
+          ]
+        },
+        "CPVert1Lo": {
+          "allOf": [
+            {
+              "$ref": "tchmi:general#/definitions/INT"
+            },
+            {
+              "comment": "software limit Low"
+            }
+          ]
+        },
+        "CPVert2Hi": {
+          "allOf": [
+            {
+              "$ref": "tchmi:general#/definitions/INT"
+            },
+            {
+              "comment": "software limit high"
+            }
+          ]
+        },
+        "CPVert2Lo": {
+          "allOf": [
+            {
+              "$ref": "tchmi:general#/definitions/INT"
+            },
+            {
+              "comment": "software limit Low"
+            }
+          ]
+        },
+        "CPvert2Hi_NO": {
+          "allOf": [
+            {
+              "$ref": "tchmi:general#/definitions/BOOL"
+            },
+            {
+              "TcAddressType": "Input"
+            }
+          ]
+        },
+        "CPvert2Lo_NO": {
+          "allOf": [
+            {
+              "$ref": "tchmi:general#/definitions/BOOL"
+            },
+            {
+              "TcAddressType": "Input"
+            }
+          ]
+        },
+        "ClampDisReq": {
+          "$ref": "tchmi:general#/definitions/REAL"
+        },
+        "DisReq": {
+          "$ref": "tchmi:general#/definitions/REAL"
+        },
+        "EnableM": {
+          "allOf": [
+            {
+              "$ref": "tchmi:general#/definitions/BOOL"
+            },
+            {
+              "comment": "motor enable"
+            }
+          ]
+        },
+        "GoClampReq": {
+          "$ref": "tchmi:general#/definitions/BOOL"
+        },
+        "GoVertReq": {
+          "$ref": "tchmi:general#/definitions/BOOL"
+        },
+        "ManualClamp": {
+          "$ref": "tchmi:general#/definitions/BOOL"
+        },
+        "ManualVert": {
+          "$ref": "tchmi:general#/definitions/BOOL"
+        },
+        "ScanCount": {
+          "$ref": "tchmi:general#/definitions/INT"
+        },
+        "ScanCount1": {
+          "$ref": "tchmi:general#/definitions/INT"
+        },
+        "Stop": {
+          "$ref": "tchmi:general#/definitions/BOOL"
+        },
+        "Vert_ATrack5": {
+          "allOf": [
+            {
+              "$ref": "tchmi:general#/definitions/REAL"
+            },
+            {
+              "comment": "track the distance when not homed"
+            }
+          ]
+        },
+        "Vert_BTrack5": {
+          "allOf": [
+            {
+              "$ref": "tchmi:general#/definitions/REAL"
+            },
+            {
+              "comment": "track the distance when not homed"
+            }
+          ]
+        },
+        "WX1": {
+          "$ref": "tchmi:project#/definitions/PLC1.BogieComboWX"
+        },
+        "WX2": {
+          "$ref": "tchmi:project#/definitions/PLC1.BogieComboWX"
+        },
+        "WX3": {
+          "$ref": "tchmi:project#/definitions/PLC1.BogieComboWX"
+        },
+        "WX4": {
+          "$ref": "tchmi:project#/definitions/PLC1.BogieComboWX"
+        },
+        "altspeedtest": {
+          "$ref": "tchmi:general#/definitions/INT"
+        },
+        "count": {
+          "$ref": "tchmi:general#/definitions/INT"
+        },
+        "count2": {
+          "$ref": "tchmi:general#/definitions/INT"
+        },
+        "cprot1Hi": {
+          "allOf": [
+            {
+              "$ref": "tchmi:general#/definitions/INT"
+            },
+            {
+              "comment": "software limit high"
+            }
+          ]
+        },
+        "cprot1Lo": {
+          "allOf": [
+            {
+              "$ref": "tchmi:general#/definitions/INT"
+            },
+            {
+              "comment": "software limit low"
+            }
+          ]
+        },
+        "degReq": {
+          "$ref": "tchmi:general#/definitions/REAL"
+        },
+        "enableTest": {
+          "allOf": [
+            {
+              "$ref": "tchmi:general#/definitions/BOOL"
+            },
+            {
+              "TcAddressType": "Output"
+            }
+          ]
+        },
+        "goSupMan": {
+          "$ref": "tchmi:general#/definitions/BOOL"
+        },
+        "goa": {
+          "$ref": "tchmi:general#/definitions/BOOL"
+        },
+        "gob": {
+          "$ref": "tchmi:general#/definitions/BOOL"
+        },
+        "inc": {
+          "$ref": "tchmi:general#/definitions/BOOL"
+        },
+        "test": {
+          "$ref": "tchmi:project#/definitions/PLC1.Tc2_Standard.R_TRIG"
+        },
+        "test2": {
+          "$ref": "tchmi:project#/definitions/PLC1.Tc2_Standard.R_TRIG"
+        }
+      },
+      "type": "object",
+      "allowMapping": false
+    },
+    "UserControl1": {
+      "properties": {},
+      "type": "object",
+      "frameworkControlNamespace": "TcHmi.Controls.Beckhoff",
+      "frameworkControlType": "TcHmi.Controls.System.TcHmiUserControl",
+      "frameworkInstanceOf": "TcHmi.Controls.System.TcHmiControl",
+      "frameworkUserControlConfig": "Pages\\StartPage\\HMI_Axis.usercontrol.json",
+      "id": "tchmi:project#/definitions/UserControl1"
+    },
+    "WXSet": {
+      "frameworkControlNamespace": "TcHmi.Controls.Beckhoff",
+      "frameworkControlType": "TcHmi.Controls.System.TcHmiUserControl",
+      "frameworkInstanceOf": "TcHmi.Controls.System.TcHmiControl",
+      "frameworkUserControlConfig": "Pages\\UserControls\\WXSet.usercontrol.json",
+      "type": "object",
+      "id": "tchmi:project#/definitions/WXSet"
+    },
+    "PLC1.CpABS_Out": {
+      "properties": {
+        "ABSMoveMsg_VO": {
+          "allOf": [
+            {
+              "$ref": "tchmi:general#/definitions/STRING%2880%29"
+            },
+            {
+              "comment": "ABSMOve Status message"
+            }
+          ]
+        },
+        "CanceledMsg_VO": {
+          "allOf": [
+            {
+              "$ref": "tchmi:general#/definitions/STRING%2880%29"
+            },
+            {
+              "comment": "Canceled status message"
+            }
+          ]
+        },
+        "ConfigMSG_VO": {
+          "allOf": [
+            {
+              "$ref": "tchmi:general#/definitions/STRING%2880%29"
+            },
+            {
+              "comment": "comment for config settings"
+            }
+          ]
+        },
+        "DisToGoMsg_VO": {
+          "allOf": [
+            {
+              "$ref": "tchmi:general#/definitions/STRING%2880%29"
+            },
+            {
+              "comment": "dis to go status message"
+            }
+          ]
+        },
+        "DistancePos_PO": {
+          "allOf": [
+            {
+              "$ref": "tchmi:general#/definitions/REAL"
+            },
+            {
+              "comment": "current position"
+            }
+          ]
+        },
+        "Error2Msg_VO": {
+          "allOf": [
+            {
+              "$ref": "tchmi:general#/definitions/STRING%2880%29"
+            },
+            {
+              "comment": "second message for error description"
+            }
+          ]
+        },
+        "Error3Msg_VO": {
+          "allOf": [
+            {
+              "$ref": "tchmi:general#/definitions/STRING%2880%29"
+            },
+            {
+              "comment": "third message for error description"
+            }
+          ]
+        },
+        "Error4Msg_VO": {
+          "allOf": [
+            {
+              "$ref": "tchmi:general#/definitions/STRING%2880%29"
+            },
+            {
+              "comment": "fourth message for error description"
+            }
+          ]
+        },
+        "ErrorMsg_VO": {
+          "allOf": [
+            {
+              "$ref": "tchmi:general#/definitions/STRING%2880%29"
+            },
+            {
+              "comment": "message for error description"
+            }
+          ]
+        },
+        "ExpDistancePos_PO": {
+          "allOf": [
+            {
+              "$ref": "tchmi:general#/definitions/REAL"
+            },
+            {
+              "comment": "expected position if all pulses are executed"
+            }
+          ]
+        },
+        "HomeMsg_VO": {
+          "allOf": [
+            {
+              "$ref": "tchmi:general#/definitions/STRING%2880%29"
+            },
+            {
+              "comment": "homed status message"
+            }
+          ]
+        },
+        "Homed_PO": {
+          "allOf": [
+            {
+              "$ref": "tchmi:general#/definitions/BOOL"
+            },
+            {
+              "comment": "true if axis is homed"
+            }
+          ]
+        },
+        "InPosition": {
+          "allOf": [
+            {
+              "$ref": "tchmi:general#/definitions/BOOL"
+            },
+            {
+              "comment": "In commanded position"
+            }
+          ]
+        },
+        "InTargetPosition": {
+          "allOf": [
+            {
+              "$ref": "tchmi:general#/definitions/BOOL"
+            },
+            {
+              "comment": "Current Pos matches last req position"
+            }
+          ]
+        },
+        "LastDistancePos_PO": {
+          "allOf": [
+            {
+              "$ref": "tchmi:general#/definitions/REAL"
+            },
+            {
+              "comment": "last position"
+            }
+          ]
+        },
+        "LimitsMsg_VO": {
+          "allOf": [
+            {
+              "$ref": "tchmi:general#/definitions/STRING%2880%29"
+            },
+            {
+              "comment": "limits status message"
+            }
+          ]
+        },
+        "MCodeComp": {
+          "allOf": [
+            {
+              "$ref": "tchmi:general#/definitions/BOOL"
+            },
+            {
+              "comment": "MCode Command Completed"
+            }
+          ]
+        },
+        "MCodeRec": {
+          "allOf": [
+            {
+              "$ref": "tchmi:general#/definitions/BOOL"
+            },
+            {
+              "comment": "MCode Command Received"
+            }
+          ]
+        },
+        "MechTypeMsg_VO": {
+          "allOf": [
+            {
+              "$ref": "tchmi:general#/definitions/STRING%2880%29"
+            },
+            {
+              "comment": "comment for mech config type"
+            }
+          ]
+        },
+        "ModeMsg_VO": {
+          "allOf": [
+            {
+              "$ref": "tchmi:general#/definitions/STRING%2880%29"
+            },
+            {
+              "comment": "mode message"
+            }
+          ]
+        },
+        "MotorName": {
+          "allOf": [
+            {
+              "$ref": "tchmi:general#/definitions/STRING%2880%29"
+            },
+            {
+              "comment": "**   Outputs   **\r\nProgram Outputs"
+            }
+          ]
+        },
+        "Moving_PO": {
+          "allOf": [
+            {
+              "$ref": "tchmi:general#/definitions/BOOL"
+            },
+            {
+              "comment": "Moving in auto mode"
+            }
+          ]
+        },
+        "ReadyForMove_PO": {
+          "allOf": [
+            {
+              "$ref": "tchmi:general#/definitions/BOOL"
+            },
+            {
+              "comment": "ready for ABSMove Command"
+            }
+          ]
+        },
+        "SuperJogMsg_VO": {
+          "allOf": [
+            {
+              "$ref": "tchmi:general#/definitions/STRING%2880%29"
+            },
+            {
+              "comment": "superjog status message"
+            }
+          ]
+        }
+      },
+      "type": "object"
+    },
+    "UserControl1_0": {
+      "frameworkControlNamespace": "TcHmi.Controls.Beckhoff",
+      "frameworkControlType": "TcHmi.Controls.System.TcHmiUserControl",
+      "frameworkInstanceOf": "TcHmi.Controls.System.TcHmiControl",
+      "frameworkUserControlConfig": "Pages\\UserControls\\UserControl1.usercontrol.json",
+      "type": "object",
+      "id": "tchmi:project#/definitions/UserControl1_0"
+    },
+    "UserControl1_1": {
+      "frameworkControlNamespace": "TcHmi.Controls.Beckhoff",
+      "frameworkControlType": "TcHmi.Controls.System.TcHmiUserControl",
+      "frameworkInstanceOf": "TcHmi.Controls.System.TcHmiControl",
+      "frameworkUserControlConfig": "Pages\\UserControls\\UserControl1.usercontrol.json",
+      "id": "tchmi:project#/definitions/UserControl1_1",
+      "type": "object"
+    },
+    "UserControl1_2": {
+      "frameworkControlNamespace": "TcHmi.Controls.Beckhoff",
+      "frameworkControlType": "TcHmi.Controls.System.TcHmiUserControl",
+      "frameworkInstanceOf": "TcHmi.Controls.System.TcHmiControl",
+      "frameworkUserControlConfig": "Pages\\UserControls\\UserControl1.usercontrol.json",
+      "id": "tchmi:project#/definitions/UserControl1_2",
+      "type": "object"
+    },
+    "UserControl2": {
+      "frameworkControlNamespace": "TcHmi.Controls.Beckhoff",
+      "frameworkControlType": "TcHmi.Controls.System.TcHmiUserControl",
+      "frameworkInstanceOf": "TcHmi.Controls.System.TcHmiControl",
+      "frameworkUserControlConfig": "Pages\\UserControls\\UserControl2.usercontrol.json",
+      "type": "object",
+      "id": "tchmi:project#/definitions/UserControl2"
+    },
+    "Open-Close": {
+      "frameworkControlNamespace": "TcHmi.Controls.Beckhoff",
+      "frameworkControlType": "TcHmi.Controls.System.TcHmiUserControl",
+      "frameworkInstanceOf": "TcHmi.Controls.System.TcHmiControl",
+      "frameworkUserControlConfig": "Pages\\UserControls\\Open-Close.usercontrol.json",
+      "id": "tchmi:project#/definitions/Open-Close",
+      "type": "object"
+    },
+    "Toggle-Switch": {
+      "frameworkControlNamespace": "TcHmi.Controls.Beckhoff",
+      "frameworkControlType": "TcHmi.Controls.System.TcHmiUserControl",
+      "frameworkInstanceOf": "TcHmi.Controls.System.TcHmiControl",
+      "frameworkUserControlConfig": "Pages\\UserControls\\Toggle-Switch.usercontrol.json",
+      "type": "object",
+      "id": "tchmi:project#/definitions/Toggle-Switch"
+    },
+    "Numerical_Input_with_Textblock": {
+      "frameworkControlNamespace": "TcHmi.Controls.Beckhoff",
+      "frameworkControlType": "TcHmi.Controls.System.TcHmiUserControl",
+      "frameworkInstanceOf": "TcHmi.Controls.System.TcHmiControl",
+      "frameworkUserControlConfig": "Pages\\UserControls\\Numerical_Input_with_Textblock.usercontrol.json",
+      "id": "tchmi:project#/definitions/Numerical_Input_with_Textblock",
+      "type": "object"
+    },
+    "Numerical-Input-with-Keyboard": {
+      "frameworkControlNamespace": "TcHmi.Controls.Beckhoff",
+      "frameworkControlType": "TcHmi.Controls.System.TcHmiUserControl",
+      "frameworkInstanceOf": "TcHmi.Controls.System.TcHmiControl",
+      "frameworkUserControlConfig": "Pages\\UserControls\\Numerical-Input-with-Keyboard.usercontrol.json",
+      "id": "tchmi:project#/definitions/Numerical-Input-with-Keyboard",
+      "type": "object"
+    },
+    "TimeInput": {
+      "frameworkControlNamespace": "TcHmi.Controls.Beckhoff",
+      "frameworkControlType": "TcHmi.Controls.System.TcHmiUserControl",
+      "frameworkInstanceOf": "TcHmi.Controls.System.TcHmiControl",
+      "frameworkUserControlConfig": "Pages\\UserControls\\TimeInput.usercontrol.json",
+      "id": "tchmi:project#/definitions/TimeInput",
+      "type": "object"
+    }
+  }
+}

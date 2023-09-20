@@ -1,0 +1,38 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+  <DUT Name="eBogieHandlerCase" Id="{01b1f6a5-2edb-4819-80a0-6e92b9c9f5d2}">
+    <Declaration><![CDATA[{attribute 'strict'}
+TYPE eBogieHandlerCase :
+(
+	STANDBY			, // The do-nothing state.
+	
+	TRAVERSE_POSITION	, // The move to Traverse position state.
+	
+ 	LIFTED_POSITION		, // The half-way position, down to/ up from the conveyor rails. 
+						  // 	Allows for the form to spin to the correct orientation, before being put down.
+						  
+	LOAD_POSITION		, // The move to Load position state.					  
+	UNLOAD_POSITION		, // The position where the tool is clamped in the clamp, but also on top of the conveyor rails.
+								  
+	UNCLAMP				, // The state that retracts the clamps.
+	CLAMP				, // The state that extends the clamps.
+	
+	SPRAY_POSITION_A	, // Move to spray side A
+	SPRAY_POSITION_B	, // Move to spray side B
+	
+	MAIN_MOVE			, // The step that move the arms to the target position
+	CLEAN_UP			, // Cleam Up step for movement
+	
+	STOP				, // This is the finishing case for all other modes. Resets the cases.
+	STOP_EXTENDED		, // This is used by the STOP case to reset the cases.
+	ERROR				, // Error State for Error Handling
+	
+	HOME_AXES			, // This case is used to home each motor position.
+	
+	REMOVE_ERROR,		  // This is for debugging, to get out of the ERROR case.
+	
+	CHECK
+) UDINT;
+END_TYPE]]></Declaration>
+  </DUT>
+</TcPlcObject>

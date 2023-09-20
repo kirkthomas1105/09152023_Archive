@@ -1,0 +1,34 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.9">
+  <DUT Name="Measure" Id="{f43c1b5d-5997-4a4b-9b4b-c3c33911aa84}">
+    <Declaration><![CDATA[TYPE Measure :
+STRUCT
+	//Structure of measure distance
+	XCur		:		LREAL;		//X gantry position
+	YCur		:		LREAL;		//Y gantry position
+	ZCur		:		LREAL;		//Z gantry position
+	RCur		:		INT;		//rotation angle of bogie
+	VCur		:		LREAL;		//height of bogie
+	Dist		:		INT;		//difference betwee distance value of sensor and base distance
+	BaseDist	:		INT;		//base distance value (does calibration handle this?)
+	strX		:		STRING ;		//string to display X in text box
+	strY		:		STRING ;		//string to display Y in text box
+	strZ		:		STRING ;		//string to display Z in text box
+	strR		:		STRING ;		//string to display R in text box
+	strV		:		STRING ;		//string to display V in text box
+	strX_Ref		:		STRING ;		//string to display X Ref in text box
+	strY_Ref		:		STRING ;		//string to display Y Ref in text box
+	strZ_Ref		:		STRING ;		//string to display Z Ref in text box
+	strR_Ref		:		STRING ;		//string to display R Ref in text box
+	strV_Ref		:		STRING ;		//string to display V Ref in text box
+	XRef		:		LREAL;		//x reference position for tool measure
+	YRef		:		LREAL;		//Y reference position for tool measure
+	ZRef		:		LREAL;		//Z reference position for tool measure
+	RRef		:		LREAL;		//R reference position for tool measure
+	VRef		:		LREAL;		//V reference position for tool measure
+	
+END_STRUCT
+END_TYPE
+]]></Declaration>
+  </DUT>
+</TcPlcObject>

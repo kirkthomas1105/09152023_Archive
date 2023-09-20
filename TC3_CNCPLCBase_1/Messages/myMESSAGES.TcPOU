@@ -1,0 +1,68 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.11">
+  <POU Name="myMESSAGES" Id="{aecb6876-327c-4dde-a240-dd5579bb62cf}" SpecialFunc="None">
+    <Declaration><![CDATA[PROGRAM myMESSAGES
+VAR
+	i : INT;
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[MSG_ALARM_List[1] := NOT bEstopPB;
+MSG_ALARM_List[2] := bProbeLowBattery;
+MSG_ALARM_List[3] := bProbeError;
+MSG_ALARM_List[4] := NOT bAtcVfdFaultedState;
+MSG_ALARM_List[5] := NOT bDriveFaultSpindle;
+MSG_ALARM_List[6] := NOT bDriveFaultAtcCarrousel;
+MSG_ALARM_List[7] := NOT bDriveFaultAtcArm;
+MSG_ALARM_List[8] := NOT bAtcArmTorqueSw ;
+MSG_ALARM_List[9] := FALSE;(*NOT (gpAx[0]^.lr_state.homing_done_r AND gpAx[1]^.lr_state.homing_done_r AND gpAx[2]^.lr_state.homing_done_r AND axAtcCarrousel.Status.Homed AND axAtcArm.Status.Homed);
+	IF CNCSystem.Channel[0].Mode.Auto OR CNCSystem.Channel[0].Mode.MDI THEN
+		IF MSG_ALARM_List[9] THEN
+			PLCMachineMode[0].Manual := TRUE;
+		END_IF
+	END_IF*)
+
+//MSG_ALARM_List[10] := True; // send msg that there is no pressure value with M10 pipe clamp or it is out of range
+//MSG_ALARM_List[11] := true; // send msg that the tool in spindle is unknown
+//MSG_ALARM_List[12] := TRUE; // send msg that drawbar switches are not adjusted properly
+//MSG_ALARM_List[13] := TRUE;// send msg that all axis are not homed
+//MSG_ALARM_List[14] := TRUE;// message = AtcCarousel not in position
+//MSG_ALARM_List[15] := TRUE;// message = AtcArm not in position
+//MSG_ALARM_List[16] := TRUE;// send msg carriage did not get to fwd limit in time
+//MSG_ALARM_List[17] := TRUE;// message = Atc Arm not clear to move
+//MSG_ALARM_List[18] := TRUE;//message = Carousel not clear to move
+//MSG_ALARM_List[19] := TRUE;//message = Carriage not clear to move
+//MSG_ALARM_List[20] := TRUE; // send msg carriage did not get to fwd limit in time
+//MSG_ALARM_List[21] := TRUE; // send msg that there is no tool detected in new tool pocket
+//MSG_ALARM_List[22] := TRUE; // send msg that drawbar sensor for tool loaded is missing
+//MSG_ALARM_List[23] := TRUE; // send msg that axes need to be moved off of home switches before homing
+MSG_ALARM_List[24] := wHorzDriveStatusWord.3;
+MSG_ALARM_List[25] := wVertDriveStatusWord.3;
+MSG_ALARM_List[26] := rActualCounterBalancePressure < 68; // Counter balance pressure too low
+MSG_ALARM_List[27] := rActualCounterBalancePressure > 72; // Counter balance pressure too high
+MSG_ALARM_List[28] := NOT bAtcManualToolReleaseSw; // manual tool release handle is not retracted
+IF bResetPB THEN
+	FOR i := 1 TO 50 BY 1 DO
+		MSG_ALARM_List[i] := FALSE;
+	END_FOR
+END_IF]]></ST>
+    </Implementation>
+    <LineIds Name="myMESSAGES">
+      <LineId Id="3" Count="7" />
+      <LineId Id="12" Count="0" />
+      <LineId Id="29" Count="3" />
+      <LineId Id="2" Count="0" />
+      <LineId Id="38" Count="0" />
+      <LineId Id="37" Count="0" />
+      <LineId Id="39" Count="11" />
+      <LineId Id="65" Count="0" />
+      <LineId Id="70" Count="1" />
+      <LineId Id="76" Count="1" />
+      <LineId Id="82" Count="0" />
+      <LineId Id="55" Count="1" />
+      <LineId Id="58" Count="0" />
+      <LineId Id="60" Count="0" />
+      <LineId Id="57" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

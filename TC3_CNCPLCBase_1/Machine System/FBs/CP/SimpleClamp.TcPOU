@@ -1,0 +1,98 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+  <POU Name="SimpleClamp" Id="{1dc743ec-aa17-4723-bc6d-41ebab479e0a}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION_BLOCK SimpleClamp
+VAR_INPUT
+	ClampRequest : BOOL;
+	UnClampRequest : BOOL;
+	Limit_NC_NO_CI : BOOL;	// Using NC limit switches =0; Using NO Limit switches =1;
+	
+END_VAR
+VAR_OUTPUT
+	
+	Clamped : BOOL;
+	Unclamped : BOOL;
+END_VAR
+VAR
+	
+	//HLFB_FI 			AT %I*	: BOOL;	//high level feedback 
+	
+	Enable_FO 				AT %Q*  : BOOL;		//Enable ClearPath
+	InputAOutCW_FO  		AT %Q* 	: BOOL; 	//input A of clearpath motor, Clockwise request move output from plc
+	InputBOutCCW_FO  		AT %Q* 	: BOOL; 	//input B of clearpath motor, CounterClockwise move output from plc
+	
+	ClampedSensorInput_FI 	AT %I* : BOOL; 
+	UnclampedSensorInput_FI AT %I* : BOOL; 
+	
+
+	
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[
+
+//Move requests if limit switches are NC
+
+IF Limit_NC_NO_CI = 0 THEN
+	IF ClampRequest AND ClampedSensorInput_FI THEN
+		Enable_FO := 1;
+		InputBOutCCW_FO := 1; //Clamp Direction
+	ELSE
+		ClampRequest := 0;
+	END_IF
+	
+	IF UnclampRequest AND UnclampedSensorInput_FI THEN
+		Enable_FO := 1;
+		InputAOutCW_FO := 1; //unClamp Direction
+	ELSE
+		UnclampRequest :=0;
+	END_IF
+	
+	IF NOT(UnclampRequest) AND NOT(ClampRequest) THEN
+		Enable_FO := 0;
+		InputAOutCW_FO := 0; //unClamp Direction
+		InputBOutCCW_FO := 0; //Clamp Direction
+	END_IF
+	
+	//FB OUTPUTS
+	IF NOT(ClampedSensorInput_FI) THEN
+		Clamped := 1;
+	ELSE
+		Clamped := 0;
+	END_IF
+	
+	
+	IF NOT(UnclampedSensorInput_FI) THEN
+		Unclamped := 1;
+	ELSE
+		Unclamped := 0;
+	END_IF
+	
+END_IF
+
+]]></ST>
+    </Implementation>
+    <LineIds Name="SimpleClamp">
+      <LineId Id="85" Count="0" />
+      <LineId Id="87" Count="4" />
+      <LineId Id="95" Count="1" />
+      <LineId Id="177" Count="0" />
+      <LineId Id="180" Count="0" />
+      <LineId Id="102" Count="2" />
+      <LineId Id="108" Count="1" />
+      <LineId Id="186" Count="0" />
+      <LineId Id="184" Count="0" />
+      <LineId Id="114" Count="0" />
+      <LineId Id="187" Count="1" />
+      <LineId Id="192" Count="2" />
+      <LineId Id="191" Count="0" />
+      <LineId Id="115" Count="1" />
+      <LineId Id="167" Count="1" />
+      <LineId Id="172" Count="1" />
+      <LineId Id="121" Count="8" />
+      <LineId Id="86" Count="0" />
+      <LineId Id="156" Count="0" />
+      <LineId Id="149" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

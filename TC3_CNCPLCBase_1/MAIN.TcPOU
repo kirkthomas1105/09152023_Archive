@@ -1,0 +1,109 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+  <POU Name="MAIN" Id="{34c8c45c-58c6-4f5f-9362-3ad98fa8450c}" SpecialFunc="None">
+    <Declaration><![CDATA[PROGRAM MAIN
+VAR
+  
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[
+
+// everything related to time
+	P_Timer();
+	
+	
+// EventLogger
+	P_EventLogger();
+
+FirstScan();
+// temporarily disabled by Kirk 
+HLI3_Init(); 
+
+//PRG_Sequence();
+(* Call CNC related code only if the HLI has been initialized succesfully! *)
+ IF CNCSystem.bHLIInit THEN
+	PRG_CNCAxesHandler();    	
+	PRG_CNCManualMode();
+	PRG_CNCChannelHandler();	
+	PRG_CNCVariablesViewer();
+	PRG_ManualFnc();	
+	myPRG_AxisHomeSwitches_1();
+	myVE_Vars(); //call this before MCodes just to be sure data was pulled and updated for each potential MCODE Call [Add a buffer to mcode rtrig if ve does not compute from same gcode line call ie[ve.wxv=90 M510]
+	myM_CODES();
+////	myPressure();
+//	myGun();
+//	myCounter();
+	mySafety();
+	SafetyConnect();
+	ModeHandle();
+	//myHMIPLCRECIPE();
+	//myDistance();
+	WX_CP();
+	WX_CP_Simple();
+	Bogie();
+	//myCNC_Call_Spray();
+	CNC_HMI_HLI_Added_Code(); //display for new hmi variables
+	BogieSettings();
+	RollerDoors();
+	PersonnelDoor();
+	Heraus_Heater_Control();
+	
+//	 		(* Conveyor Programs *)
+	
+	Input_Buffering();
+	MOTOR_FAULTS();
+	JAM_FAULTS();
+	OUTPUTS();
+	//Ventilation();
+	GL1_Transfer_Traverse();
+	GL10_Transfer_Traverse();
+	GL11_Transfer();
+	GL2_Transfer();
+	GL3_Accumulation();
+	GL4_Accumulation();
+	GL5A_Accumulation();
+	GL5B_Accumulation();
+	GL6_Conveyor();
+	GL7_Conveyor();
+	GL8_Conveyor();
+	GL9_Conveyor();
+
+			(* Rib Machine Programs *)
+	Guarding_Safety();
+	Input_Buffering_RB();
+	START_STOP();
+	Index_and_measure();
+	Fault_Logic();
+	Lift_Raise_and_Lower();
+	Clamp_and_cut();
+	Interlocks_to_Main_Line();
+	// Outputs_RB();
+	
+END_IF
+(* Reset the reset flag from HMI *)
+PLCReset := FALSE;]]></ST>
+    </Implementation>
+    <LineIds Name="MAIN">
+      <LineId Id="442" Count="0" />
+      <LineId Id="441" Count="0" />
+      <LineId Id="393" Count="4" />
+      <LineId Id="391" Count="1" />
+      <LineId Id="285" Count="1" />
+      <LineId Id="457" Count="0" />
+      <LineId Id="287" Count="13" />
+      <LineId Id="303" Count="6" />
+      <LineId Id="462" Count="0" />
+      <LineId Id="310" Count="5" />
+      <LineId Id="451" Count="0" />
+      <LineId Id="316" Count="1" />
+      <LineId Id="446" Count="0" />
+      <LineId Id="318" Count="0" />
+      <LineId Id="407" Count="0" />
+      <LineId Id="320" Count="2" />
+      <LineId Id="376" Count="10" />
+      <LineId Id="335" Count="14" />
+      <LineId Id="19" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

@@ -1,0 +1,27 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.9">
+  <GVL Name="GVL_Log" Id="{be33028e-e4cc-4bd1-bc7f-6e7e5c46afef}">
+    <Declaration><![CDATA[{attribute 'qualified_only'}
+VAR_GLOBAL
+	NewMeasure : BOOL;
+	PointLogged : BOOL;
+	ReadytoLog 	: BOOL := TRUE;
+	
+	XCur		: STRING;
+	YCur		: STRING;
+	ZCur		: STRING;
+	RCur		: STRING;
+	VCur		: STRING;
+	Dist		: STRING;
+	
+	XRef		: STRING;
+	YRef		: STRING;
+	ZRef		: STRING;
+	RRef		: STRING;
+	VRef		: STRING;
+	DistRef		: STRING;
+	
+	
+END_VAR]]></Declaration>
+  </GVL>
+</TcPlcObject>

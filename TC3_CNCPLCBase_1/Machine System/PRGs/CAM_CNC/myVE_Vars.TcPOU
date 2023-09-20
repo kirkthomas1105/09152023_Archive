@@ -1,0 +1,123 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+  <POU Name="myVE_Vars" Id="{6f6e46aa-fb13-446b-b0d4-d13ff62fba16}" SpecialFunc="None">
+    <Declaration><![CDATA[PROGRAM myVE_Vars
+VAR
+//Name each ve_Var lreal as a separate variable if you want to see comments in other sections of program
+//NCtoPLC ch[0][pull data from the cnc channel [0]
+Spray_X_NctoPLC			:	LREAL;
+SPray_Y_NCtoPLC			:	LREAL;
+Spray_Z_NCtoPLC			:	LREAL;
+SPray_A_NctoPLC			:	LREAL;
+Spray_C_NCtoPLC			:	LREAL;
+WX1Vert_Dis_NCtoPLC		:	LREAL;
+WX1Rot_Dis_NCtoPLC		:	LREAL;
+WX1Clamp_Dis_NctoPLc	:	LREAL;
+WX2Vert_Dis_NctoPLc		:	LREAL;
+WX2Rot_Dis_NCtoPLC		:	LREAL;
+WX2Clamp_Dis_NCtoPLC	:	LREAL;
+WX3Vert_Dis_NCtoPLC		:	LREAL;
+WX3Rot_Dis_NCtoPLC		:	LREAL;
+WX3Clamp_Dis_NCtoPLC	:	LREAL;
+WX4Vert_Dis_NCtoPLC		:	LREAL;
+WX4Rot_Dis_NCtoPLC		:	LREAL;
+WX4Clamp_Dis_NctoPLC	:	LREAL;
+FlangeHeight_NCtoPLC	: 	LREAL;
+SocketHeight_NCtoPLC	: 	LREAL;
+TrenchWidth_NCtoPLC		: 	LREAL;
+D_NCtoPLC				: 	LREAL;
+GratingWidth_NCtoPLC	: 	LREAL;
+ribOffset_NCtoPLC		: 	LREAL;
+RibLength_NctoPLC		: 	LREAL;
+TrenchLength_nctoPLC	: 	LREAL;
+GratingLength_NCtoPLC	: 	LREAL;
+FirstRib_NCtoPLC		: 	LREAL;
+RibSpacing_NCtoPLC		: 	LREAL;
+Spare_nctoPLC			: 	LREAL;
+SPare2_NCtoPLC			: 	LREAL;
+
+
+//NCtoPLC ch[1] will need roll channel set as well.  Will prob need each ve used again from ch[0] duplicated for ch[1]
+
+//PLCtoNC
+spray_X_PLCtoNC			: LREAL;
+Spray_Y_PLCtoNC			: LREAL;
+Spray_Z_PLCtoNC			: LREAL;
+Spray_A_PLCtoNC			: LREAL;
+Spray_C_PLCtoNC			: LREAL;
+WX1Vert_PLCtoNC		: LREAL;
+WX1Rot_PLCtoNc		: LREAL;
+WX1Clamp_PLCtoNC	: LREAL;
+WX2Vert_PLCtoNC		: LREAL;
+WX2Rot_PLCtoNC		: LREAL;
+WX2Clamp_PLCtoNC	: LREAL;
+WX3Vert_PLCtoNC		: LREAL;
+WX3Rot_PLCtoNC		: LREAL;
+WX3Clamp_PLCtoNC	: LREAL;
+WX4Vert_PLCtoNC 	: LREAL;
+WX4Rot_PLCtoNC		: LREAL;
+WX4Clamp_PLCtoNC	: LREAL;
+
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[//NCtoPLC [read data from GCode Channel]
+	Spray_X_NctoPLc			:= HLI3_GetVEChannelLRealValue(nChanIdx:= 0, nVEIndex:=0, nArrayIndex:=1, bGlobal:=TRUE); //Step_x
+	SPray_Y_NCtoPLC			:= HLI3_GetVEChannelLRealValue(nChanIdx:= 0, nVEIndex:=0, nArrayIndex:=2, bGlobal:=TRUE); //Step_Y
+	Spray_Z_NCtoPLC			:= HLI3_GetVEChannelLRealValue(nChanIdx:= 0, nVEIndex:=0, nArrayIndex:=3, bGlobal:=TRUE); //Step_z
+	SPray_A_NctoPLC			:= HLI3_GetVEChannelLRealValue(nChanIdx:= 0, nVEIndex:=0, nArrayIndex:=4, bGlobal:=TRUE); //Step_a
+	Spray_C_NCtoPLC			:= HLI3_GetVEChannelLRealValue(nChanIdx:= 0, nVEIndex:=0, nArrayIndex:=5, bGlobal:=TRUE); //Step_c
+	WX1Vert_Dis_NCtoPLC		:= HLI3_GetVEChannelLRealValue(nChanIdx:= 0, nVEIndex:=0, nArrayIndex:=6, bGlobal:=TRUE); //WX1Vert_dis
+	WX1Rot_Dis_NCtoPLC 		:= HLI3_GetVEChannelLRealValue(nChanIdx:= 0, nVEIndex:=0, nArrayIndex:=7, bGlobal:=TRUE); //WX1Rot_dis
+	WX1Clamp_Dis_NctoPLc	:= HLI3_GetVEChannelLRealValue(nChanIdx:= 0, nVEIndex:=0, nArrayIndex:=8, bGlobal:=TRUE); //WX1Clamp_dis
+	WX2Vert_Dis_NctoPLc		:= HLI3_GetVEChannelLRealValue(nChanIdx:= 0, nVEIndex:=0, nArrayIndex:=9, bGlobal:=TRUE); //WX2Vert_dis
+	WX2Rot_Dis_NCtoPLC		:= HLI3_GetVEChannelLRealValue(nChanIdx:= 0, nVEIndex:=0, nArrayIndex:=10, bGlobal:=TRUE); //WX2Rot_dis
+	WX2Clamp_Dis_NCtoPLC 	:= HLI3_GetVEChannelLRealValue(nChanIdx:= 0, nVEIndex:=0, nArrayIndex:=11, bGlobal:=TRUE); //WX2Clamp_dis
+	WX3Vert_Dis_NCtoPLC 	:= HLI3_GetVEChannelLRealValue(nChanIdx:= 0, nVEIndex:=0, nArrayIndex:=12, bGlobal:=TRUE); //WX3Vert_dis
+	WX3Rot_Dis_NCtoPLC	 	:= HLI3_GetVEChannelLRealValue(nChanIdx:= 0, nVEIndex:=0, nArrayIndex:=13, bGlobal:=TRUE); //WX3Rot_dis
+	WX3Clamp_Dis_NCtoPLC 	:= HLI3_GetVEChannelLRealValue(nChanIdx:= 0, nVEIndex:=0, nArrayIndex:=14, bGlobal:=TRUE); //WX3Clamp_dis
+	WX4Vert_Dis_NCtoPLC	 	:= HLI3_GetVEChannelLRealValue(nChanIdx:= 0, nVEIndex:=0, nArrayIndex:=15, bGlobal:=TRUE); //WX4Vert_dis
+	WX4Rot_Dis_NCtoPLC	 	:= HLI3_GetVEChannelLRealValue(nChanIdx:= 0, nVEIndex:=0, nArrayIndex:=16, bGlobal:=TRUE); //WX4Rot_dis
+	WX4Clamp_Dis_NctoPLC 	:= HLI3_GetVEChannelLRealValue(nChanIdx:= 0, nVEIndex:=0, nArrayIndex:=17, bGlobal:=TRUE); //WX4Clamp_dis
+	FlangeHeight_NCtoPLC 	:= HLI3_GetVEChannelLRealValue(nChanIdx:= 0, nVEIndex:=0, nArrayIndex:=18, bGlobal:=TRUE); //FlangeHeight
+	SocketHeight_NCtoPLC 	:= HLI3_GetVEChannelLRealValue(nChanIdx:= 0, nVEIndex:=0, nArrayIndex:=19, bGlobal:=TRUE); //SocketHeight
+	TrenchWidth_NCtoPLC 	:= HLI3_GetVEChannelLRealValue(nChanIdx:= 0, nVEIndex:=0, nArrayIndex:=20, bGlobal:=TRUE); //TrenchWidth
+	D_NCtoPLC			 	:= HLI3_GetVEChannelLRealValue(nChanIdx:= 0, nVEIndex:=0, nArrayIndex:=21, bGlobal:=TRUE); //D
+	GratingWidth_NCtoPLC 	:= HLI3_GetVEChannelLRealValue(nChanIdx:= 0, nVEIndex:=0, nArrayIndex:=22, bGlobal:=TRUE); //GratingWidth
+	ribOffset_NCtoPLC	 	:= HLI3_GetVEChannelLRealValue(nChanIdx:= 0, nVEIndex:=0, nArrayIndex:=23, bGlobal:=TRUE); //RibOffset
+	RibLength_NctoPLC		:= HLI3_GetVEChannelLRealValue(nChanIdx:= 0, nVEIndex:=0, nArrayIndex:=24, bGlobal:=TRUE); //RibLength
+	TrenchLength_nctoPLC 	:= HLI3_GetVEChannelLRealValue(nChanIdx:= 0, nVEIndex:=0, nArrayIndex:=25, bGlobal:=TRUE); //TrenchLength
+	GratingLength_NCtoPLC 	:= HLI3_GetVEChannelLRealValue(nChanIdx:= 0, nVEIndex:=0, nArrayIndex:=26, bGlobal:=TRUE); //GratingLength
+	FirstRib_NCtoPLC	 	:= HLI3_GetVEChannelLRealValue(nChanIdx:= 0, nVEIndex:=0, nArrayIndex:=27, bGlobal:=TRUE); //FirstRib
+	RibSpacing_NCtoPLC	 	:= HLI3_GetVEChannelLRealValue(nChanIdx:= 0, nVEIndex:=0, nArrayIndex:=28, bGlobal:=TRUE); //RibSpacing
+	Spare_NCtoPLC			:= HLI3_GetVEChannelLRealValue(nChanIdx:= 0, nVEIndex:=0, nArrayIndex:=29, bGlobal:=TRUE); //spare
+	Spare2_NCtoPLC		 	:= HLI3_GetVEChannelLRealValue(nChanIdx:= 0, nVEIndex:=0, nArrayIndex:=30, bGlobal:=TRUE); //spare [channel max @100 total]
+	
+	
+//PLCtoNC example [can run these in other pou as necessary - will conflict with GCODE SET Value in channel if used concurrently]
+	//HLI3_SetVEChannelLRealValue(nChanIdx:=0,nVEIndex:=0,nArrayIndex:=2, bGlobal:=TRUE, val:=spray_Y_PlctoNC);
+	//HLI3_SetVEChannelLRealValue(nChanIdx:=0,nVEIndex:=0,nArrayIndex:=6, bGlobal:=TRUE, val:=WX4Vert_Dis_PLCtoNC);
+	
+	]]></ST>
+    </Implementation>
+    <LineIds Name="myVE_Vars">
+      <LineId Id="5" Count="0" />
+      <LineId Id="93" Count="0" />
+      <LineId Id="66" Count="0" />
+      <LineId Id="20" Count="0" />
+      <LineId Id="67" Count="1" />
+      <LineId Id="8" Count="0" />
+      <LineId Id="25" Count="0" />
+      <LineId Id="70" Count="7" />
+      <LineId Id="79" Count="3" />
+      <LineId Id="78" Count="0" />
+      <LineId Id="83" Count="9" />
+      <LineId Id="69" Count="0" />
+      <LineId Id="14" Count="0" />
+      <LineId Id="27" Count="0" />
+      <LineId Id="94" Count="1" />
+      <LineId Id="24" Count="0" />
+      <LineId Id="39" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

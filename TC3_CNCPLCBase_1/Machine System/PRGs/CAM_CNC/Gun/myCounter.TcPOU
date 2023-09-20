@@ -1,0 +1,33 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.11">
+  <POU Name="myCounter" Id="{426c8798-b4fe-4558-8c90-5e68c7e9353e}" SpecialFunc="None">
+    <Declaration><![CDATA[PROGRAM myCounter
+VAR
+	
+	iPumpCount AT %I* : UDINT;
+	iGunRPMCount AT %I* : UDINT;
+	iLastGunRPMCount : UDINT;
+	
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[//plug both into EL1512 
+//count chopper gun rpm (rising trigger)
+	//add rpm hmi display (floating average)
+IF iGunRPMCount <> iLastGunRPMCount THEN
+	iLastGunRPMCount := iGunRPMCount;
+END_IF
+//count resin/mek pump strokes (rising trigger)
+	//add flow rate hmi display (floating average)]]></ST>
+    </Implementation>
+    <LineIds Name="myCounter">
+      <LineId Id="6" Count="0" />
+      <LineId Id="5" Count="0" />
+      <LineId Id="11" Count="0" />
+      <LineId Id="10" Count="0" />
+      <LineId Id="18" Count="1" />
+      <LineId Id="9" Count="0" />
+      <LineId Id="12" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

@@ -1,0 +1,15 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.11">
+  <POU Name="myCNC_CureQue" Id="{8ee457db-f410-4e86-82d6-a405a74cff8d}" SpecialFunc="None">
+    <Declaration><![CDATA[PROGRAM myCNC_CureQue
+VAR
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[]]></ST>
+    </Implementation>
+    <LineIds Name="myCNC_CureQue">
+      <LineId Id="5" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

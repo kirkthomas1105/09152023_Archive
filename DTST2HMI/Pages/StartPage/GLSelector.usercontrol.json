@@ -1,0 +1,55 @@
+{
+  "parameters": [
+    {
+      "name": "data-tchmi-displaytext",
+      "displayName": "DisplayText",
+      "visible": true,
+      "type": "tchmi:general#/definitions/String",
+      "category": "",
+      "description": "",
+      "requiredOnCompile": false,
+      "readOnly": false,
+      "bindable": true,
+      "heritable": true,
+      "propertyName": "DisplayText",
+      "propertySetterName": "setDisplayText",
+      "propertyGetterName": "getDisplayText",
+      "refTo": ""
+    },
+    {
+      "name": "data-tchmi-gl_selected_int",
+      "displayName": "GL_Selected_int",
+      "visible": true,
+      "type": "tchmi:general#/definitions/INT",
+      "category": "",
+      "description": "",
+      "requiredOnCompile": false,
+      "readOnly": false,
+      "bindable": true,
+      "heritable": true,
+      "propertyName": "GL_Selected_int",
+      "propertySetterName": "setGL_Selected_int",
+      "propertyGetterName": "getGL_Selected_int",
+      "refTo": ""
+    },
+    {
+      "name": "data-tchmi-this_gl_int",
+      "displayName": "This_GL_int",
+      "visible": true,
+      "type": "tchmi:general#/definitions/INT",
+      "category": "",
+      "description": "",
+      "requiredOnCompile": false,
+      "readOnly": false,
+      "bindable": true,
+      "heritable": true,
+      "propertyName": "This_GL_int",
+      "propertySetterName": "setThis_GL_int",
+      "propertyGetterName": "getThis_GL_int",
+      "refTo": ""
+    }
+  ],
+  "virtualRights": [],
+  "$schema": "./../../../Packages/Beckhoff.TwinCAT.HMI.Framework.12.756.1/runtimes/native1.12-tchmi/Schema/UserControlConfig.Schema.json",
+  "description": ""
+}

@@ -1,0 +1,147 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+  <POU Name="Heraus_Heater_Control" Id="{9435777a-9821-4d70-8036-dc6683a37a24}" SpecialFunc="None">
+    <Declaration><![CDATA[PROGRAM Heraus_Heater_Control
+
+VAR_INPUT
+		HMI_RECIPE_NUM : INT; // SELECTED RECIPE VALUE FROM HMI NUMERIC INPUT
+		
+		HERAUS_STATUS  : INT; // BINARY STATUS INFORMATION FROM HEATER CABINET.
+							  // 0 = OFF
+							  // 1 = SYSTEM STARTING
+							  // 2 = POST HEATING GAS ON
+							  // 3 = RUNNING
+							  // 4 = STANDBY
+END_VAR
+
+VAR
+	HERAUS_ESTOP_OK      AT %I*: BOOL; // ESTOP OK INTERLOCK RELAY STATE
+	HERAUS_STATUS_B1     AT %I*: BOOL; // HEARAUS HEATER STATUS BIT 1
+	HERAUS_STATUS_B2     AT %I*: BOOL; // HEARAUS HEATER STATUS BIT 2
+	HERAUS_STATUS_B3     AT %I*: BOOL; // HEARAUS HEATER STATUS BIT 3
+	RECIPE_VALUE_BIT_0   AT %Q*: BOOL; // BINARY VALUE 1 RECIPE SELECTION
+	RECIPE_VALUE_BIT_1   AT %Q*: BOOL; // BINARY VALUE 2 RECIPE SELECTION
+	RECIPE_VALUE_BIT_2   AT %Q*: BOOL; // BINARY VALUE 4 RECIPE SELECTION
+	RECIPE_VALUE_BIT_3   AT %Q*: BOOL; // BINARY VALUE 8 RECIPE SELECTION
+	RECIPE_VALUE_BIT_4   AT %Q*: BOOL; // BINARY VALUE 16 RECIPE SELECTION
+		
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[// INITIALIZE HEATER STATUS TO 0
+		HERAUS_STATUS := 0;
+IF HERAUS_STATUS_B1 AND NOT HERAUS_STATUS_B2 AND NOT HERAUS_STATUS_B3 THEN
+		HERAUS_STATUS := 1;
+ELSIF HERAUS_STATUS_B2 AND NOT HERAUS_STATUS_B1 AND NOT HERAUS_STATUS_B3 THEN
+		HERAUS_STATUS := 2;
+ELSIF HERAUS_STATUS_B3 AND NOT HERAUS_STATUS_B1 AND NOT HERAUS_STATUS_B2 THEN
+		HERAUS_STATUS := 3;
+ELSIF HERAUS_STATUS_B3 AND HERAUS_STATUS_B1 AND NOT HERAUS_STATUS_B2 THEN
+		HERAUS_STATUS := 4;
+END_IF
+
+CASE HMI_RECIPE_NUM OF 
+     1 : RECIPE_VALUE_BIT_0 := TRUE; 
+         RECIPE_VALUE_BIT_1 := FALSE; 
+		 RECIPE_VALUE_BIT_2 := FALSE;
+		 RECIPE_VALUE_BIT_3 := FALSE;
+		 RECIPE_VALUE_BIT_4 := FALSE; 
+
+     2 : RECIPE_VALUE_BIT_0 := FALSE; 
+         RECIPE_VALUE_BIT_1 := TRUE;
+		 RECIPE_VALUE_BIT_2 := FALSE;
+		 RECIPE_VALUE_BIT_3 := FALSE;
+		 RECIPE_VALUE_BIT_4 := FALSE; 
+
+	 3 : RECIPE_VALUE_BIT_0 := TRUE; 
+         RECIPE_VALUE_BIT_1 := TRUE;
+		 RECIPE_VALUE_BIT_2 := FALSE;
+		 RECIPE_VALUE_BIT_3 := FALSE;
+		 RECIPE_VALUE_BIT_4 := FALSE; 
+		 
+	 4 : RECIPE_VALUE_BIT_0 := FALSE; 
+         RECIPE_VALUE_BIT_1 := FALSE;
+		 RECIPE_VALUE_BIT_2 := TRUE;
+		 RECIPE_VALUE_BIT_3 := FALSE;
+		 RECIPE_VALUE_BIT_4 := FALSE; 
+		 
+	 5 : RECIPE_VALUE_BIT_0 := TRUE; 
+         RECIPE_VALUE_BIT_1 := FALSE;
+		 RECIPE_VALUE_BIT_2 := TRUE;
+		 RECIPE_VALUE_BIT_3 := FALSE;
+		 RECIPE_VALUE_BIT_4 := FALSE; 
+
+     6 : RECIPE_VALUE_BIT_0 := FALSE; 
+         RECIPE_VALUE_BIT_1 := TRUE;
+		 RECIPE_VALUE_BIT_2 := TRUE;
+		 RECIPE_VALUE_BIT_3 := FALSE;
+		 RECIPE_VALUE_BIT_4 := FALSE; 
+
+	 7 : RECIPE_VALUE_BIT_0 := TRUE; 
+         RECIPE_VALUE_BIT_1 := TRUE;
+		 RECIPE_VALUE_BIT_2 := TRUE;
+		 RECIPE_VALUE_BIT_3 := FALSE;
+		 RECIPE_VALUE_BIT_4 := FALSE; 
+		 
+	 8 : RECIPE_VALUE_BIT_0 := FALSE; 
+         RECIPE_VALUE_BIT_1 := FALSE;
+		 RECIPE_VALUE_BIT_2 := FALSE;
+		 RECIPE_VALUE_BIT_3 := TRUE;
+		 RECIPE_VALUE_BIT_4 := FALSE; 
+		 
+	 9 : RECIPE_VALUE_BIT_0 := TRUE; 
+         RECIPE_VALUE_BIT_1 := FALSE;
+		 RECIPE_VALUE_BIT_2 := FALSE;
+		 RECIPE_VALUE_BIT_3 := TRUE;
+		 RECIPE_VALUE_BIT_4 := FALSE; 
+		 
+	10 : RECIPE_VALUE_BIT_0 := FALSE; 
+         RECIPE_VALUE_BIT_1 := TRUE;
+		 RECIPE_VALUE_BIT_2 := FALSE;
+		 RECIPE_VALUE_BIT_3 := TRUE;
+		 RECIPE_VALUE_BIT_4 := FALSE; 
+		
+ELSE 
+	     RECIPE_VALUE_BIT_0 := FALSE; 
+         RECIPE_VALUE_BIT_1 := FALSE;
+		 RECIPE_VALUE_BIT_2 := FALSE;
+		 RECIPE_VALUE_BIT_3 := FALSE;
+		 RECIPE_VALUE_BIT_4 := FALSE; 
+END_CASE;]]></ST>
+    </Implementation>
+    <LineIds Name="Heraus_Heater_Control">
+      <LineId Id="179" Count="0" />
+      <LineId Id="178" Count="0" />
+      <LineId Id="20" Count="0" />
+      <LineId Id="163" Count="0" />
+      <LineId Id="165" Count="0" />
+      <LineId Id="169" Count="1" />
+      <LineId Id="174" Count="0" />
+      <LineId Id="181" Count="0" />
+      <LineId Id="180" Count="0" />
+      <LineId Id="175" Count="0" />
+      <LineId Id="177" Count="0" />
+      <LineId Id="112" Count="0" />
+      <LineId Id="42" Count="0" />
+      <LineId Id="63" Count="2" />
+      <LineId Id="43" Count="0" />
+      <LineId Id="45" Count="0" />
+      <LineId Id="66" Count="3" />
+      <LineId Id="48" Count="1" />
+      <LineId Id="71" Count="3" />
+      <LineId Id="52" Count="0" />
+      <LineId Id="79" Count="0" />
+      <LineId Id="81" Count="3" />
+      <LineId Id="80" Count="0" />
+      <LineId Id="110" Count="0" />
+      <LineId Id="87" Count="22" />
+      <LineId Id="124" Count="0" />
+      <LineId Id="114" Count="9" />
+      <LineId Id="113" Count="0" />
+      <LineId Id="86" Count="0" />
+      <LineId Id="53" Count="0" />
+      <LineId Id="75" Count="3" />
+      <LineId Id="56" Count="0" />
+      <LineId Id="26" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

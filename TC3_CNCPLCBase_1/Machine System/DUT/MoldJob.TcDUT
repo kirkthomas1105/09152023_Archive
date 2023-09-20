@@ -1,0 +1,54 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+  <DUT Name="MoldJob" Id="{23887a53-408d-4bce-8b3d-1f6189976847}">
+    <Declaration><![CDATA[TYPE MoldJob :
+STRUCT
+	MoldID		: INT;
+	AKeyFile	: STRING ;//'L C:\CNC\AKey.nc'
+	AKeyDone	: BOOL;
+	BKeyFile	: STRING ;//'L C:\CNC\BKey.nc'
+	BKeyDone	: BOOL;
+	AMacroFile	: STRING ;//'L C:\CNC\AMacro.nc'
+	AMacroDone	: BOOL;
+	BMacroFile	: STRING ;//'L C:\CNC\BMacro.nc' example
+	BMacroDone	: BOOL;
+	APlace		: STRING;
+	APlaceDone 	: BOOL;
+	BPlace		: STRING;
+	BPlaceDone	: BOOL;
+	
+
+	MoldLength 			: LREAL := 0;
+	MoldHeight			: LREAL := 0;
+	MoldWidth			: LREAL := 0;
+	MoldRadius1			: LREAL := 0;
+	MoldRadius2			: LREAL := 0;
+	EdgeHeight1			: LREAL := 0;
+	EdgeHeight2			: LREAL := 0;
+	FlangeHeight		: LREAL := 0;
+	SocketHeight		: LREAL := 0;
+	TrenchWidth			: LREAL := 0;
+	GratingWidth		: LREAL := 0;
+	RibRequired			: BOOL 	:= 0;
+	RibOffset			: LREAL := 0;
+	RibLength			: LREAL := 0;
+	TrenchLength		: LREAL := 0;
+	GratingLength		: LREAL := 0;
+	FirstRibDistance	: LREAL := 0;
+	RibSpacing			: LREAL := 0;
+	Slope				: LREAL := 0;
+	HeaterRecipe		: INT	:= 0;
+	OkToSpray			: BOOL 	:= 0;
+	
+	SprayGCodeSide1Filepath : STRING;
+	SprayGCodeSide2Filepath : STRING;
+	RollGCodeSide1Filepath 	: STRING;
+	RollGCodeSide2Filepath 	: STRING;
+	RibGCodeSide1Filepath 	: STRING;
+	RibGCodeSide2Filepath 	: STRING;
+	
+END_STRUCT
+END_TYPE
+]]></Declaration>
+  </DUT>
+</TcPlcObject>

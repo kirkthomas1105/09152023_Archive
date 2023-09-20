@@ -1,0 +1,49 @@
+<svg id="pfade" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 80">
+  <defs>
+    <style>
+      .cls-1, .cls-2, .cls-3, .cls-4, .cls-5 {
+        fill: none;
+        stroke: #4794da;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+      }
+
+      .cls-1, .cls-3, .cls-4, .cls-5 {
+        stroke-width: 2px;
+      }
+
+      .cls-3 {
+        stroke-dasharray: 3.50006 3.50006;
+      }
+
+      .cls-4 {
+        stroke-dasharray: 3.49999 3.49999;
+      }
+
+      .cls-5 {
+        stroke-dasharray: 3.50009 3.50009;
+      }
+    </style>
+  </defs>
+  <rect class="cls-1" x="47.0007" y="25.3412" width="7.4854" height="7.4853"/>
+  <line class="cls-2" x1="50.7434" y1="32.8265" x2="50.7434" y2="34.9584"/>
+  <rect class="cls-1" x="25.4243" y="25.4176" width="7.4851" height="7.4853"/>
+  <line class="cls-2" x1="29.1667" y1="32.9029" x2="29.1667" y2="35.0348"/>
+  <line class="cls-1" x1="18.5" y1="19.4762" x2="61.5002" y2="19.4762"/>
+  <line class="cls-1" x1="29.1667" y1="25.3503" x2="29.1667" y2="19.4762"/>
+  <line class="cls-1" x1="50.7429" y1="25.2937" x2="50.7429" y2="19.4762"/>
+  <g>
+    <line class="cls-1" x1="35.5471" y1="53.2892" x2="36.9613" y2="51.875"/>
+    <line class="cls-3" x1="39.4363" y1="49.4001" x2="48.0986" y2="40.7379"/>
+    <polyline class="cls-1" points="49.336 39.501 50.75 38.086 52.164 39.501"/>
+    <line class="cls-4" x1="54.6392" y1="41.9754" x2="63.3013" y2="50.6376"/>
+    <line class="cls-1" x1="64.5386" y1="51.875" x2="65.9529" y2="53.2892"/>
+  </g>
+  <g>
+    <line class="cls-1" x1="13.9639" y1="53.2892" x2="15.378" y2="51.875"/>
+    <line class="cls-5" x1="17.853" y1="49.4001" x2="26.5155" y2="40.7379"/>
+    <polyline class="cls-1" points="27.753 39.501 29.167 38.086 30.581 39.501"/>
+    <line class="cls-4" x1="33.0563" y1="41.9754" x2="41.7183" y2="50.6376"/>
+    <line class="cls-1" x1="42.9556" y1="51.875" x2="44.3699" y2="53.2892"/>
+  </g>
+</svg>

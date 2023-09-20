@@ -1,0 +1,428 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+  <POU Name="BogieCombo_PPR" Id="{6201c427-aa00-44d3-83a8-e8203b4d2096}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION_BLOCK BogieCombo_PPR
+VAR_INPUT
+	//Configuration Inputs
+	VertSyncTolerance_CI 	: INT;
+	Vert_A_CI				: LinPPR_CI;
+	Vert_B_CI				: LinPPR_CI;
+	Clamp_A_CI				: LinPPR_CI;
+	Clamp_B_CI				: LinPPR_CI;
+	
+	
+	//VI (visualization input/hmi input)
+	Reset_VI				: BOOL;		//reset button		
+	JogVertExecute_VI		: BOOL;		//Call manual vert move method if true
+	JogClampExecute_VI		: BOOL;		//Call manual Clamp move method if true
+	JogRotExecute_VI		: BOOL;		//Call manual Rot Move method if true
+	SyncSuperJogExecute_VI	: BOOL;		//sync superjog manual move action bit
+	SuperJogMode_VI			: BOOL;		//Superjog mode enable bit
+	VertASuperJog_VI		: BOOL;
+	VertBSuperJog_VI		: bool;		
+	JogSlow_VI				: BOOL;		//slow manual move
+	CW_VI					: BOOL;		//Set Direction for requested move (does not apply to absolute move) True = Clockwise
+	SyncVertJogExecute_VI 	: BOOL;
+	SyncClampJogExecute_VI 	: BOOL;
+
+	//Program Inputs
+	PowerOn_PI				: BOOL;
+	VertDisReq_PI			: INT;
+	ClampDisReq_PI			: INT;
+	RotDegReq_PI			: INT;
+	HomeWithPartStart_PI	: BOOL;		//set this true in program with oneshot to start homing, do not hold true in program as FB.Home() will continue to start at step 1
+	SyncAbsDisReq_PI		: REAL;
+	Stop_PI					: BOOL;		//stop command from program
+	//Field Inputs
+	PartPres_A_Hi			: BOOL;
+	PartPres_A_Lo			: BOOL;
+	PartPres_B_Hi			: BOOL;
+	PartPres_B_Lo			: BOOL;
+END_VAR
+VAR_OUTPUT
+	//Program OutPuts
+	Homed_PO				: BOOL;	
+	Msg						: STRING;	//debug message
+END_VAR
+VAR
+	synctestbit				: bool;
+	Vert_A					: ClearpathPositionLinPPR;
+	Vert_B					: ClearpathPositionLinPPR;
+	Clamp_A 				: ClearpathPositionLinPPR;
+	Clamp_B					: ClearpathPositionLinPPR;
+	Rot_A					: ClearpathPosition;
+	Rot_B					: ClearpathPosition;
+	
+END_VAR
+VAR PERSISTENT
+	Vert_ATrack				: REAL;		//track the distance when not homed
+	Vert_BTrack				: REAL;		//track the distance when not homed
+	Clamp_ATrack			: REAL;		//track the distance when not homed
+	Clamp_BTrack			: REAL;		//track the distance when not homed
+	HomingReq				: BOOL;		//homing started, used to stop auto homing process if outside sync tolerance;  Superjog required to fix
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[//initialize the fb for bogie clearpaths bog[1-4 (vert, rot, clamp)
+//Bog.Clamp();
+//Bog.Rot();
+Clamp_A	(IN:=Clamp_A_CI,Poweron_PI:=Poweron_pi, Stop_PI:=Stop_PI,Reset_VI:=Reset_VI, JogExecute_VI:=JogClampExecute_VI, JogSlow_VI:=JogSlow_VI, CW_VI:=CW_VI);
+Clamp_B	(IN:=Clamp_B_CI,Poweron_PI:=Poweron_pi, Stop_PI:=Stop_PI,Reset_VI:=Reset_VI, JogExecute_VI:=JogClampExecute_VI, JogSlow_VI:=JogSlow_VI, CW_VI:=CW_VI);
+Vert_A	(IN:=Vert_A_CI,Poweron_PI:=Poweron_pi, Stop_PI:=Stop_PI,Reset_VI:=Reset_VI, JogExecute_VI:=JogVertExecute_VI, JogSlow_VI:=JogSlow_VI, CW_VI:=CW_VI);
+Vert_B	(IN:=Vert_B_CI,Poweron_PI:=Poweron_pi, Stop_PI:=Stop_PI,Reset_VI:=Reset_VI, JogExecute_VI:=JogVertExecute_VI, JogSlow_VI:=JogSlow_VI, CW_VI:=CW_VI);
+//Rot_A();
+//Rot_B();
+//intialize the fb for bogie servo axis 1 and axis 2 in main pou	
+//enable motors with enable hmi variable
+If Vert_A.Out.Homed_PO=0 or Vert_B.Out.Homed_PO=0 then  Homed_PO:=0; End_if
+//homing check
+
+//SyncVertABSLin(VertDisReq_PI);
+SuperMode(); 
+HomeWithPart();
+Syncvertjog();
+(*8 From InSync() ..... Was being called every Insync() check but was not setting dis to lastdis*)
+Vert_ATrack := Vert_ATrack + (Vert_A.Out.DistancePos_PO - Vert_A.Out.LastDistancePos_PO);
+Vert_BTrack := Vert_BTrack + (Vert_B.Out.DistancePos_PO - Vert_B.Out.LastDistancePos_PO);
+Clamp_ATrack := Clamp_ATrack + (Clamp_A.Out.DistancePos_PO - Clamp_A.Out.LastDistancePos_PO);
+Clamp_BTrack := Clamp_BTrack + (Clamp_B.Out.DistancePos_PO - Clamp_B.Out.LastDistancePos_PO);
+(* End From InSync()*)
+
+//ready to receive move command
+
+//move to request if above is met
+IF InSync() = FALSE THEN
+	IF SuperJogMode_VI =FALSE THEN	//if superjog mode is not enabled stop all moves if out of sync
+		
+	synctestbit :=1;
+	Vert_A.CancelMove();
+	Vert_B.CancelMove();
+	Clamp_A.CancelMove();
+	Clamp_B.CancelMove();
+	msg := 'Not in Sync, Move Canceled, Reset and retry home';
+	ELSE
+		msg := ' SuperJog Mode in Progress, Caution';
+	END_IF
+END_IF	
+]]></ST>
+    </Implementation>
+    <Method Name="HomeSeparate" Id="{2141a868-60fe-46c2-8408-30e2f48e1562}">
+      <Declaration><![CDATA[METHOD PUBLIC HomeSeparate : BOOL
+VAR_INPUT
+END_VAR
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[//if no tool is pressent then homing can be separate
+t]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="HomeWithPart" Id="{f3171a35-c63f-4041-8932-c72fa43fc0c1}">
+      <Declaration><![CDATA[METHOD PUBLIC HomeWithPart : BOOL
+VAR_INPUT
+END_VAR
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[//if part present in one or both of the bogie verts then use this method
+
+//set homepulsecountA from vert_a.pulsecount and use to avoid travel mismatch
+//set homepulsecountB from vert_B.pulsecount and use to avoid travel mismatch
+
+//Position Tracking
+//after homingReq bit is true then
+IF HomingReq THEN
+	Vert_ATrack 	:= Vert_ATrack + (Vert_A.Out.DistancePos_PO - Vert_A.Out.LastDistancePos_PO);
+	Vert_BTrack		:= Vert_BTrack + (Vert_B.Out.DistancePos_PO - Vert_B.Out.LastDistancePos_PO);
+	Clamp_ATrack	:= Clamp_ATrack + (Clamp_A.Out.DistancePos_PO - Clamp_A.Out.LastDistancePos_PO);
+	Clamp_BTrack	:= Clamp_BTrack + (Clamp_B.Out.DistancePos_PO -Clamp_B.Out.LastDistancePos_PO);
+	ELSE 
+		Vert_ATrack 	:=0;
+		Vert_BTrack 	:=0;	
+		Clamp_ATrack 	:=0;
+		Clamp_BTrack 	:=0;
+	END_IF
+
+IF InSync() = FALSE AND SuperJogMode_VI = FALSE THEN
+	//message not in sync	
+	Vert_A.CancelMove();
+	Vert_B.CancelMove();
+	Clamp_A.CancelMove();
+	Clamp_B.CancelMove();
+	
+END_IF
+
+IF vert_A.Out.Homed_PO = 1 AND vert_B.out.Homed_PO =1 AND clamp_A.out.homed_po =1 AND clamp_b.Out.Homed_PO =1 THEN	//check for homed switch
+	HomeWithPart:=TRUE;
+	Homed_PO :=1;
+	HomingReq :=0;
+	ELSE
+		HomeWithPart:=FALSE;
+		Homed_PO :=0;
+END_IF
+IF HomeWithPartStart_PI = 1 THEN
+	Vert_A.bHomeStart_PI := 1;
+	Vert_B.bHomeStart_PI := 1;
+	// dont home the clamps to the low sensor if part is present
+	IF PartPres_A_Hi OR PartPres_A_Lo OR PartPres_B_Hi OR PartPres_B_lo THEN
+		//message that part is present.  add to pressure and set home or leave same and set home
+		
+		ELSE
+			Clamp_A.bHomeStart_PI := 1;
+			Clamp_B.bHomeStart_PI := 1;
+	END_IF
+	//
+	JogSlow_VI :=1;
+	HomeWithPartStart_PI :=0;
+	HomingReq :=1;
+END_IF
+	
+//if homed on A and not B then keep pulsing B
+	
+	//if homed on B and not A then keep pulsing A
+	
+	//if not homed on A and B then pulse both again
+	
+	//wait pulse complete before sending another pulse
+	//if homedswitch trig or limitswitch then cancelmove()
+	]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="InSync" Id="{f4ab3ea0-acc6-491b-b327-957bf6487dd9}">
+      <Declaration><![CDATA[METHOD PRIVATE InSync : BOOL
+VAR_INPUT
+END_VAR
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[
+IF Homed_PO THEN
+	IF ABS(Vert_A.Out.DistancePos_PO - Vert_B.Out.DistancePos_PO) <= VertSyncTolerance_CI AND ABS(Clamp_A.Out.DistancePos_PO - Clamp_B.Out.DistancePos_PO) <= VertSyncTolerance_CI THEN
+		InSync := TRUE;
+	ELSE 
+		InSync := FALSE;
+	END_IF
+ELSE
+	IF ABS((Vert_ATrack) - (Vert_BTrack)) <= VertSyncTolerance_CI AND ABS((Clamp_ATrack) - (Clamp_BTrack)) <= VertSyncTolerance_CI THEN
+			InSync := TRUE;
+		ELSE
+			InSync := FALSE;
+	END_IF
+END_IF
+(*AND ABS((Clamp_ATrack) - (Clamp_BTrack)) <= VertSyncTolerance_CI*)
+//add alarm and check this for when "InSync" is false and one motor has reached home switch and exceeds the sync tolerance]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="Reset" Id="{f9a5b41d-c30a-49fe-bd9c-c5e338a4607e}">
+      <Declaration><![CDATA[METHOD Reset : BOOL
+VAR_INPUT
+END_VAR
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="SuperMode" Id="{d4517f38-ff0e-443b-bd3f-071f44451737}">
+      <Declaration><![CDATA[METHOD SuperMode : BOOL
+VAR_INPUT
+END_VAR
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[IF InSync()=TRUE AND SyncSuperJogExecute_VI AND SuperJogMode_VI THEN
+	//jogs are canceled in 'ClearpathLinPPR' FB when SuperJogExecute is set to 0.
+	Vert_A.SuperJogExecute_VI :=1;
+	Vert_B.SuperJogExecute_VI :=1;
+ELSE
+	Vert_A.SuperJogExecute_VI :=0;
+	Vert_B.SuperJogExecute_VI :=0;
+END_IF
+
+IF SuperJogMode_VI AND SyncSuperJogExecute_VI =0 THEN 	//sync move has to be off to move an individual
+	Vert_A.SuperJogExecute_VI :=VertASuperJog_VI;
+	Vert_B.SuperJogExecute_VI :=VertBSuperJog_VI;
+
+END_IF]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="SyncClampAbsLin" Id="{adb79db3-04f3-45f8-b23f-3194db63b646}">
+      <Declaration><![CDATA[METHOD SyncClampAbsLin : BOOL
+VAR_INPUT
+	req : REAL;
+END_VAR
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[IF InSync()=TRUE  THEN
+	Clamp_A.MoveAbsLin(Req);
+	Clamp_B.MoveAbsLin(Req);
+ELSE
+	//re sync or cancel move
+	Clamp_A.CancelMove();
+	Clamp_B.CancelMove();
+END_IF
+
+]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="SyncVertAbsLin" Id="{c59311f0-0a2a-47dd-85bf-04ed47467842}">
+      <Declaration><![CDATA[METHOD PUBLIC SyncVertAbsLin : BOOL
+VAR_INPUT
+	Req : REAL;
+END_VAR
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[IF InSync()=TRUE  THEN
+	Vert_A.MoveAbsLin(Req);
+	Vert_B.MoveAbsLin(Req);
+ELSE
+	//re sync or cancel move
+	Vert_A.CancelMove();
+	Vert_B.CancelMove();
+END_IF
+
+]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="SyncVertJog" Id="{93ec0b06-02e8-4c89-b52d-b58973572462}">
+      <Declaration><![CDATA[METHOD PRIVATE SyncVertJog : BOOL
+VAR_INPUT
+END_VAR
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[(*
+IF InSync()=TRUE AND SyncJogExecute_VI THEN
+	Vert_A.JogExecute_VI :=1;
+	Vert_B.JogExecute_VI :=1;
+ELSE
+	Vert_A.JogExecute_VI :=0;
+	Vert_B.JogExecute_VI :=0;
+END_IF
+*)
+IF InSync()=TRUE AND SyncVertJogExecute_VI THEN
+	JogVertExecute_VI :=1;
+ELSE
+	JogVertExecute_VI :=0;
+END_IF
+IF InSync()=TRUE AND SyncClampJogExecute_VI THEN
+	JogClampExecute_VI :=1;
+ELSE
+	JogClampExecute_VI :=0;
+END_IF]]></ST>
+      </Implementation>
+    </Method>
+    <LineIds Name="BogieCombo_PPR">
+      <LineId Id="283" Count="17" />
+      <LineId Id="432" Count="0" />
+      <LineId Id="429" Count="2" />
+      <LineId Id="428" Count="0" />
+      <LineId Id="427" Count="0" />
+      <LineId Id="301" Count="5" />
+      <LineId Id="317" Count="1" />
+      <LineId Id="307" Count="1" />
+      <LineId Id="370" Count="1" />
+      <LineId Id="309" Count="4" />
+      <LineId Id="227" Count="0" />
+    </LineIds>
+    <LineIds Name="BogieCombo_PPR.HomeSeparate">
+      <LineId Id="5" Count="1" />
+    </LineIds>
+    <LineIds Name="BogieCombo_PPR.HomeWithPart">
+      <LineId Id="5" Count="0" />
+      <LineId Id="7" Count="1" />
+      <LineId Id="27" Count="0" />
+      <LineId Id="62" Count="3" />
+      <LineId Id="60" Count="0" />
+      <LineId Id="88" Count="2" />
+      <LineId Id="66" Count="0" />
+      <LineId Id="70" Count="1" />
+      <LineId Id="91" Count="1" />
+      <LineId Id="68" Count="0" />
+      <LineId Id="10" Count="0" />
+      <LineId Id="9" Count="0" />
+      <LineId Id="38" Count="0" />
+      <LineId Id="55" Count="1" />
+      <LineId Id="93" Count="1" />
+      <LineId Id="74" Count="0" />
+      <LineId Id="35" Count="0" />
+      <LineId Id="59" Count="0" />
+      <LineId Id="12" Count="0" />
+      <LineId Id="18" Count="0" />
+      <LineId Id="41" Count="0" />
+      <LineId Id="72" Count="0" />
+      <LineId Id="20" Count="1" />
+      <LineId Id="42" Count="0" />
+      <LineId Id="19" Count="0" />
+      <LineId Id="50" Count="1" />
+      <LineId Id="53" Count="0" />
+      <LineId Id="97" Count="0" />
+      <LineId Id="99" Count="0" />
+      <LineId Id="95" Count="0" />
+      <LineId Id="108" Count="0" />
+      <LineId Id="101" Count="0" />
+      <LineId Id="100" Count="0" />
+      <LineId Id="96" Count="0" />
+      <LineId Id="102" Count="0" />
+      <LineId Id="98" Count="0" />
+      <LineId Id="61" Count="0" />
+      <LineId Id="57" Count="0" />
+      <LineId Id="73" Count="0" />
+      <LineId Id="58" Count="0" />
+      <LineId Id="54" Count="0" />
+      <LineId Id="43" Count="6" />
+      <LineId Id="11" Count="0" />
+      <LineId Id="17" Count="0" />
+    </LineIds>
+    <LineIds Name="BogieCombo_PPR.InSync">
+      <LineId Id="36" Count="0" />
+      <LineId Id="13" Count="0" />
+      <LineId Id="21" Count="0" />
+      <LineId Id="14" Count="2" />
+      <LineId Id="28" Count="0" />
+      <LineId Id="22" Count="2" />
+      <LineId Id="26" Count="1" />
+      <LineId Id="25" Count="0" />
+      <LineId Id="7" Count="0" />
+      <LineId Id="31" Count="0" />
+      <LineId Id="20" Count="0" />
+    </LineIds>
+    <LineIds Name="BogieCombo_PPR.Reset">
+      <LineId Id="5" Count="0" />
+    </LineIds>
+    <LineIds Name="BogieCombo_PPR.SuperMode">
+      <LineId Id="6" Count="0" />
+      <LineId Id="21" Count="0" />
+      <LineId Id="7" Count="1" />
+      <LineId Id="19" Count="1" />
+      <LineId Id="11" Count="0" />
+      <LineId Id="5" Count="0" />
+      <LineId Id="13" Count="0" />
+      <LineId Id="12" Count="0" />
+      <LineId Id="14" Count="0" />
+      <LineId Id="22" Count="0" />
+      <LineId Id="18" Count="0" />
+      <LineId Id="15" Count="0" />
+    </LineIds>
+    <LineIds Name="BogieCombo_PPR.SyncClampAbsLin">
+      <LineId Id="6" Count="8" />
+      <LineId Id="5" Count="0" />
+    </LineIds>
+    <LineIds Name="BogieCombo_PPR.SyncVertAbsLin">
+      <LineId Id="6" Count="4" />
+      <LineId Id="13" Count="1" />
+      <LineId Id="5" Count="0" />
+      <LineId Id="20" Count="0" />
+      <LineId Id="19" Count="0" />
+    </LineIds>
+    <LineIds Name="BogieCombo_PPR.SyncVertJog">
+      <LineId Id="10" Count="0" />
+      <LineId Id="18" Count="0" />
+      <LineId Id="5" Count="0" />
+      <LineId Id="9" Count="0" />
+      <LineId Id="12" Count="2" />
+      <LineId Id="11" Count="0" />
+      <LineId Id="19" Count="0" />
+      <LineId Id="21" Count="1" />
+      <LineId Id="24" Count="0" />
+      <LineId Id="26" Count="0" />
+      <LineId Id="20" Count="0" />
+      <LineId Id="31" Count="3" />
+      <LineId Id="30" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

@@ -1,0 +1,115 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+  <POU Name="mySAFETY" Id="{842f556e-02df-400e-9a48-c0f38860887d}" SpecialFunc="None">
+    <Declaration><![CDATA[PROGRAM mySAFETY
+VAR
+	ResetReq	: bool;
+	bPlc2TsErrAck AT %Q* : BOOL;
+	bPlc2TsRestart AT %Q* : BOOL;
+	bPlc2TsSTO AT %Q* : BOOL;
+	bInit: BOOL;
+	bTsToPlcEstopState AT %I* : BOOL := TRUE;
+	bPlc2TsRun AT %Q* : BOOL := TRUE;
+	ranint : INT;
+	ranbool : BOOL;
+	ranbool2 : bool;
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[
+bPlc2TsErrAck := FALSE;
+IF NOT bInit THEN
+	bInit := TRUE;
+	bPlc2TsErrAck := TRUE;
+END_IF
+
+IF NOT bTsToPlcEstopState THEN
+	PLCAxisEnable := FALSE;
+END_IF
+
+IF GVL_IO.bEstopPB = FALSE THEN
+	GVL_IO.bAceOn := FALSE;
+ 	GVL_IO.bSprayOn := FALSE;
+	GVL_IO.iTrunSig := 0;
+END_IF
+
+IF GVL_HMI.ManualMode AND GVL_SAF.DeadmanEnable AND GVL_SAF.EStopOK THEN
+	
+	GVL_HMI.EnableAll := 1;
+	PLCAxisEnable := 1;
+	KM1_ContactorOn := 1;
+	KM2_ContactorOn := 1;
+	
+ELSIF GVL_HMI.ManualMode THEN//TEMP REMOVE THIS
+	
+	GVL_HMI.EnableAll := 1;
+	KM1_ContactorOn := 1;
+	KM2_ContactorOn := 1;
+	
+ELSIF GVL_HMI.AutoMode AND GVL_SAF.DeadmanEnable AND GVL_SAF.EStopOK THEN //REMOVE THIS LATER
+	
+	GVL_HMI.EnableAll := 1;
+	PLCAxisEnable := 1;
+	KM1_ContactorOn := 1;
+	KM2_ContactorOn := 1;
+	
+ELSE
+	
+	GVL_HMI.EnableAll := 0;
+	PLCAxisEnable := 0;
+	KM1_ContactorOn := 0;
+	KM2_ContactorOn := 0;
+
+END_IF
+
+(*
+IF GVL_HMI.ManualMode AND GVL_SAF.DeadmanEnable AND GVL_SAF.EStopOK THEN
+	
+	GVL_HMI.EnableAll := 1;
+	PLCAxisEnable := 1;
+	KM1_ContactorOn := 1;
+	KM2_ContactorOn := 1;
+	
+	ELSE
+	
+	GVL_HMI.EnableAll := 0;
+	PLCAxisEnable := 0;
+	KM1_ContactorOn := 0;
+	KM2_ContactorOn := 0;
+
+END_IF*)]]></ST>
+    </Implementation>
+    <LineIds Name="mySAFETY">
+      <LineId Id="11" Count="0" />
+      <LineId Id="10" Count="0" />
+      <LineId Id="5" Count="0" />
+      <LineId Id="12" Count="0" />
+      <LineId Id="7" Count="1" />
+      <LineId Id="22" Count="0" />
+      <LineId Id="21" Count="0" />
+      <LineId Id="23" Count="1" />
+      <LineId Id="35" Count="0" />
+      <LineId Id="34" Count="0" />
+      <LineId Id="36" Count="0" />
+      <LineId Id="39" Count="0" />
+      <LineId Id="38" Count="0" />
+      <LineId Id="37" Count="0" />
+      <LineId Id="77" Count="0" />
+      <LineId Id="76" Count="0" />
+      <LineId Id="80" Count="1" />
+      <LineId Id="91" Count="0" />
+      <LineId Id="106" Count="1" />
+      <LineId Id="186" Count="2" />
+      <LineId Id="88" Count="0" />
+      <LineId Id="189" Count="2" />
+      <LineId Id="125" Count="8" />
+      <LineId Id="170" Count="2" />
+      <LineId Id="137" Count="1" />
+      <LineId Id="123" Count="0" />
+      <LineId Id="154" Count="1" />
+      <LineId Id="169" Count="0" />
+      <LineId Id="156" Count="12" />
+      <LineId Id="61" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

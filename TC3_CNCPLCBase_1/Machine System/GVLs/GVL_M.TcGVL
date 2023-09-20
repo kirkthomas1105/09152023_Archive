@@ -1,0 +1,25 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.11">
+  <GVL Name="GVL_M" Id="{34622a41-5d64-48c5-8d2b-c5e5f1e0245b}">
+    <Declaration><![CDATA[{attribute 'qualified_only'}
+VAR_GLOBAL
+	//use for mcode mns_sns type and aux axis calls in cnc channel
+	M510Latch :BOOL;
+	M511Latch : BOOL;
+	M512Latch : BOOL;
+	M519Latch : bool;
+	M520Latch : BOOL;
+	M521Latch : BOOL;
+	M522Latch : BOOL;
+	M529Latch : BOOL;
+	M530Latch : BOOL;
+	M531Latch : BOOL;
+	M532Latch : BOOL;
+	M539Latch : BOOL;
+	M540Latch : BOOL;
+	M541Latch : BOOL;
+	M542Latch : BOOL;
+	M549Latch : BOOL;
+END_VAR]]></Declaration>
+  </GVL>
+</TcPlcObject>

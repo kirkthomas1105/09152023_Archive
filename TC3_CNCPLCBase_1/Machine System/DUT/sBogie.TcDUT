@@ -1,0 +1,27 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+  <DUT Name="sBogie" Id="{6e2cd502-5e05-41e8-bb2a-3ec617a1fb96}">
+    <Declaration><![CDATA[TYPE sBogie :
+STRUCT
+	
+	A : sWX_Side;
+	B : sWX_Side;
+	
+	//Vert	: ClearpathPosition;
+	//Rot		: ClearpathPosition;
+	//Clamp	: ClearpathPOsition;
+	bFileCheckOk 	: BOOL;
+	CurrentJob 		: MoldJob;
+	
+	bArmsAtTravelPos 	: BOOL;
+	
+	bEnabled : BOOL;
+	
+	//Conveyor Signals
+	ConveyorLoadPos : BOOL;
+
+END_STRUCT
+END_TYPE
+]]></Declaration>
+  </DUT>
+</TcPlcObject>

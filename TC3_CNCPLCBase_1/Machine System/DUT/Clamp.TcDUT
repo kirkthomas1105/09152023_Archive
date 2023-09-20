@@ -1,0 +1,17 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+  <DUT Name="Clamp" Id="{71ad9021-a25e-408f-b4f8-bced98dbac2e}">
+    <Declaration><![CDATA[TYPE Clamp :
+STRUCT
+	Open_Command:BOOL;
+	Close_Command:BOOL;
+	Opened_Switch_ON:BOOL;
+	Closed_Switch_ON:BOOL;
+	Jam_Fault:BOOL;
+	Air_Pres_OK:BOOL;
+	
+END_STRUCT
+END_TYPE
+]]></Declaration>
+  </DUT>
+</TcPlcObject>

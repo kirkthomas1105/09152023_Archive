@@ -1,0 +1,98 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+  <POU Name="fb_HMI_AX" Id="{28be423a-df4a-4905-986c-21149f70c485}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION_BLOCK fb_HMI_AX
+VAR_INPUT
+	chId	: INT;	//channel id from cnc configuration
+	chAx	: INT;	//default index setting in cnc channel config
+	Scaler	: INT;	//scaler used to move from micro mm to mm (can also be changed in plc to get to inches)
+	viSelectAx : BOOL; //select this axis on hmi
+END_VAR
+VAR_OUTPUT
+	Name 	: STRING;
+	PCS 	: STRING;
+	ACS		: LReal;
+	CMD		: STRING;
+	PosMin	: LREAL;
+	PosMax	: LREAL;
+	manualActive : BOOL;
+	selectedAx : INT;
+	Feed : STRING;
+	Feed2 : STRING;
+	Feed3 : STRING;
+	tf1 : LREAL;
+	tf2 : LREAL;
+	tf3 : LREAL;
+	tf4 : STRING;
+	tf5 : string;
+	//Feed4 : string;
+END_VAR
+VAR
+	axID		: UINT;
+	axLogN		:UINT;
+	chLogN		:UINT;
+	m			: int;
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[//Idea of this fb is to create a scalable method to display axis data on the new twincat hmi display no matter how many axis get added to a channel
+chLogN	:= gpCh[chId]^.bahn_state.coord_r[chAx].log_achs_nr_r; //this is located in motion paramters when adding axis to project
+axLogN 	:= gpAx[m]^.head.log_ax_nr_r;
+WHILE chLogN <> axLogN AND m<255 DO //m<255
+	m := m+1;
+	axLogN 	:= gpAx[m]^.head.log_ax_nr_r;
+END_WHILE
+
+Name 	 := gpCh[chId]^.bahn_state.coord_r[chAx].axis_name_r.zeichen;
+PCS		 := FLOAT_TO_STRING(Dint_to_float(gpCh[chId]^.bahn_state.coord_r[chAx].current_position_r)/Scaler);
+ACS		 := (Dint_to_float(gpCh[chid]^.bahn_state.coord_r[chAx].acs_position_r)/Scaler);
+CMD		 := FLOAT_TO_STRING(DINT_TO_FLOAT(gpCh[chid]^.bahn_state.coord_r[chAx].cmd_position_r)/Scaler);
+PosMin	 := (DINT_TO_FLOAT(gpAx[m]^.lr_state.conf_neg_software_limit_r)/Scaler);
+PosMax	 := (DINT_TO_FLOAT(gpAx[m]^.lr_state.conf_pos_software_limit_r)/Scaler);
+tf1	 := (DINT_TO_FLOAT(gpAx[m]^.lr_state.current_rev_r)/Scaler);
+tf2	 := (Dint_to_float(gpCh[chid]^.bahn_state.active_feed_r)/Scaler);
+//tf3	 := GVL_Machine.pCh0^.bahn_state.coord_r[2].w0_velocity_r;
+tf3	 := gpCh[chId]^.bahn_state.coord_r[chAx].w0_velocity_r;
+//Feed 	 := Float_to_string(Dint_to_Float(gpCH[chId]^.bahn_state.active_feed_r)/Scaler);
+//Feed2 	 := Float_to_string(Dint_to_Float(gpCH[chId]^.bahn_state.command_feed_r)/Scaler);
+//Feed3 	 := Float_to_string(Dint_to_Float(gpCH[chId]^.bahn_state.command_feed_active_r)/Scaler);
+////Feed4 	 := Float_to_string(Dint_to_Float(gpCH[chId]^.bahn_state.coord_r)/Scaler);
+
+
+IF global_hmi.PLCMachineMode[chID].ManualMode.nLogAxisNumber = axLogN THEN
+	manualActive := TRUE;
+	else manualActive :=false;
+END_IF
+IF viSelectAx THEN
+	global_hmi.PLCMachineMode[chID].ManualMode.nLogAxisNumber := axLogN;
+	viSelectAx := false;
+END_IF
+
+]]></ST>
+    </Implementation>
+    <LineIds Name="fb_HMI_AX">
+      <LineId Id="34" Count="1" />
+      <LineId Id="37" Count="0" />
+      <LineId Id="44" Count="2" />
+      <LineId Id="43" Count="0" />
+      <LineId Id="47" Count="0" />
+      <LineId Id="22" Count="5" />
+      <LineId Id="139" Count="0" />
+      <LineId Id="142" Count="0" />
+      <LineId Id="149" Count="0" />
+      <LineId Id="158" Count="0" />
+      <LineId Id="104" Count="0" />
+      <LineId Id="135" Count="2" />
+      <LineId Id="107" Count="0" />
+      <LineId Id="105" Count="0" />
+      <LineId Id="69" Count="1" />
+      <LineId Id="72" Count="0" />
+      <LineId Id="71" Count="0" />
+      <LineId Id="76" Count="1" />
+      <LineId Id="79" Count="0" />
+      <LineId Id="78" Count="0" />
+      <LineId Id="73" Count="0" />
+      <LineId Id="39" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

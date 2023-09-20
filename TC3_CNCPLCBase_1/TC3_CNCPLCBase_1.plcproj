@@ -1,0 +1,720 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <FileVersion>1.0.0.0</FileVersion>
+    <SchemaVersion>2.0</SchemaVersion>
+    <ProjectGuid>{94ac9d40-5918-43f1-aece-33669bc42632}</ProjectGuid>
+    <SubObjectsSortedByName>True</SubObjectsSortedByName>
+    <Name>TC3_CNCPLCBase_1</Name>
+    <ProgramVersion>3.1.4022.1</ProgramVersion>
+    <Application>{fd225ecb-4f2c-4286-820e-5fa1fa6811e9}</Application>
+    <TypeSystem>{ca2649a4-65a5-4458-9b69-9fe354b84880}</TypeSystem>
+    <Implicit_Task_Info>{37b8c9af-4c67-43b1-853b-f17ee6cdcaf1}</Implicit_Task_Info>
+    <Implicit_KindOfTask>{1ed6edfd-6af4-4534-8615-24f78b7bc015}</Implicit_KindOfTask>
+    <Implicit_Jitter_Distribution>{050a50b2-4a69-4ce2-b460-643edb781724}</Implicit_Jitter_Distribution>
+    <LibraryReferences>{2b63d46f-10f1-4caa-9f35-11cf7fd24ec6}</LibraryReferences>
+    <SccProjectName>SAK</SccProjectName>
+    <SccProvider>SAK</SccProvider>
+    <SccAuxPath>SAK</SccAuxPath>
+    <SccLocalPath>SAK</SccLocalPath>
+    <CombineIds>false</CombineIds>
+    <Company>Beckhoff Automation GmbH &amp; Co. KG</Company>
+    <Released>false</Released>
+    <Title>CNC PLC Project</Title>
+    <Author>Beckhoff Automation GmbH &amp; Co. KG</Author>
+    <Description>TwinCAT CNC Base Project</Description>
+    <ProjectVersion>3.1.5000.18</ProjectVersion>
+    <GenerateTpy>false</GenerateTpy>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="CNC\Global_CNC.TcGVL">
+      <SubType>Code</SubType>
+      <LinkAlways>true</LinkAlways>
+    </Compile>
+    <Compile Include="CNC\PRG_CNCAxesHandler.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="CNC\PRG_CNCChannelHandler.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="CNC\PRG_CNCManualMode.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="CNC\PRG_CNCVariablesViewer.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="CNC\PRG_ManualFnc.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="CyclicTask100ms.TcTTO">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="FAST.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="CNC HMI\CNC_HMI_HLI_Added_Code.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="CNC HMI\fb_HMI_AX.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="CNC HMI\Global_HMI.TcGVL">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="CNC HMI\P_GFunctionMonitor.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="CNC HMI\P_GFunctionMonitor_2.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="CNC HMI\ST_HMI_Axis_Display.TcDUT">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="CNC HMI\ST_MachineData.TcDUT">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="CNC HMI\ST_MachineMode.TcDUT">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="CNC HMI\ST_MANUAL.TcDUT">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="CNC HMI\ST_Position.TcDUT">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Machine System\DUT\Clamp.TcDUT">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Machine System\DUT\eBogieHandlerCase.TcDUT">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Machine System\DUT\eMoveState.TcDUT">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Machine System\DUT\eSD_Positions.TcDUT">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Machine System\DUT\MoldJob.TcDUT">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Machine System\DUT\sBogieArmPosition.TcDUT">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Machine System\DUT\sConveyor.TcDUT">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Machine System\DUT\sDatagridVFD.TcDUT">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Machine System\DUT\sPersonnelDoor.TcDUT">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Machine System\DUT\sRollerDoor.TcDUT">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Machine System\DUT\sRoll_Door.TcDUT">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Machine System\DUT\sSD.TcDUT">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Machine System\DUT\sToolData.TcDUT">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Machine System\DUT\sTransfer.TcDUT">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Machine System\DUT\sVFD.TcDUT">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Machine System\DUT\sWX_Side.TcDUT">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Machine System\FBs\CP\SimpleClamp.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Machine System\FBs\FB_AutoMovementHandler.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Machine System\FBs\FB_RollerDoor.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Machine System\FUNCTIONS\F_ArmsInLoadOrientation.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Machine System\FUNCTIONS\F_CheckMoldData.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Machine System\FUNCTIONS\F_CheckRollerDoor.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Machine System\FUNCTIONS\F_IsEmpty.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Machine System\FUNCTIONS\F_PartIsPresent.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Machine System\FUNCTIONS\F_PartIsClamped.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Machine System\FUNCTIONS\F_PartPickupSuccess.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Machine System\GVLs\GVL_CONVEYORS.TcGVL">
+      <SubType>Code</SubType>
+      <LinkAlways>true</LinkAlways>
+    </Compile>
+    <Compile Include="Machine System\GVLs\GVL_CPDefault.TcGVL">
+      <SubType>Code</SubType>
+      <LinkAlways>true</LinkAlways>
+    </Compile>
+    <Compile Include="Machine System\GVLs\GVL_Doors.TcGVL">
+      <SubType>Code</SubType>
+      <LinkAlways>true</LinkAlways>
+    </Compile>
+    <Compile Include="Machine System\GVLs\GVL_HMI.TcGVL">
+      <SubType>Code</SubType>
+      <LinkAlways>true</LinkAlways>
+    </Compile>
+    <Compile Include="Machine System\GVLs\GVL_M.TcGVL">
+      <SubType>Code</SubType>
+      <LinkAlways>true</LinkAlways>
+    </Compile>
+    <Compile Include="Machine System\GVLs\GVL_RibMachine.TcGVL">
+      <SubType>Code</SubType>
+      <LinkAlways>true</LinkAlways>
+    </Compile>
+    <Compile Include="Machine System\PRGs\ALARM AND STATUS\Database_PRG_SEQUENCE_1.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Machine System\PRGs\ALARM AND STATUS\Light.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Machine System\PRGs\ALARM AND STATUS\PumpStatus.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Machine System\PRGs\ALARM AND STATUS\P_EventLogger.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Machine System\PRGs\ALARM AND STATUS\P_Timer.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Machine System\PRGs\ALARM AND STATUS\SYSTEM.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Machine System\PRGs\Bogie\Bogie.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Machine System\PRGs\Bogie\WX_CP_Simple.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Machine System\PRGs\CAM_CNC\Gun\myCounter.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Machine System\PRGs\CAM_CNC\Gun\myGun.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Machine System\PRGs\CAM_CNC\Gun\myPressure.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Machine System\PRGs\Conveyors\GL10_Transfer_Traverse.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Machine System\PRGs\Conveyors\GL11_Transfer.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Machine System\PRGs\Conveyors\GL1_Transfer_Traverse.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Machine System\PRGs\Conveyors\GL2_Transfer.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Machine System\PRGs\Conveyors\GL3_Accumulation.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Machine System\PRGs\Conveyors\GL4_Accumulation.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Machine System\PRGs\Conveyors\GL5A_Accumulation.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Machine System\PRGs\Conveyors\GL5B_Accumulation.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Machine System\PRGs\Conveyors\GL6_Conveyor.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Machine System\PRGs\Conveyors\GL7_Conveyor.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Machine System\PRGs\Conveyors\GL8_Conveyor.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Machine System\PRGs\Conveyors\GL9_Conveyor.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Machine System\PRGs\Conveyors\Input_Buffering.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Machine System\PRGs\Conveyors\JAM_FAULTS.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Machine System\PRGs\Conveyors\MOTOR_FAULTS.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Machine System\PRGs\Conveyors\OUTPUTS.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Machine System\PRGs\FirstScan.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Machine System\PRGs\Heraus_Heater_Control.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Machine System\PRGs\ModeHandle.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Machine System\PRGs\PersonnelDoor.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Machine System\PRGs\PID\PRG_FB_CTRL_PID.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Machine System\PRGs\PID\PRG_PID_CALL.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Machine System\PRGs\Rib Machine\Clamp_and_cut.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Machine System\PRGs\Rib Machine\Fault_Logic.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Machine System\PRGs\Rib Machine\Guarding_Safety.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Machine System\PRGs\Rib Machine\Index_and_Measure.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Machine System\PRGs\Rib Machine\Input_Buffering_RB.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Machine System\PRGs\Rib Machine\Interlocks_to_Main_Line.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Machine System\PRGs\Rib Machine\Lift_Raise_and_Lower.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Machine System\PRGs\Rib Machine\Outputs_RB.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Machine System\PRGs\Rib Machine\START_STOP_1.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Machine System\PRGs\RollerDoors.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Machine System\PRGs\SprayRibRollCureSequencerSD1.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Machine System\PRGs\START_STOP.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Machine System\PRGs\Ventilation.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="MAIN.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Messages\FB_ExtSimpleEventLog.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Messages\FB_SimpleEventLog.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Messages\Global_Messages.TcGVL">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Messages\myMESSAGES.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Messages\myPlcMessages.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Messages\PRG_Messages.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Machine System\CNC_VirtualHBA\ST_CNCVirtualHBA.TcDUT">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Machine System\CNC_VirtualHBA\ST_CNCVirtualHBAKey.TcDUT">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Machine System\DUT\sBogie.TcDUT">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Machine System\DUT\LinPPR_CI.TcDUT">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Machine System\DUT\CpABS_CI.TcDUT">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Machine System\DUT\LinPPR_Out.TcDUT">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Machine System\DUT\CpABS_Out.TcDUT">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Machine System\DUT\Measure.TcDUT">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Machine System\DUT\sClearPath.TcDUT">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Machine System\FBs\CP\ClampCPLinPPR.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Machine System\FBs\CP\ClearpathPositionLinPPR.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Machine System\FBs\CP\ClearpathPositionABS.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Machine System\FBs\CP\ClearpathPositionLinPPR_1.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Machine System\FBs\EventLogger\FB_EventAlarm.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Machine System\FBs\EventLogger\FB_EventMessage.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Machine System\GVLs\GVL_CP.TcGVL">
+      <SubType>Code</SubType>
+      <LinkAlways>true</LinkAlways>
+    </Compile>
+    <Compile Include="Machine System\GVLs\GVL_Job.TcGVL">
+      <SubType>Code</SubType>
+      <LinkAlways>true</LinkAlways>
+    </Compile>
+    <Compile Include="Machine System\GVLs\GVL_Log.TcGVL">
+      <SubType>Code</SubType>
+      <LinkAlways>true</LinkAlways>
+    </Compile>
+    <Compile Include="Machine System\GVLs\GVL_SAF.TcGVL">
+      <SubType>Code</SubType>
+      <LinkAlways>true</LinkAlways>
+    </Compile>
+    <Compile Include="Machine System\PRGs\Bogie\BogieComboWX.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Machine System\PRGs\Bogie\BogieCombo_PPR.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Machine System\PRGs\Bogie\BogieSettings\BogieSettings.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Machine System\PRGs\Bogie\BogieSettings\HMI_Setting_GVL.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Machine System\PRGs\Bogie\BogieSettings\WX1Settings.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Machine System\PRGs\Bogie\BogieSettings\WX2Settings.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Machine System\PRGs\Bogie\BogieSettings\WX3Settings.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Machine System\PRGs\Bogie\BogieSettings\WX4Settings.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Machine System\PRGs\Bogie\WX_CP.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Machine System\PRGs\CAM_CNC\CNC\FB_SetAxisZero.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Machine System\PRGs\CAM_CNC\CNC\FB_StepperHomeToHardStop.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Machine System\PRGs\CAM_CNC\CNC\GetMotorTemps.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Machine System\PRGs\CAM_CNC\CNC\myBUTTONS.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Machine System\PRGs\CAM_CNC\CNC\myHMIPLCRECIPE.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Machine System\PRGs\CAM_CNC\CNC\myMachine.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Machine System\PRGs\CAM_CNC\CNC\myPlcAxis.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Machine System\PRGs\CAM_CNC\CNC\myPlcAxis_1.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Machine System\PRGs\CAM_CNC\CNC\myPRG_AxisHomeSwitches.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Machine System\PRGs\CAM_CNC\CNC\myPRG_AxisHomeSwitches_1.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Machine System\PRGs\CAM_CNC\CNC\myPRG_CNCManualMode_1.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Machine System\PRGs\CAM_CNC\CNC\PRG_ManualModeVirtualHBA.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Machine System\PRGs\CAM_CNC\CNC\PRG_SetAxisOffsets.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Machine System\PRGs\CAM_CNC\myCNC_Call_BogieIndex.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Machine System\PRGs\CAM_CNC\myCNC_Call_Place.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Machine System\PRGs\CAM_CNC\myCNC_Call_Roll.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Machine System\PRGs\CAM_CNC\myCNC_Call_Spray.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Machine System\PRGs\CAM_CNC\myCNC_CureQue.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Machine System\PRGs\CAM_CNC\myCNC_JobQue.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Machine System\PRGs\CAM_CNC\myM_CODES.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Machine System\PRGs\CAM_CNC\myParts.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Machine System\PRGs\CAM_CNC\myVE_Vars.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Machine System\PRGs\CSV\FB_CSV_RECIPE.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Machine System\PRGs\DB\PRG_SEQUENCE.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Machine System\PRGs\mySAFETY.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Machine System\PRGs\Mold Laser Mapping\myDistance.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Machine System\FBs\FB_EcDiagnostics.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Machine System\FBs\FB_GetSpindleRpm.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Machine System\GVLs\GVL_IO.TcGVL">
+      <SubType>Code</SubType>
+      <LinkAlways>true</LinkAlways>
+    </Compile>
+    <Compile Include="Machine System\GVLs\GVL_Machine.TcGVL">
+      <SubType>Code</SubType>
+      <LinkAlways>true</LinkAlways>
+    </Compile>
+    <Compile Include="Machine System\PRGs\SafetyConnect.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="PlcFastTask.TcTTO">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="PlcTask.TcTTO">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Samples\PRG_FastMFunctions.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+  </ItemGroup>
+  <ItemGroup>
+    <PlaceholderReference Include="Tc2_CncBase">
+      <DefaultResolution>Tc2_CncBase, * (Beckhoff Automation GmbH)</DefaultResolution>
+      <Namespace>Tc2_CncBase</Namespace>
+    </PlaceholderReference>
+    <PlaceholderReference Include="Tc2_CncHli">
+      <DefaultResolution>Tc2_CncHli, * (Beckhoff Automation GmbH)</DefaultResolution>
+      <Namespace>Tc2_CncHli</Namespace>
+    </PlaceholderReference>
+    <PlaceholderReference Include="Tc2_CncPlcopenP1">
+      <DefaultResolution>Tc2_CncPlcopenP1, * (Beckhoff Automation GmbH)</DefaultResolution>
+      <Namespace>Tc2_CncPlcopenP1</Namespace>
+    </PlaceholderReference>
+    <PlaceholderReference Include="Tc2_ControllerToolbox">
+      <DefaultResolution>Tc2_ControllerToolbox, * (Beckhoff Automation GmbH)</DefaultResolution>
+      <Namespace>Tc2_ControllerToolbox</Namespace>
+    </PlaceholderReference>
+    <PlaceholderReference Include="Tc2_MC2">
+      <DefaultResolution>Tc2_MC2, * (Beckhoff Automation GmbH)</DefaultResolution>
+      <Namespace>Tc2_MC2</Namespace>
+    </PlaceholderReference>
+    <PlaceholderReference Include="Tc2_Standard">
+      <DefaultResolution>Tc2_Standard, * (Beckhoff Automation GmbH)</DefaultResolution>
+      <Namespace>Tc2_Standard</Namespace>
+    </PlaceholderReference>
+    <PlaceholderReference Include="Tc2_System">
+      <DefaultResolution>Tc2_System, * (Beckhoff Automation GmbH)</DefaultResolution>
+      <Namespace>Tc2_System</Namespace>
+    </PlaceholderReference>
+    <PlaceholderReference Include="Tc2_TempController">
+      <DefaultResolution>Tc2_TempController, * (Beckhoff Automation GmbH)</DefaultResolution>
+      <Namespace>Tc2_TempController</Namespace>
+    </PlaceholderReference>
+    <PlaceholderReference Include="Tc2_Utilities">
+      <DefaultResolution>Tc2_Utilities, * (Beckhoff Automation GmbH)</DefaultResolution>
+      <Namespace>Tc2_Utilities</Namespace>
+    </PlaceholderReference>
+    <PlaceholderReference Include="Tc3_CNC">
+      <DefaultResolution>Tc3_CNC, * (Beckhoff Automation GmbH)</DefaultResolution>
+      <Namespace>Tc3_CNC</Namespace>
+    </PlaceholderReference>
+    <PlaceholderReference Include="Tc3_Database">
+      <DefaultResolution>Tc3_Database, * (Beckhoff Automation GmbH)</DefaultResolution>
+      <Namespace>Tc3_Database</Namespace>
+    </PlaceholderReference>
+    <PlaceholderReference Include="Tc3_EventLogger">
+      <DefaultResolution>Tc3_EventLogger, * (Beckhoff Automation GmbH)</DefaultResolution>
+      <Namespace>Tc3_EventLogger</Namespace>
+    </PlaceholderReference>
+    <PlaceholderReference Include="Tc3_Module">
+      <DefaultResolution>Tc3_Module, * (Beckhoff Automation GmbH)</DefaultResolution>
+      <Namespace>Tc3_Module</Namespace>
+    </PlaceholderReference>
+    <PlaceholderReference Include="UML State Chart Types">
+      <DefaultResolution>UML Statechart Types, 4.1.1.0 (3S - Smart Software Solutions GmbH)</DefaultResolution>
+      <Namespace>UML_SC</Namespace>
+      <SystemLibrary>true</SystemLibrary>
+      <ResolverGuid>d9a6b70a-92f0-4827-8ca3-8ce8a61652d9</ResolverGuid>
+    </PlaceholderReference>
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="CNC" />
+    <Folder Include="CNC HMI" />
+    <Folder Include="Machine System\FUNCTIONS" />
+    <Folder Include="Machine System\PRGs\ALARM AND STATUS" />
+    <Folder Include="Machine System\PRGs\CAM_CNC\Gun" />
+    <Folder Include="Machine System\PRGs\CAM_CNC\Roller-Rib EOAT" />
+    <Folder Include="Machine System\PRGs\Conveyors" />
+    <Folder Include="Machine System\PRGs\PID" />
+    <Folder Include="Machine System\PRGs\Rib Machine" />
+    <Folder Include="Messages" />
+    <Folder Include="Machine System" />
+    <Folder Include="Machine System\CNC_VirtualHBA" />
+    <Folder Include="Machine System\FBs\CP" />
+    <Folder Include="Machine System\FBs\EventLogger" />
+    <Folder Include="Machine System\PRGs" />
+    <Folder Include="Machine System\PRGs\Bogie\BogieSettings" />
+    <Folder Include="Machine System\PRGs\CAM_CNC\CNC" />
+    <Folder Include="Machine System\PRGs\CSV" />
+    <Folder Include="Machine System\FBs" />
+    <Folder Include="Machine System\GVLs" />
+    <Folder Include="Machine System\DUT" />
+    <Folder Include="Machine System\PRGs\DB" />
+    <Folder Include="Machine System\PRGs\Bogie" />
+    <Folder Include="Machine System\PRGs\CAM_CNC" />
+    <Folder Include="Machine System\PRGs\Mold Laser Mapping" />
+    <Folder Include="Samples" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="TC3_CNCPLCBase.tmc">
+      <SubType>Content</SubType>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="TC3_CNCPLCBase_1.tmc">
+      <SubType>Content</SubType>
+    </None>
+  </ItemGroup>
+  <ProjectExtensions>
+    <PlcProjectOptions>
+      <XmlArchive>
+        <Data>
+          <o xml:space="preserve" t="OptionKey">
+      <v n="Name">"&lt;ProjectRoot&gt;"</v>
+      <d n="SubKeys" t="Hashtable" ckt="String" cvt="OptionKey">
+        <v>{192FAD59-8248-4824-A8DE-9177C94C195A}</v>
+        <o>
+          <v n="Name">"{192FAD59-8248-4824-A8DE-9177C94C195A}"</v>
+          <d n="SubKeys" t="Hashtable" />
+          <d n="Values" t="Hashtable" />
+        </o>
+        <v>{8F99A816-E488-41E4-9FA3-846536012284}</v>
+        <o>
+          <v n="Name">"{8F99A816-E488-41E4-9FA3-846536012284}"</v>
+          <d n="SubKeys" t="Hashtable" />
+          <d n="Values" t="Hashtable" />
+        </o>
+        <v>{29BD8D0C-3586-4548-BB48-497B9A01693F}</v>
+        <o>
+          <v n="Name">"{29BD8D0C-3586-4548-BB48-497B9A01693F}"</v>
+          <d n="SubKeys" t="Hashtable" ckt="String" cvt="OptionKey">
+            <v>Rules</v>
+            <o>
+              <v n="Name">"Rules"</v>
+              <d n="SubKeys" t="Hashtable" />
+              <d n="Values" t="Hashtable" />
+            </o>
+          </d>
+          <d n="Values" t="Hashtable" />
+        </o>
+        <v>{40450F57-0AA3-4216-96F3-5444ECB29763}</v>
+        <o>
+          <v n="Name">"{40450F57-0AA3-4216-96F3-5444ECB29763}"</v>
+          <d n="SubKeys" t="Hashtable" />
+          <d n="Values" t="Hashtable" ckt="String">
+            <v>ActiveVisuExtensionsLength</v>
+            <v>0</v>
+            <v>ActiveVisuProfile</v>
+            <v>"IR0whWr8bwfwBwAAiD2qpQAAAABVAgAA37x72QAAAAABAAAAAAAAAAEaUwB5AHMAdABlAG0ALgBTAHQAcgBpAG4AZwACTHsAZgA5ADUAYgBiADQAMgA2AC0ANQA1ADIANAAtADQAYgA0ADUALQA5ADQAMAAwAC0AZgBiADAAZgAyAGUANwA3AGUANQAxAGIAfQADCE4AYQBtAGUABDBUAHcAaQBuAEMAQQBUACAAMwAuADEAIABCAHUAaQBsAGQAIAA0ADAAMgA0AC4ANwAFFlAAcgBvAGYAaQBsAGUARABhAHQAYQAGTHsAMQA2AGUANQA1AGIANgAwAC0ANwAwADQAMwAtADQAYQA2ADMALQBiADYANQBiAC0ANgAxADQANwAxADMAOAA3ADgAZAA0ADIAfQAHEkwAaQBiAHIAYQByAGkAZQBzAAhMewAzAGIAZgBkADUANAA1ADkALQBiADAANwBmAC0ANABkADYAZQAtAGEAZQAxAGEALQBhADgAMwAzADUANgBhADUANQAxADQAMgB9AAlMewA5AGMAOQA1ADgAOQA2ADgALQAyAGMAOAA1AC0ANAAxAGIAYgAtADgAOAA3ADEALQA4ADkANQBmAGYAMQBmAGUAZABlADEAYQB9AAoOVgBlAHIAcwBpAG8AbgALBmkAbgB0AAwKVQBzAGEAZwBlAA0KVABpAHQAbABlAA4aVgBpAHMAdQBFAGwAZQBtAE0AZQB0AGUAcgAPDkMAbwBtAHAAYQBuAHkAEAxTAHkAcwB0AGUAbQARElYAaQBzAHUARQBsAGUAbQBzABIwVgBpAHMAdQBFAGwAZQBtAHMAUwBwAGUAYwBpAGEAbABDAG8AbgB0AHIAbwBsAHMAEyhWAGkAcwB1AEUAbABlAG0AcwBXAGkAbgBDAG8AbgB0AHIAbwBsAHMAFCRWAGkAcwB1AEUAbABlAG0AVABlAHgAdABFAGQAaQB0AG8AcgAVIlYAaQBzAHUATgBhAHQAaQB2AGUAQwBvAG4AdAByAG8AbAAWFHYAaQBzAHUAaQBuAHAAdQB0AHMAFwxzAHkAcwB0AGUAbQAYGFYAaQBzAHUARQBsAGUAbQBCAGEAcwBlABkmRABlAHYAUABsAGEAYwBlAGgAbwBsAGQAZQByAHMAVQBzAGUAZAAaCGIAbwBvAGwAGyJQAGwAdQBnAGkAbgBDAG8AbgBzAHQAcgBhAGkAbgB0AHMAHEx7ADQAMwBkADUAMgBiAGMAZQAtADkANAAyAGMALQA0ADQAZAA3AC0AOQBlADkANAAtADEAYgBmAGQAZgAzADEAMABlADYAMwBjAH0AHRxBAHQATABlAGEAcwB0AFYAZQByAHMAaQBvAG4AHhRQAGwAdQBnAGkAbgBHAHUAaQBkAB8WUwB5AHMAdABlAG0ALgBHAHUAaQBkACBIYQBmAGMAZAA1ADQANAA2AC0ANAA5ADEANAAtADQAZgBlADcALQBiAGIANwA4AC0AOQBiAGYAZgBlAGIANwAwAGYAZAAxADcAIRRVAHAAZABhAHQAZQBJAG4AZgBvACJMewBiADAAMwAzADYANgBhADgALQBiADUAYwAwAC0ANABiADkAYQAtAGEAMAAwAGUALQBlAGIAOAA2ADAAMQAxADEAMAA0AGMAMwB9ACMOVQBwAGQAYQB0AGUAcwAkTHsAMQA4ADYAOABmAGYAYwA5AC0AZQA0AGYAYwAtADQANQAzADIALQBhAGMAMAA2AC0AMQBlADMAOQBiAGIANQA1ADcAYgA2ADkAfQAlTHsAYQA1AGIAZAA0ADgAYwAzAC0AMABkADEANwAtADQAMQBiADUALQBiADEANgA0AC0ANQBmAGMANgBhAGQAMgBiADkANgBiADcAfQAmFk8AYgBqAGUAYwB0AHMAVAB5AHAAZQAnVFUAcABkAGEAdABlAEwAYQBuAGcAdQBhAGcAZQBNAG8AZABlAGwARgBvAHIAQwBvAG4AdgBlAHIAdABpAGIAbABlAEwAaQBiAHIAYQByAGkAZQBzACgQTABpAGIAVABpAHQAbABlACkUTABpAGIAQwBvAG0AcABhAG4AeQAqHlUAcABkAGEAdABlAFAAcgBvAHYAaQBkAGUAcgBzACs4UwB5AHMAdABlAG0ALgBDAG8AbABsAGUAYwB0AGkAbwBuAHMALgBIAGEAcwBoAHQAYQBiAGwAZQAsEnYAaQBzAHUAZQBsAGUAbQBzAC1INgBjAGIAMQBjAGQAZQAxAC0AZAA1AGQAYwAtADQAYQAzAGIALQA5ADAANQA0AC0AMgAxAGYAYQA3ADUANgBhADMAZgBhADQALihJAG4AdABlAHIAZgBhAGMAZQBWAGUAcgBzAGkAbwBuAEkAbgBmAG8AL0x7AGMANgAxADEAZQA0ADAAMAAtADcAZgBiADkALQA0AGMAMwA1AC0AYgA5AGEAYwAtADQAZQAzADEANABiADUAOQA5ADYANAAzAH0AMBhNAGEAagBvAHIAVgBlAHIAcwBpAG8AbgAxGE0AaQBuAG8AcgBWAGUAcgBzAGkAbwBuADIMTABlAGcAYQBjAHkAMzBMAGEAbgBnAHUAYQBnAGUATQBvAGQAZQBsAFYAZQByAHMAaQBvAG4ASQBuAGYAbwA0MEwAbwBhAGQATABpAGIAcgBhAHIAaQBlAHMASQBuAHQAbwBQAHIAbwBqAGUAYwB0ADUaQwBvAG0AcABhAHQAaQBiAGkAbABpAHQAeQDQAAIaA9ADAS0E0AUGGgfQBwgaAUUHCQjQAAkaBEUKCwQDAAAABQAAAA0AAAAAAAAA0AwLrQIAAADQDQEtDtAPAS0Q0AAJGgRFCgsEAwAAAAUAAAANAAAAKAAAANAMC60BAAAA0A0BLRHQDwEtENAACRoERQoLBAMAAAAFAAAADQAAAAAAAADQDAutAgAAANANAS0S0A8BLRDQAAkaBEUKCwQDAAAABQAAAA0AAAAUAAAA0AwLrQIAAADQDQEtE9APAS0Q0AAJGgRFCgsEAwAAAAUAAAANAAAAAAAAANAMC60CAAAA0A0BLRTQDwEtENAACRoERQoLBAMAAAAFAAAADQAAAAAAAADQDAutAgAAANANAS0V0A8BLRDQAAkaBEUKCwQDAAAABQAAAA0AAAAAAAAA0AwLrQIAAADQDQEtFtAPAS0X0AAJGgRFCgsEAwAAAAUAAAANAAAAKAAAANAMC60EAAAA0A0BLRjQDwEtENAZGq0BRRscAdAAHBoCRR0LBAMAAAAFAAAADQAAAAAAAADQHh8tINAhIhoCRSMkAtAAJRoFRQoLBAMAAAADAAAAAAAAAAoAAADQJgutAAAAANADAS0n0CgBLRHQKQEtENAAJRoFRQoLBAMAAAADAAAAAAAAAAoAAADQJgutAQAAANADAS0n0CgBLRHQKQEtEJoqKwFFAAEC0AABLSzQAAEtF9AAHy0t0C4vGgPQMAutAQAAANAxC60XAAAA0DIarQDQMy8aA9AwC60CAAAA0DELrQMAAADQMhqtANA0Gq0A0DUarQA="</v>
+          </d>
+        </o>
+        <v>{535658C0-5AF5-460d-99A4-BFFB984A829A}</v>
+        <o>
+          <v n="Name">"{535658C0-5AF5-460d-99A4-BFFB984A829A}"</v>
+          <d n="SubKeys" t="Hashtable" />
+          <d n="Values" t="Hashtable" ckt="String" cvt="ExactVersionConstraintToSave">
+            <v>VersionConstraint</v>
+            <o>
+              <v n="TheVersion">"3.1.4022.14"</v>
+            </o>
+          </d>
+        </o>
+        <v>{F66C7017-BDD8-4114-926C-81D6D687E35F}</v>
+        <o>
+          <v n="Name">"{F66C7017-BDD8-4114-926C-81D6D687E35F}"</v>
+          <d n="SubKeys" t="Hashtable" />
+          <d n="Values" t="Hashtable" />
+        </o>
+        <v>{246001F4-279D-43AC-B241-948EB31120E1}</v>
+        <o>
+          <v n="Name">"{246001F4-279D-43AC-B241-948EB31120E1}"</v>
+          <d n="SubKeys" t="Hashtable" />
+          <d n="Values" t="Hashtable" ckt="String" cvt="String">
+            <v>GlobalVisuImageFilePath</v>
+            <v>%APPLICATIONPATH%</v>
+          </d>
+        </o>
+      </d>
+      <d n="Values" t="Hashtable" />
+    </o>
+        </Data>
+        <TypeList>
+          <Type n="ExactVersionConstraintToSave">{f9079115-a4ba-4f30-bf7c-9e76613146fc}</Type>
+          <Type n="Hashtable">System.Collections.Hashtable</Type>
+          <Type n="Int32">System.Int32</Type>
+          <Type n="OptionKey">{54dd0eac-a6d8-46f2-8c27-2f43c7e49861}</Type>
+          <Type n="String">System.String</Type>
+        </TypeList>
+      </XmlArchive>
+    </PlcProjectOptions>
+  </ProjectExtensions>
+</Project>

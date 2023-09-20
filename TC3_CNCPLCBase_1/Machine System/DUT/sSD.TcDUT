@@ -1,0 +1,94 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+  <DUT Name="sSD" Id="{ce779c21-5180-4b4c-a8ab-0c05941e54c1}">
+    <Declaration><![CDATA[TYPE sSD :
+STRUCT
+	//Axis and Motor Control and Status
+	AxisRef 				: Tc2_MC2.AXIS_REF;
+	AxisPower				: Tc2_MC2.MC_Power;
+	AxisPowerOutputs		: ST_McOutputs;
+    AxisMoveAbsolute		: Tc2_MC2.MC_MoveAbsolute;
+	AxisJog					: Tc2_MC2.MC_Jog;
+	AxisJogOutputs			: ST_McOutputs;
+	AxisMoveAbsoluteOutputs : ST_McOutputs;
+	AxisReadActualPos 		: TC2_MC2.MC_ReadActualPosition;
+	AxisReadActualPosOutputs: ST_McOutputs;
+	AxisReset				: TC2_MC2.MC_Reset;
+	AxisResetOutputs		: ST_McOutputs;
+	AxisStop				: Tc2_MC2.MC_Stop;
+	AxisStopOutputs			: ST_McOutputs;
+	state					: eMoveState;
+	PosistionRequestAuto	: eSD_Positions;
+	PosistionRequestManual	: eSD_Positions;
+	
+	//Error Handling
+	bSDError 		: BOOL := FALSE;
+	sSDErrorMessage : STRING(255);
+	
+	bWXError 		: BOOL := FALSE;
+	sWXErrorMessage : STRING(255);
+	
+	bEnable			: BOOL := FALSE;
+    fOverride		: LREAL;
+    bMove			: BOOL := FALSE;
+	bMoveDone		: BOOL;
+    fTargetPosition	: LREAL;
+    fTargetVelocity	: LREAL := 5000;
+	fAccel			: LREAL;
+	bMoveBusy		: BOOL;
+	
+	fPosTolerance 		: LREAL := 10;
+	
+	//Position Status
+	bInSprayPos				: BOOL; //this is the pick up and spray pos
+	fSprayPosWindowMax		: LREAL;
+	fSprayPosWindowMin		: LREAL;
+	
+	bInPrePickupPos 		: BOOL;
+	fPrePickupPosWindowMax	: LREAL;
+	fPrePickupPosWindowMin	: LREAL;
+	
+	bInPickupPos			: BOOL;   //JOSEPHBARTONCHANGE4-13-2023 This needs to be implemented.
+	fPickupPosWindowMax		: LREAL;  /// -------
+	fPickupPosWindowMin		: LREAL;  /// -------
+	
+	bInRollPos				: BOOL;
+	fRollPosWindowMax		: LREAL;
+	fRollPosWindowMin		: LREAL;
+	
+	bInCurePos				: BOOL;
+	fCurePosWindowMax		: LREAL;
+	fCurePosWindowMin		: LREAL;
+	
+	bInPostPutDownPos		 : BOOL;
+	fPostPutDownPosWindowMax : LREAL;
+	fPostPutDownPosWindowMin : LREAL;
+	
+	bInPutDownPos			: BOOL;
+	fPutDownPosWindowMax 	: LREAL;
+	fPutDownPosWindowMin 	: LREAL;
+		
+	bPutDownZoneClear 		: BOOL;
+	
+	
+	
+	//Job Status
+	iStep 					: INT;
+	iStepDry				: INT;
+	bSpray_A_Complete 		: BOOL;
+	bSpray_B_Complete 		: BOOL;
+	bRoll_A_Complete 		: BOOL;
+	bRoll_B_Complete		: BOOL;
+	bCure_A_Complete		: BOOL;
+	bCure_B_complete		: BOOL;
+	bPlace_A_Complete		: BOOL;
+	bPlace_B_Complete		: BOOL;
+	bJob_Complete			: BOOL;
+	bPartPresentLoadSide	: BOOL;
+	bPartPresentCureSide 	: BOOL;
+	
+END_STRUCT
+END_TYPE
+]]></Declaration>
+  </DUT>
+</TcPlcObject>

@@ -1,0 +1,1278 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+  <POU Name="FB_AutoMovementHandler" Id="{6fd26d15-e2e5-4fdc-ae2e-da0f4d25aef7}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION_BLOCK FB_AutoMovementHandler
+VAR_INPUT
+	// Bogie arms to use
+	WX : POINTER TO BogieComboWX;
+	
+	// State Handler case
+	nMoveState : eBogieHandlerCase := STANDBY;
+END_VAR
+	
+VAR_OUTPUT
+	//Status Variables
+	bMoveComplete : BOOL 		:= FALSE;
+	bBusy 		  : BOOL 		:= FALSE; // While bBusy := TRUE; assume motor movement.
+	bClamped	  : BOOL 		:= FALSE;
+	bHomed    	  : BOOL		:= FALSE;
+	
+	// Error Variables
+	bError 		  : BOOL 		:= FALSE;
+	sErrorMessage : STRING(255) := '';
+	
+	bTest : BOOL;
+END_VAR
+
+VAR
+	// Bogie arm target position
+	WX2TargetPos : sBogieArmPosition;
+	
+	//Clamp Error Detection
+	nWX2ClampedAPos	: LREAL;
+	nWX2ClampedBPos : LREAL;
+	nClampTolerance : INT := 2;
+	
+	//Timeout Error Detection
+	tStartTime : TIME;
+	tTimeLimit : TIME := T#45S;
+	
+	// General Vars
+	nCounter : USINT := 0;
+	
+	//Initialising Variables
+	bInit 	 : BOOL := FALSE;
+	
+	//Motor Movement Variables
+	bCleanUp 			: BOOL := FALSE;
+	bCleanUpBusy		: BOOL := FALSE;
+	bInitCleanUpTrigger : BOOL := FALSE;
+	
+	//Clamping Variables
+	nClamp_ATracker : ARRAY[1..100] OF REAL;
+	nClamp_BTracker : ARRAY[1..100] OF REAL;
+		
+	nClampAvgPos	: REAL;
+	nClampCounter : INT := 1;	// Don't use me.
+	
+	bClamp_AClamped : BOOL := FALSE;
+	bClamp_BClamped : BOOL := FALSE;
+	
+	bAllStop : BOOL;
+	
+	// For stopping movement & changing modes
+	nStopCounter : INT := 0;	// Don't use me.
+END_VAR
+
+VAR CONSTANT
+	WX2TravelPos 	: sBogieArmPosition := (
+						nVertPos 	   := 0,
+						nVertTolerance := 5,
+						
+						nRotPos := -300,
+						nRotTolerance := 5,
+						
+						nClampPos := 15,
+						nClampTolerance := 2
+						);
+						
+	WX2LoadPos 	: sBogieArmPosition := (
+						nVertPos 	   := 0,
+						nVertTolerance := 5,
+						
+						nRotPos := 0,
+						nRotTolerance := 5,
+						
+						nClampPos := 15,
+						nClampTolerance := 2
+						);
+	WX2UnloadPos 	: sBogieArmPosition := (
+						nVertPos 	   := 0,
+						nVertTolerance := 5,
+						
+						nRotPos := 0,
+						nRotTolerance := 5,
+						
+						nClampPos := 15,
+						nClampTolerance := 2
+						);
+	WX2SprayAPos 	: sBogieArmPosition := (
+						nVertPos 	   := 200,
+						nVertTolerance := 5,
+						
+						nRotPos := -300,
+						nRotTolerance := 5,
+						
+						nClampPos := 450,
+						nClampTolerance := 2
+						);
+						
+	WX2SprayBPos 	: sBogieArmPosition := (
+						nVertPos 	   := 200,
+						nVertTolerance := 5,
+						
+						nRotPos := 300,
+						nRotTolerance := 5,
+						
+						nClampPos := 450,
+						nClampTolerance := 2
+						);
+						
+	WX2LiftedPos 	: sBogieArmPosition := (
+						nVertPos 	   := 200,
+						nVertTolerance := 5,
+						
+						nRotPos := 0,
+						nRotTolerance := 5,
+						
+						nClampPos := 450,
+						nClampTolerance := 2
+						);
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[IF WX^.bPresetMoveTrigger THEN
+	WX^.bPresetMoveTrigger := FALSE;
+END_IF
+
+bAllStop := allAxisAreStopped();
+
+IF bError AND NOT nMoveState = REMOVE_ERROR THEN
+	nMoveState := ERROR;
+END_IF
+
+IF bCleanUp THEN
+	enableAltSpeed();
+END_IF
+
+ // WX1^.Vert_A.Out.DistancePos_PO; To get the current location.
+IF NOT bInit THEN
+	bInit := TRUE;
+END_IF
+
+IF GVL_HMI.AutoMode THEN
+	CASE nMoveState OF
+		STANDBY: // Do Nothing
+			IF bBusy AND NOT bError THEN
+				nMoveState := STOP_EXTENDED;
+				stopAllMovement();
+				disableAltSpeed();
+				nCounter := 0;
+			END_IF
+			
+			IF bError THEN nMoveState := ERROR; END_IF
+			
+		LOAD_POSITION: // Load Position -------------------------------------------------------
+			
+			IF NOT bBusy THEN
+				bBusy := TRUE;
+				bMoveComplete := FALSE;
+				
+				WX2TargetPos := WX2LoadPos;
+
+				WX^.VertDisReq_PI 	:= REAL_TO_INT(WX2TargetPos.nVertPos);
+				WX^.RotDegReq_PI  	:= REAL_TO_INT(WX2TargetPos.nRotPos);
+				WX^.ClampDisReq_PI := 3; // We can assume we are unclamped.
+				
+				WX^.Clamp_A.bStopMove := FALSE;
+				WX^.Clamp_B.bStopMove := FALSE;
+				
+				startAllMovement();
+				
+				disableAltSpeed();
+				WX^.bPresetMoveTrigger := TRUE;
+				
+				nMoveState := MAIN_MOVE;
+				
+				tStartTime := TIME();
+				
+			ELSE
+				nMoveState := STOP;
+			END_IF
+			
+		TRAVERSE_POSITION: // Goto traverse Position -------------------------------------------------------
+			
+			IF NOT bBusy THEN
+				bBusy := TRUE;
+				bMoveComplete := FALSE;
+				
+				WX2TargetPos := WX2TravelPos;
+
+				WX^.VertDisReq_PI 	:= REAL_TO_INT(WX2TargetPos.nVertPos);
+				WX^.RotDegReq_PI  	:= REAL_TO_INT(WX2TargetPos.nRotPos);
+				WX^.ClampDisReq_PI := REAL_TO_INT(WX^.Clamp_A.Out.DistancePos_PO); // We can assume we are unclamped.
+				
+				startAllMovement();
+				
+				disableAltSpeed();
+				WX^.bPresetMoveTrigger := TRUE;
+				
+				nMoveState := MAIN_MOVE;
+				
+				tStartTime := TIME();
+				
+			ELSE
+				nMoveState := STOP;
+			END_IF
+
+		SPRAY_POSITION_A: // Spray Side A -------------------------------------------------------
+			IF NOT bBusy THEN
+				bBusy := TRUE;
+				bMoveComplete := FALSE;
+				
+				WX2TargetPos := WX2SprayAPos;
+				
+				WX^.VertDisReq_PI 	:= REAL_TO_INT(WX2TargetPos.nVertPos);
+				WX^.RotDegReq_PI  	:= REAL_TO_INT(WX2TargetPos.nRotPos);
+				
+				WX2TargetPos.nClampPos := WX^.Clamp_A.Out.DistancePos_PO;
+				
+				startAllMovement();
+				disableAltSpeed();
+				WX^.bPresetMoveTrigger := TRUE;
+				
+				nMoveState := MAIN_MOVE;
+				
+				tStartTime := TIME();
+			END_IF
+			
+		SPRAY_POSITION_B: // Spray Side B -----------------------------------------------------
+			IF NOT bBusy THEN
+				bBusy := TRUE;
+				bMoveComplete := FALSE;
+				
+				WX2TargetPos := WX2SprayBPos;
+				
+				WX^.VertDisReq_PI 	:= REAL_TO_INT(WX2TargetPos.nVertPos);
+				WX^.RotDegReq_PI  	:= REAL_TO_INT(WX2TargetPos.nRotPos);
+				WX2TargetPos.nClampPos := WX^.Clamp_A.Out.DistancePos_PO;
+				
+				startAllMovement();
+				disableAltSpeed();
+				WX^.bPresetMoveTrigger := TRUE;
+				
+				nMoveState := MAIN_MOVE;
+				
+				tStartTime := TIME();
+			END_IF
+		
+		UNLOAD_POSITION: // Unload Position ||| THIS NEEDS TO BE CHECKED!
+			IF NOT bBusy THEN
+				bBusy := TRUE;
+				bMoveComplete := FALSE;
+				
+				WX2TargetPos := WX2UnloadPos;
+				
+				WX^.VertDisReq_PI 	:= REAL_TO_INT(WX2TargetPos.nVertPos);
+				WX^.RotDegReq_PI  	:= REAL_TO_INT(WX2TargetPos.nRotPos);
+				WX^.ClampDisReq_PI := REAL_TO_INT(WX2TargetPos.nClampPos);
+				
+				startAllMovement();
+				disableAltSpeed();
+				WX^.bPresetMoveTrigger := TRUE;
+				
+				nMoveState := MAIN_MOVE;
+				
+				tStartTime := TIME();
+			END_IF
+		
+		LIFTED_POSITION:	
+			IF NOT bBusy THEN
+				bBusy := TRUE;
+				bMoveComplete := FALSE;
+				
+				WX2TargetPos := WX2LiftedPos;
+				
+				WX^.VertDisReq_PI 	:= REAL_TO_INT(WX2TargetPos.nVertPos);
+				WX^.RotDegReq_PI  	:= REAL_TO_INT(WX2TargetPos.nRotPos);
+				WX^.ClampDisReq_PI := REAL_TO_INT(WX2TargetPos.nClampPos);
+				
+				startAllMovement();
+				disableAltSpeed();
+				WX^.bPresetMoveTrigger := TRUE;
+				
+				nMoveState := MAIN_MOVE;
+				
+				tStartTime := TIME();
+			END_IF
+			
+		CLAMP: // Clamp Tool ||||| THIS NEEDS TO BE CHECKED!
+			IF NOT bBusy THEN
+				bBusy := TRUE;
+				bMoveComplete := FALSE;
+				
+				WX^.ClampDisReq_PI := 500;
+				
+				tStartTime := TIME();
+				
+				WX^.Clamp_A.bPresetMoveTrigger := TRUE;
+				WX^.Clamp_B.bPresetMoveTrigger := TRUE;
+				
+				WX^.Clamp_A.bMove_PI := TRUE;
+				WX^.Clamp_B.bMove_PI := TRUE;
+				
+				WX^.Clamp_A.bStopMove := FALSE;
+				WX^.Clamp_B.bStopMove := FALSE;
+				
+				bClamp_AClamped := FALSE;
+				bClamp_BClamped := FALSE;
+				
+					// Set the Clamp Position Tracker to -100, because 0 is a possible clamp value.
+				FOR nClampCounter := 1 TO 100 BY 1 DO
+					nClamp_ATracker[nClampCounter] := -100;
+					nClamp_BTracker[nClampCounter] := -100;
+				END_FOR
+				nClampCounter := 1;
+				disableAltSpeed();
+				
+				tStartTime := TIME();
+			END_IF
+			
+			
+			nClamp_ATracker[nClampCounter] := WX^.Clamp_A.Out.DistancePos_PO;
+			nClamp_BTracker[nClampCounter] := WX^.Clamp_B.Out.DistancePos_PO;
+			nClampCounter := nClampCounter + 1;
+			
+				// Checking positions about every 1 second(s)
+			IF nClampCounter > 100 THEN
+					
+				IF TIME() - tStartTime > T#2S THEN
+						// Checking Clamp A
+					nClampAvgPos := 0;
+					IF NOT bClamp_AClamped THEN
+						nClampAvgPos := nClamp_ATracker[1];
+						
+						IF nClampAvgPos = WX^.Clamp_A.Out.DistancePos_PO THEN
+							bClamp_AClamped := TRUE;
+							nWX2ClampedAPos := WX^.Clamp_A.Out.DistancePos_PO;
+						END_IF
+					END_IF
+					
+						// Checking Clamp B
+					nClampAvgPos := 0;
+					IF NOT bClamp_BClamped THEN
+						nClampAvgPos := nClamp_BTracker[1];
+						
+						IF nClampAvgPos = WX^.Clamp_B.Out.DistancePos_PO THEN
+							bClamp_BClamped := TRUE;
+							nWX2ClampedBPos := WX^.Clamp_B.Out.DistancePos_PO;
+						END_IF
+					END_IF
+				END_IF
+				
+				nClampCounter := 1;
+			END_IF
+				
+			IF bClamp_AClamped THEN
+				WX^.Clamp_A.bStopMove := TRUE;
+			END_IF
+			
+			IF bClamp_BClamped THEN
+				WX^.Clamp_B.bStopMove := TRUE;
+			END_IF
+			
+			IF bClamp_AClamped AND bClamp_BClamped THEN
+				IF WX^.Clamp_A.StopCase = 100 AND WX^.Clamp_B.StopCase = 100 THEN
+					bClamped   := TRUE;
+					WX^.Clamp_A.bStopMove := FALSE;
+					WX^.Clamp_B.bStopMove := FALSE;
+					nMoveState := STOP;
+				END_IF
+			END_IF
+			
+			IF ((TIME() - tStartTime) > tTimeLimit) THEN
+				nMoveState := ERROR;
+			END_IF
+						
+			//IF (TIME() - tStartTime) > tTimeLimit THEN
+			//	nMoveState := ERROR;
+			//	sErrorMessage := 'x Clamping Tool Timeout! x';
+			//END_IF
+			
+		UNCLAMP: // Unclamp Tool ||| THIS NEEDS TO BE CHECKED
+			IF NOT bBusy THEN
+				bBusy := TRUE;
+				bMoveComplete := FALSE;
+				
+				//WX2^.RotDegReq_PI := LREAL_TO_INT(WX2^.Rot_B.Out.DistancePos_PO);
+				WX^.ClampDisReq_PI := 0;
+				
+				tStartTime := TIME();
+				
+				WX^.Clamp_A.bPresetMoveTrigger := TRUE;
+				WX^.Clamp_B.bPresetMoveTrigger := TRUE;
+				
+				WX^.Clamp_A.bMove_PI := TRUE;
+				WX^.Clamp_B.bMove_PI := TRUE;
+				
+				WX^.Clamp_A.bStopMove := FALSE;
+				WX^.Clamp_B.bStopMove := FALSE;
+				
+				bClamp_AClamped := TRUE;
+				bClamp_BClamped := TRUE;
+				
+				disableAltSpeed();
+				
+				bClamped := FALSE;
+				
+				
+				tStartTime := TIME();
+			END_IF
+			
+			IF WX^.Clamp_A.Out.DistancePos_PO < (13) THEN
+				WX^.Clamp_A.bStopMove := TRUE;
+				bClamp_AClamped := FALSE;
+			END_IF
+			
+			IF WX^.Clamp_B.Out.DistancePos_PO < (13) THEN
+				WX^.Clamp_B.bStopMove := TRUE;
+				bClamp_BClamped := FALSE;
+			END_IF
+			IF bClamp_AClamped AND bClamp_BClamped THEN
+				bClamped := FALSE;
+			END_IF
+			
+			IF (WX^.Clamp_A.bStopMove AND WX^.Clamp_A.StopCase = 100) AND (WX^.Clamp_B.bStopMove AND WX^.Clamp_B.StopCase = 100) THEN
+				nMoveState := STOP;
+				WX^.Clamp_A.bStopMove := FALSE;
+				WX^.Clamp_B.bStopMove := FALSE;
+			END_IF
+			
+			IF ((TIME() - tStartTime) > tTimeLimit) THEN
+				nMoveState := ERROR;
+			END_IF
+			
+		HOME_AXES: // Home each axis
+			IF NOT bBusy AND NOT bClamped THEN
+				bBusy := TRUE;
+				bMoveComplete := FALSE;
+				
+					// It is 999 to drive the motors into the High Limit Switch for homing off that switch.
+				WX^.VertDisReq_PI  := -999;
+				WX^.RotDegReq_PI   := -999;
+				WX^.ClampDisReq_PI := -999;
+				
+				WX^.bPresetMoveTrigger := TRUE;
+				
+				tStartTime := TIME();
+			END_IF
+			
+
+			IF WX^.Vert_A.bHigh_FI THEN
+				WX^.Vert_A.bStopMove := TRUE;
+			END_IF
+			
+			IF WX^.Rot_A.bHigh_FI THEN
+				WX^.Rot_A.bStopMove := TRUE;
+			END_IF
+			
+			IF WX^.Clamp_A.bHigh_FI THEN
+				WX^.Clamp_A.bStopMove := TRUE;
+			END_IF
+			
+			IF WX^.Vert_B.bHigh_FI THEN
+				WX^.Vert_B.bStopMove := TRUE;
+			END_IF
+			
+			IF WX^.Rot_B.bHigh_FI THEN
+				WX^.Rot_B.bStopMove := TRUE;
+			END_IF
+			
+			IF WX^.Clamp_B.bHigh_FI THEN
+				WX^.Clamp_B.bStopMove := TRUE;
+			END_IF
+			
+			IF WX^.Vert_A.bLow_FI AND WX^.Rot_A.bLow_FI AND WX^.Clamp_A.bLow_FI AND
+				WX^.Vert_B.bLow_FI AND WX^.Rot_B.bLow_FI AND WX^.Clamp_B.bLow_FI THEN
+				
+					WX^.Vert_A.IN.ABSEncoderZero_CI  := WX^.Vert_A.ABSEncoder_FI;//  - (WX2^.Vert_A.IN.SWLimit_Hi_CI  * WX2^.Vert_A.IN.ABSEncoderScaler_CI);
+					WX^.Rot_A.IN.ABSEncoderZero_CI   := WX^.Rot_A.ABSEncoder_FI;//   - (WX2^.Rot_A.IN.SWLimit_Hi_CI   * WX2^.Rot_A.IN.ABSEncoderScaler_CI);
+					WX^.Clamp_A.IN.ABSEncoderZero_CI := WX^.Clamp_A.ABSEncoder_FI;// - (WX2^.Clamp_A.IN.SWLimit_Hi_CI * WX2^.Clamp_A.IN.ABSEncoderScaler_CI);
+					
+					WX^.Vert_B.IN.ABSEncoderZero_CI  := WX^.Vert_B.ABSEncoder_FI;//  - (WX2^.Vert_B.IN.SWLimit_Hi_CI  * WX2^.Vert_B.IN.ABSEncoderScaler_CI);
+					WX^.Rot_B.IN.ABSEncoderZero_CI   := WX^.Rot_B.ABSEncoder_FI;//   - (WX2^.Rot_B.IN.SWLimit_Hi_CI   * WX2^.Rot_B.IN.ABSEncoderScaler_CI);
+					WX^.Clamp_B.IN.ABSEncoderZero_CI := WX^.Clamp_B.ABSEncoder_FI;// - (WX2^.Clamp_B.IN.SWLimit_Hi_CI * WX2^.Clamp_B.IN.ABSEncoderScaler_CI);
+					nMoveState := STOP;
+			END_IF
+			
+			IF (TIME() - tStartTime) > tTimeLimit THEN
+				nMoveState := ERROR;
+				sErrorMessage := 'x Homing Axis Timeout! x';
+			END_IF
+				
+			
+		STOP: // Stop All Auto Movement
+			disableAltSpeed();
+			stopAllMovement();
+			bCleanup 			:= FALSE;
+			bCleanUpBusy 		:= FALSE;
+			bInitCleanupTrigger := FALSE;
+			bMoveComplete 		:= TRUE;
+			nMoveState 	  		:= STANDBY;
+			WX^.bPresetMoveTrigger := FALSE;
+			WX^.Vert_A.bPresetMoveTrigger := FALSE;
+			WX^.Rot_A.bPresetMoveTrigger := FALSE;
+			WX^.Clamp_A.bPresetMoveTrigger := FALSE;
+			WX^.Vert_B.bPresetMoveTrigger := FALSE;
+			WX^.Rot_B.bPresetMoveTrigger := FALSE;
+			WX^.Clamp_B.bPresetMoveTrigger := FALSE;
+			
+		STOP_EXTENDED:
+			IF nStopCounter < 7 THEN
+				stopAllMovement();
+				disableAltSpeed();
+				nStopCounter := nStopCounter + 1;
+				
+				WX^.bPresetMoveTrigger := FALSE;
+				WX^.Vert_A.bPresetMoveTrigger := FALSE;
+				WX^.Rot_A.bPresetMoveTrigger := FALSE;
+				WX^.Clamp_A.bPresetMoveTrigger := FALSE;
+				WX^.Vert_B.bPresetMoveTrigger := FALSE;
+				WX^.Rot_B.bPresetMoveTrigger := FALSE;
+				WX^.Clamp_B.bPresetMoveTrigger := FALSE;
+			ELSE
+				stopAllMovement();
+				disableAltSpeed();
+				nMoveState := STANDBY;
+				nStopCounter := 0;
+				bBusy := FALSE;
+			END_IF
+		
+		ERROR:
+			disableAltSpeed();			
+			bError 					:= TRUE;
+			bCleanup 				:= FALSE;
+			WX^.bPresetMoveTrigger := FALSE;
+			stopAllMovement();
+			
+		REMOVE_ERROR:
+			bError 		:= FALSE;
+			nMoveState  := STOP;
+			
+			
+
+			
+		CLEAN_UP:
+			IF CleanUpMove()THEN				
+				nMoveState 			:= CHECK;
+				bInitCleanUpTrigger := FALSE;
+				nCounter := 0;
+			END_IF
+			
+			IF ((TIME() - tStartTime) > tTimeLimit) THEN
+				nMoveState := ERROR;
+			END_IF
+		
+		MAIN_MOVE:
+					disableAltSpeed();
+			IF armsInTargetPosition() THEN
+				bCleanUp := TRUE;
+				nMoveState := CLEAN_UP;
+				startAllMovement();
+			END_IF
+			
+			IF ((TIME() - tStartTime) > tTimeLimit) THEN
+				nMoveState := ERROR;
+			END_IF
+			
+			
+			// This is for checking the position to verify that the arms are in the correct position
+			// This really is necessary, because we need to throw an error if it is incorrect!
+			// Currently just moves to the stop state for testing
+		CHECK: 
+			(*
+			IF NOT precisionMoveChecker() AND bCleanup THEN
+				enableAltSpeed();
+				IF NOT bClamped THEN
+					WX2^.VertDisReq_PI  := LREAL_TO_INT(WX2TargetPos.nVertPos);
+					WX2^.RotDegReq_PI 	:= LREAL_TO_INT(WX2TargetPos.nRotPos);
+					WX2^.ClampDisReq_PI := LREAL_TO_INT(WX2TargetPos.nClampPos);
+					
+					WX2^.bPresetMoveTrigger := TRUE;
+				ELSE
+					WX2^.VertDisReq_PI  := LREAL_TO_INT(WX2TargetPos.nVertPos);
+					WX2^.RotDegReq_PI 	:= LREAL_TO_INT(WX2TargetPos.nRotPos);
+					
+					WX2^.Vert_A.bMove_PI := TRUE;
+					WX2^.Vert_A.bPresetMoveTrigger := TRUE;
+					
+					WX2^.Vert_B.bMove_PI := TRUE;
+					WX2^.Vert_B.bPresetMoveTrigger := TRUE;
+					
+					WX2^.Rot_A.bMove_PI := TRUE;
+					WX2^.Rot_A.bPresetMoveTrigger := TRUE;
+				END_IF
+			ELSE
+				nMoveState := STOP;
+			END_IF
+			*)
+			nMoveState := STOP;
+	END_CASE
+	
+		// If holding tool, then we disable the clamp and follow rotation axis
+	IF bClamped THEN
+				// If we are clamped and NOT unloading, then we disable the follow rotation axis,
+				// 		otherwise we need that axis enabled to put the tool down safely.
+		WX^.Rot_B.EnableOut_FO := FALSE;
+		WX^.Rot_B.bStopMove := TRUE;
+		WX^.Clamp_A.EnableOut_FO := FALSE;
+		WX^.Clamp_B.EnableOut_FO := FALSE;
+		WX^.Clamp_A.bStopMove := TRUE;
+		WX^.Clamp_B.bStopMove := TRUE;
+		
+		 // Unclamping detection.
+		 (* This uses the scaled encoder value. Maybe should be changed to absolute encoder value. *)
+		IF (nWX2ClampedAPos > (nClampTolerance + WX^.Clamp_A.Out.DistancePos_PO)) THEN
+			bError := TRUE;
+			sErrorMessage := 'A side clamp has become unlclamped!';
+		END_IF
+		IF (nWX2ClampedBPos > (nClampTolerance + WX^.Clamp_B.Out.DistancePos_PO)) THEN
+			bError := TRUE;
+			sErrorMessage := 'B side clamp has become unlclamped!';
+		END_IF
+	ELSE
+		IF (NOT nMoveState = UNCLAMP) THEN
+			WX^.Clamp_A.bPresetMoveTrigger := FALSE;
+			WX^.Clamp_B.bPresetMoveTrigger := FALSE;
+		END_IF
+	END_IF
+END_IF]]></ST>
+    </Implementation>
+    <Method Name="allAxisAreStopped" Id="{ad7c143b-9979-4854-a4ec-215dede0e0a8}">
+      <Declaration><![CDATA[METHOD allAxisAreStopped : BOOL
+VAR
+	bVertA 	: BOOL := FALSE;
+	bRotA  	: BOOL := FALSE;
+	bClampA : BOOL := FALSE;
+	bVertB 	: BOOL := FALSE;
+	bRotB  	: BOOL := FALSE;
+	bClampB : BOOL := FALSE;
+END_VAR]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[IF WX^.Vert_B.StopCase = 100 THEN
+	bVertB := TRUE;
+END_IF
+
+IF WX^.Rot_B.StopCase = 100 THEN
+	bRotB := TRUE;
+END_IF
+
+IF WX^.Clamp_B.StopCase = 100 THEN
+	bClampB := TRUE;
+END_IF
+
+IF WX^.Vert_A.StopCase = 100 THEN
+	bVertA := TRUE;
+END_IF
+
+IF WX^.Rot_A.StopCase = 100 THEN
+	bRotA := TRUE;
+END_IF
+
+IF WX^.Clamp_A.StopCase = 100 THEN
+	bClampA := TRUE;
+END_IF
+
+allAxisAreStopped := bVertA AND bRotA AND bClampA AND bVertB AND bRotB AND bClampB;]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="armsInTargetPosition" Id="{7d11eafc-349a-4ca2-b13f-7a72ba27de66}">
+      <Declaration><![CDATA[METHOD armsInTargetPosition : BOOL
+VAR	
+	bInPosition : BOOL := FALSE;
+END_VAR]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[//WX1
+
+//WX2
+	// WX2A VERT
+IF WX2TargetPos.nVertPos + WX2TargetPos.nVertCatch > WX^.Vert_A.Out.DistancePos_PO AND
+	WX2TargetPos.nVertPos - WX2TargetPos.nVertCatch < WX^.Vert_A.Out.DistancePos_PO THEN
+		WX^.Vert_A.bStopMove := TRUE;
+END_IF
+
+	// WX2A ROT
+IF WX2TargetPos.nRotPos + WX2TargetPos.nRotCatch > WX^.Rot_A.Out.DistancePos_PO AND
+	WX2TargetPos.nRotPos - WX2TargetPos.nRotCatch < WX^.Rot_A.Out.DistancePos_PO THEN
+		WX^.Rot_A.bStopMove := TRUE;
+END_IF
+
+	// WX2A CLAMP
+IF WX2TargetPos.nClampPos + WX2TargetPos.nClampCatch > WX^.Clamp_A.Out.DistancePos_PO AND
+	WX2TargetPos.nClampPos - WX2TargetPos.nClampCatch < WX^.Clamp_A.Out.DistancePos_PO THEN
+		WX^.Clamp_A.bStopMove := TRUE;
+END_IF
+
+	// WX2B VERT
+IF WX2TargetPos.nVertPos + WX2TargetPos.nVertCatch > WX^.Vert_B.Out.DistancePos_PO AND
+	WX2TargetPos.nVertPos - WX2TargetPos.nVertCatch < WX^.Vert_B.Out.DistancePos_PO THEN
+		WX^.Vert_B.bStopMove := TRUE;
+END_IF
+
+	// WX2B ROT
+IF WX2TargetPos.nRotPos + WX2TargetPos.nRotCatch > WX^.Rot_B.Out.DistancePos_PO AND
+	WX2TargetPos.nRotPos - WX2TargetPos.nRotCatch < WX^.Rot_B.Out.DistancePos_PO THEN
+		WX^.Rot_B.bStopMove := TRUE;
+END_IF
+
+	// WX2B CLAMP
+IF WX2TargetPos.nClampPos + WX2TargetPos.nClampCatch > WX^.Clamp_B.Out.DistancePos_PO AND
+	WX2TargetPos.nClampPos - WX2TargetPos.nClampCatch < WX^.Clamp_B.Out.DistancePos_PO THEN
+		WX^.Clamp_B.bStopMove := TRUE;
+END_IF
+
+
+
+
+	// This is to give the axes time to stop, before we move onto the next step
+IF WX^.Vert_A.StopCase = 100 AND WX^.Rot_A.StopCase = 100 AND WX^.Clamp_A.StopCase = 100 AND
+	WX^.Vert_B.StopCase = 100 AND WX^.Rot_B.StopCase = 100 AND WX^.Clamp_B.StopCase = 100 THEN
+	bInPosition := TRUE;
+ELSE
+	bInPosition := FALSE;
+END_IF
+
+IF bClamped THEN
+	IF WX^.Vert_A.StopCase = 100 AND WX^.Rot_A.StopCase = 100 AND WX^.Vert_B.StopCase = 100 THEN
+		bInPosition := TRUE;
+	ELSE
+		bInPosition := FALSE;
+	END_IF
+END_IF
+
+armsInTargetPosition := bInPosition;]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="CleanUpMove" Id="{222be7c1-e813-49c1-a930-ebe5458b977c}">
+      <Declaration><![CDATA[METHOD CleanUpMove : BOOL
+(*
+	This method assumes that the movement from the initial 'big' move has ended.
+*)]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[IF NOT bInitCleanUpTrigger THEN
+	enableAltSpeed();
+	
+		// Reload Target Position into our ClearpathPositionABS
+	WX^.VertDisReq_PI 	:= REAL_TO_INT(WX2TargetPos.nVertPos);
+	WX^.RotDegReq_PI  	:= REAL_TO_INT(WX2TargetPos.nRotPos);
+	WX^.ClampDisReq_PI := REAL_TO_INT(WX2TargetPos.nClampPos);
+	
+		// If we are clamped, we don't move all axis
+	IF NOT bClamped THEN
+		WX^.bPresetMoveTrigger := TRUE;
+	ELSE
+		WX^.Vert_A.bPresetMoveTrigger := TRUE;
+		WX^.Vert_B.bPresetMoveTrigger := TRUE;
+		WX^.Rot_A.bPresetMoveTrigger  := TRUE;
+			
+		WX^.Vert_A.bMove_PI := TRUE;
+		WX^.Vert_B.bMove_PI := TRUE;
+		WX^.Rot_A.bMove_PI  := TRUE;
+	END_IF
+	
+	enableAltSpeed();
+	
+	bInitCleanUpTrigger     := TRUE;
+END_IF
+
+enableAltSpeed();
+
+CleanUpMove := precisionMoveChecker();]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="disableAltSpeed" Id="{1230f1d2-7589-49b0-b972-5d4ec9a2341e}">
+      <Declaration><![CDATA[METHOD disableAltSpeed : BOOL
+VAR
+	bDetect : BOOL := FALSE;
+END_VAR
+
+(* 
+	This method returns TRUE if  alt speed control was DISABLED already.
+*)
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[bDetect := FALSE;
+
+IF NOT WX^.Vert_A.bAltSpeedControl OR NOT WX^.Vert_B.bAltSpeedControl  THEN
+	bDetect := TRUE;
+END_IF
+
+IF NOT WX^.Rot_A.bAltSpeedControl OR NOT WX^.Rot_B.bAltSpeedControl THEN
+	bDetect := TRUE;
+END_IF
+
+IF NOT WX^.Clamp_A.bAltSpeedControl OR NOT WX^.Clamp_A.bAltSpeedControl THEN
+	bDetect := TRUE;
+END_IF
+
+WX^. Vert_A.bAltSpeedControl := FALSE;
+WX^.  Rot_A.bAltSpeedControl := FALSE;
+WX^.Clamp_A.bAltSpeedControl := FALSE;
+
+WX^. Vert_B.bAltSpeedControl := FALSE;
+WX^.  Rot_B.bAltSpeedControl := FALSE;
+WX^.Clamp_A.bAltSpeedControl := FALSE;
+
+disableAltSpeed := bDetect;]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="enableAltSpeed" Id="{8bd3e33c-b171-4bc2-961e-d0523a48f9dc}">
+      <Declaration><![CDATA[METHOD enableAltSpeed : BOOL
+VAR
+	bDetect : BOOL := FALSE;
+END_VAR
+(* 
+	This method returns TRUE if  alt speed control was ENABLED already.
+*)]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[bDetect := FALSE;
+
+IF WX^.Vert_A.bAltSpeedControl OR WX^.Vert_B.bAltSpeedControl  THEN
+	bDetect := TRUE;
+END_IF
+
+IF WX^.Rot_A.bAltSpeedControl OR WX^. Rot_B.bAltSpeedControl THEN
+	bDetect := TRUE;
+END_IF
+
+IF WX^.Clamp_A.bAltSpeedControl OR WX^.Clamp_B.bAltSpeedControl THEN
+	bDetect := TRUE;
+END_IF
+
+WX^. Vert_A.bAltSpeedControl := TRUE;
+WX^.  Rot_A.bAltSpeedControl := TRUE;
+WX^.Clamp_A.bAltSpeedControl := TRUE;
+
+WX^. Vert_B.bAltSpeedControl := TRUE;
+WX^.  Rot_B.bAltSpeedControl := TRUE;
+WX^.Clamp_B.bAltSpeedControl := TRUE;
+
+enableAltSpeed := bDetect;]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="MoveArms" Id="{959aa24e-3ce4-4f82-9153-3862643fc281}">
+      <Declaration><![CDATA[METHOD MoveArms : BOOL
+VAR_INPUT
+	position : sBogieArmPosition;
+END_VAR
+(*
+	Author @ Joseph Barton	
+
+	This method is initiating and monitoring the initial move for a preset move command.
+*)]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[
+	// If we are not busy moving somewhere.
+IF NOT bBusy THEN	
+	bBusy 		  := TRUE;	// We are now busy.
+	bMoveComplete := FALSE;	// And our move is not complete.
+							// 	If we are already in the target position,
+							// 	That will be determined later in this cycle.
+	tStartTime := TIME(); 	// Save the start time, for the timeout error tracking.
+							
+		// This is the 'big' move, so we disable altenate speed to move quickly
+	disableAltSpeed();		
+	
+		// set our target position for position checking.
+	WX2TargetPos := position;	
+	
+		// Tell the Auto-movement part of our clearpath library our desired location.
+	WX^.VertDisReq_PI 	:= REAL_TO_INT(WX2TargetPos.nVertPos); 	
+	WX^.RotDegReq_PI  	:= REAL_TO_INT(WX2TargetPos.nRotPos);
+	WX^.ClampDisReq_PI := REAL_TO_INT(WX2TargetPos.nClampPos);
+	
+		// IF we are NOT clamped we can use the bPresetMoveTrigger boolean to
+		//		give the library the right information on how te move.
+	IF NOT bClamped THEN
+		WX^.bPresetMoveTrigger := TRUE;
+	ELSE
+		
+			// If we are clamped, then we cannot move all 6 motors,
+			//		and we have to manually tell our desired axis
+			//		that we are moving them to a preset position.
+		WX^.Vert_A.bPresetMoveTrigger := TRUE;
+		WX^.Vert_B.bPresetMoveTrigger := TRUE;
+		WX^.Rot_A.bPresetMoveTrigger  := TRUE;
+		
+			// Then tell them to move.
+		WX^.Vert_A.bMove_PI := TRUE;
+		WX^.Vert_B.bMove_PI := TRUE;
+		WX^.Rot_A.bMove_PI  := TRUE;
+	END_IF
+	
+	disableAltSpeed();
+END_IF
+
+	// disableing alternate speed each cycle is too much,
+	//		but there is a glitch where it will go into
+	// 		alternate speed 'randomly'. I will have to
+	//		fix it soon.
+disableAltSpeed();
+
+	// Check if we are in the correct position each cycle.
+MoveArms := armsInTargetPosition();]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="partPresent" Id="{3fe73a78-d29c-4600-a138-715d1e708776}">
+      <Declaration><![CDATA[METHOD partPresent : BOOL
+VAR_INPUT
+END_VAR
+
+(* 
+	This method returns true if there is a part detected by the part present sensor.
+	
+	This still needs to be implemented, but because the Part Present Sensors do not exist yet, this is what we got.
+*)]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[partPresent := FALSE;]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="precisionMoveChecker" Id="{e710bd19-157b-4cc2-b43c-9f98b82c861a}">
+      <Declaration><![CDATA[METHOD precisionMoveChecker : BOOL
+VAR
+	bWX2AVertInLocation  : BOOL := FALSE;
+	bWX2ARotInLocation   : BOOL := FALSE;
+	bWX2AClampInLocation : BOOL := FALSE;
+	
+	bWX2BVertInLocation  : BOOL := FALSE;
+	bWX2BRotInLocation 	 : BOOL := FALSE;
+	bWX2BClampInLocation : BOOL := FALSE;
+END_VAR]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[	// Vert_A
+IF WX2TargetPos.nVertPos + WX2TargetPos.nVertTolerance > WX^.Vert_A.Out.DistancePos_PO AND
+ 	WX2TargetPos.nVertPos - WX2TargetPos.nVertTolerance < WX^.Vert_A.Out.DistancePos_PO THEN
+		bWX2AVertInLocation := TRUE;
+		WX^.Vert_A.bStopMove := TRUE;
+ELSE
+	WX^.Vert_A.bStopMove := FALSE;
+END_IF
+	
+	// Rot_A
+IF WX2TargetPos.nRotPos + WX2TargetPos.nRotTolerance > WX^.Rot_A.Out.DistancePos_PO AND
+	WX2TargetPos.nRotPos - WX2TargetPos.nRotTolerance < WX^.Rot_A.Out.DistancePos_PO THEN
+		bWX2ARotInLocation := TRUE;
+		WX^.Rot_A.bStopMove := TRUE;
+ELSE
+	WX^.Rot_A.bStopMove := FALSE;
+END_IF
+
+	// Clamp_A
+IF WX2TargetPos.nClampPos + WX2TargetPos.nClampTolerance > WX^.Clamp_A.Out.DistancePos_PO AND
+	WX2TargetPos.nClampPos - WX2TargetPos.nClampTolerance < WX^.Clamp_A.Out.DistancePos_PO THEN
+		bWX2AClampInLocation := TRUE;
+		WX^.Clamp_A.bStopMove := TRUE;
+ELSE
+	WX^.Clamp_A.bStopMove := FALSE;
+END_IF
+
+	// Vert_B
+IF WX2TargetPos.nVertPos + WX2TargetPos.nVertTolerance > WX^.Vert_B.Out.DistancePos_PO AND
+ 	WX2TargetPos.nVertPos - WX2TargetPos.nVertTolerance < WX^.Vert_B.Out.DistancePos_PO THEN
+		bWX2BVertInLocation := TRUE;
+		WX^.Vert_B.bStopMove := TRUE;
+ELSE
+	WX^.Vert_B.bStopMove := FALSE;
+END_IF
+	
+	// Rot_B
+IF WX2TargetPos.nRotPos + WX2TargetPos.nRotTolerance > WX^.Rot_B.Out.DistancePos_PO AND
+	WX2TargetPos.nRotPos - WX2TargetPos.nRotTolerance < WX^.Rot_B.Out.DistancePos_PO THEN
+		bWX2BRotInLocation := TRUE;
+		WX^.Rot_B.bStopMove := TRUE;
+ELSE
+	WX^.Rot_B.bStopMove := FALSE;
+END_IF
+
+	// Clamp_B
+IF WX2TargetPos.nClampPos + WX2TargetPos.nClampTolerance > WX^.Clamp_B.Out.DistancePos_PO AND
+	WX2TargetPos.nClampPos - WX2TargetPos.nClampTolerance < WX^.Clamp_B.Out.DistancePos_PO THEN
+		bWX2BClampInLocation := TRUE;
+		WX^.Clamp_B.bStopMove := TRUE;
+ELSE
+	WX^.Clamp_B.bStopMove := FALSE;
+END_IF
+
+	// Check if all axis are in location, and return TRUE; ELSE return FALSE;
+IF bWX2AVertInLocation AND bWX2ARotInLocation AND bWX2AClampInLocation AND
+	bWX2BVertInLocation AND bWX2BRotInLocation AND bWX2BClampInLocation THEN
+		
+		WX^.Clamp_B.bStopMove := FALSE;
+		WX^.Rot_B.bStopMove := FALSE;
+		WX^.Vert_B.bStopMove := FALSE;
+		WX^.Clamp_A.bStopMove := FALSE;
+		WX^.Rot_A.bStopMove := FALSE;
+		WX^.Vert_A.bStopMove := FALSE;
+		
+		precisionMoveChecker := TRUE;
+	
+ELSE
+	precisionMoveChecker := FALSE;
+END_IF
+
+	// IF we are clamped then we are checking for the Vert_A, Vert_B, & Rot_A axis only.
+IF bClamped THEN
+	IF bWX2AVertInLocation AND bWX2ARotInLocation AND bWX2BVertInLocation THEN
+		
+		WX^.Vert_B.bStopMove := FALSE;
+		WX^.Rot_A.bStopMove := FALSE;
+		WX^.Vert_A.bStopMove := FALSE;
+		
+		precisionMoveChecker := TRUE;
+	END_IF
+END_IF
+]]></ST>
+      </Implementation>
+    </Method>
+    <Action Name="startAllMovement" Id="{2ad7285f-05d8-4403-8dcd-1d99404f3d87}">
+      <Implementation>
+        <ST><![CDATA[WX^.Vert_A.bStopMove 	:= FALSE;
+WX^.Rot_A.bStopMove 	:= FALSE;
+WX^.Clamp_A.bStopMove 	:= FALSE;
+WX^.Vert_B.bStopMove 	:= FALSE;
+WX^.Rot_B.bStopMove  	:= FALSE;
+WX^.Clamp_B.bStopMove 	:= FALSE;]]></ST>
+      </Implementation>
+    </Action>
+    <Action Name="stopAllMovement" Id="{e00f51f6-27c9-476c-a586-5e76d2b62d12}">
+      <Implementation>
+        <ST><![CDATA[WX^.Vert_A.bStopMove 	:= TRUE;
+WX^.Rot_A.bStopMove 	:= TRUE;
+WX^.Clamp_A.bStopMove 	:= TRUE;
+WX^.Vert_B.bStopMove 	:= TRUE;
+WX^.Rot_B.bStopMove 	:= TRUE;
+WX^.Clamp_B.bStopMove 	:= TRUE;]]></ST>
+      </Implementation>
+    </Action>
+    <LineIds Name="FB_AutoMovementHandler">
+      <LineId Id="3200" Count="42" />
+      <LineId Id="3951" Count="0" />
+      <LineId Id="3953" Count="0" />
+      <LineId Id="3952" Count="0" />
+      <LineId Id="3243" Count="111" />
+      <LineId Id="3822" Count="0" />
+      <LineId Id="3356" Count="105" />
+      <LineId Id="4085" Count="2" />
+      <LineId Id="4089" Count="1" />
+      <LineId Id="4093" Count="2" />
+      <LineId Id="4091" Count="1" />
+      <LineId Id="4088" Count="0" />
+      <LineId Id="4096" Count="2" />
+      <LineId Id="3462" Count="2" />
+      <LineId Id="3468" Count="0" />
+      <LineId Id="4082" Count="0" />
+      <LineId Id="3476" Count="5" />
+      <LineId Id="4099" Count="0" />
+      <LineId Id="3482" Count="3" />
+      <LineId Id="4100" Count="0" />
+      <LineId Id="3486" Count="0" />
+      <LineId Id="4101" Count="0" />
+      <LineId Id="3487" Count="0" />
+      <LineId Id="4103" Count="0" />
+      <LineId Id="4102" Count="0" />
+      <LineId Id="3488" Count="131" />
+      <LineId Id="3687" Count="0" />
+      <LineId Id="3621" Count="65" />
+      <LineId Id="3818" Count="0" />
+      <LineId Id="3815" Count="0" />
+      <LineId Id="3817" Count="0" />
+      <LineId Id="3819" Count="0" />
+      <LineId Id="3816" Count="0" />
+      <LineId Id="1335" Count="0" />
+    </LineIds>
+    <LineIds Name="FB_AutoMovementHandler.allAxisAreStopped">
+      <LineId Id="20" Count="0" />
+      <LineId Id="22" Count="1" />
+      <LineId Id="21" Count="0" />
+      <LineId Id="5" Count="2" />
+      <LineId Id="17" Count="2" />
+      <LineId Id="16" Count="0" />
+      <LineId Id="25" Count="10" />
+      <LineId Id="24" Count="0" />
+      <LineId Id="37" Count="0" />
+      <LineId Id="36" Count="0" />
+    </LineIds>
+    <LineIds Name="FB_AutoMovementHandler.armsInTargetPosition">
+      <LineId Id="38" Count="1" />
+      <LineId Id="37" Count="0" />
+      <LineId Id="28" Count="0" />
+      <LineId Id="5" Count="0" />
+      <LineId Id="92" Count="0" />
+      <LineId Id="75" Count="0" />
+      <LineId Id="16" Count="0" />
+      <LineId Id="29" Count="0" />
+      <LineId Id="19" Count="0" />
+      <LineId Id="102" Count="0" />
+      <LineId Id="91" Count="0" />
+      <LineId Id="77" Count="0" />
+      <LineId Id="90" Count="0" />
+      <LineId Id="30" Count="0" />
+      <LineId Id="24" Count="0" />
+      <LineId Id="103" Count="0" />
+      <LineId Id="89" Count="0" />
+      <LineId Id="79" Count="0" />
+      <LineId Id="32" Count="0" />
+      <LineId Id="41" Count="1" />
+      <LineId Id="104" Count="0" />
+      <LineId Id="88" Count="0" />
+      <LineId Id="82" Count="0" />
+      <LineId Id="46" Count="0" />
+      <LineId Id="48" Count="1" />
+      <LineId Id="105" Count="0" />
+      <LineId Id="87" Count="0" />
+      <LineId Id="166" Count="0" />
+      <LineId Id="54" Count="2" />
+      <LineId Id="106" Count="0" />
+      <LineId Id="58" Count="0" />
+      <LineId Id="85" Count="0" />
+      <LineId Id="60" Count="0" />
+      <LineId Id="242" Count="1" />
+      <LineId Id="241" Count="0" />
+      <LineId Id="239" Count="0" />
+      <LineId Id="231" Count="0" />
+      <LineId Id="230" Count="0" />
+      <LineId Id="232" Count="0" />
+      <LineId Id="234" Count="0" />
+      <LineId Id="233" Count="0" />
+      <LineId Id="235" Count="1" />
+      <LineId Id="248" Count="0" />
+      <LineId Id="247" Count="0" />
+      <LineId Id="249" Count="0" />
+      <LineId Id="251" Count="0" />
+      <LineId Id="253" Count="1" />
+      <LineId Id="252" Count="0" />
+      <LineId Id="250" Count="0" />
+      <LineId Id="240" Count="0" />
+      <LineId Id="189" Count="0" />
+    </LineIds>
+    <LineIds Name="FB_AutoMovementHandler.CleanUpMove">
+      <LineId Id="19" Count="0" />
+      <LineId Id="52" Count="0" />
+      <LineId Id="25" Count="0" />
+      <LineId Id="68" Count="0" />
+      <LineId Id="28" Count="1" />
+      <LineId Id="26" Count="0" />
+      <LineId Id="60" Count="0" />
+      <LineId Id="27" Count="0" />
+      <LineId Id="69" Count="0" />
+      <LineId Id="39" Count="0" />
+      <LineId Id="21" Count="0" />
+      <LineId Id="42" Count="5" />
+      <LineId Id="40" Count="1" />
+      <LineId Id="53" Count="1" />
+      <LineId Id="48" Count="0" />
+      <LineId Id="33" Count="0" />
+      <LineId Id="22" Count="0" />
+      <LineId Id="55" Count="1" />
+      <LineId Id="24" Count="0" />
+      <LineId Id="23" Count="0" />
+    </LineIds>
+    <LineIds Name="FB_AutoMovementHandler.disableAltSpeed">
+      <LineId Id="6" Count="21" />
+      <LineId Id="5" Count="0" />
+    </LineIds>
+    <LineIds Name="FB_AutoMovementHandler.enableAltSpeed">
+      <LineId Id="31" Count="1" />
+      <LineId Id="17" Count="0" />
+      <LineId Id="20" Count="0" />
+      <LineId Id="19" Count="0" />
+      <LineId Id="22" Count="0" />
+      <LineId Id="21" Count="0" />
+      <LineId Id="23" Count="1" />
+      <LineId Id="26" Count="0" />
+      <LineId Id="30" Count="0" />
+      <LineId Id="29" Count="0" />
+      <LineId Id="28" Count="0" />
+      <LineId Id="6" Count="6" />
+      <LineId Id="5" Count="0" />
+      <LineId Id="34" Count="0" />
+      <LineId Id="33" Count="0" />
+    </LineIds>
+    <LineIds Name="FB_AutoMovementHandler.MoveArms">
+      <LineId Id="39" Count="1" />
+      <LineId Id="6" Count="0" />
+      <LineId Id="34" Count="1" />
+      <LineId Id="41" Count="1" />
+      <LineId Id="65" Count="0" />
+      <LineId Id="43" Count="0" />
+      <LineId Id="33" Count="0" />
+      <LineId Id="7" Count="0" />
+      <LineId Id="44" Count="1" />
+      <LineId Id="38" Count="0" />
+      <LineId Id="46" Count="0" />
+      <LineId Id="8" Count="4" />
+      <LineId Id="47" Count="1" />
+      <LineId Id="13" Count="2" />
+      <LineId Id="49" Count="3" />
+      <LineId Id="16" Count="3" />
+      <LineId Id="53" Count="0" />
+      <LineId Id="20" Count="5" />
+      <LineId Id="28" Count="0" />
+      <LineId Id="54" Count="0" />
+      <LineId Id="29" Count="0" />
+      <LineId Id="55" Count="2" />
+      <LineId Id="30" Count="0" />
+      <LineId Id="58" Count="0" />
+      <LineId Id="31" Count="0" />
+      <LineId Id="5" Count="0" />
+    </LineIds>
+    <LineIds Name="FB_AutoMovementHandler.partPresent">
+      <LineId Id="5" Count="0" />
+    </LineIds>
+    <LineIds Name="FB_AutoMovementHandler.precisionMoveChecker">
+      <LineId Id="30" Count="0" />
+      <LineId Id="5" Count="0" />
+      <LineId Id="74" Count="0" />
+      <LineId Id="16" Count="1" />
+      <LineId Id="7" Count="0" />
+      <LineId Id="146" Count="1" />
+      <LineId Id="19" Count="0" />
+      <LineId Id="31" Count="0" />
+      <LineId Id="20" Count="0" />
+      <LineId Id="75" Count="0" />
+      <LineId Id="21" Count="1" />
+      <LineId Id="148" Count="1" />
+      <LineId Id="18" Count="0" />
+      <LineId Id="32" Count="0" />
+      <LineId Id="25" Count="1" />
+      <LineId Id="76" Count="0" />
+      <LineId Id="27" Count="1" />
+      <LineId Id="150" Count="1" />
+      <LineId Id="24" Count="0" />
+      <LineId Id="35" Count="0" />
+      <LineId Id="77" Count="4" />
+      <LineId Id="156" Count="1" />
+      <LineId Id="82" Count="6" />
+      <LineId Id="154" Count="1" />
+      <LineId Id="89" Count="6" />
+      <LineId Id="152" Count="1" />
+      <LineId Id="56" Count="0" />
+      <LineId Id="96" Count="0" />
+      <LineId Id="57" Count="2" />
+      <LineId Id="122" Count="0" />
+      <LineId Id="124" Count="4" />
+      <LineId Id="123" Count="0" />
+      <LineId Id="60" Count="4" />
+      <LineId Id="55" Count="0" />
+      <LineId Id="107" Count="3" />
+      <LineId Id="129" Count="0" />
+      <LineId Id="134" Count="0" />
+      <LineId Id="136" Count="0" />
+      <LineId Id="131" Count="0" />
+      <LineId Id="130" Count="0" />
+      <LineId Id="111" Count="1" />
+      <LineId Id="106" Count="0" />
+      <LineId Id="33" Count="0" />
+    </LineIds>
+    <LineIds Name="FB_AutoMovementHandler.startAllMovement">
+      <LineId Id="2" Count="2" />
+      <LineId Id="6" Count="1" />
+      <LineId Id="1" Count="0" />
+    </LineIds>
+    <LineIds Name="FB_AutoMovementHandler.stopAllMovement">
+      <LineId Id="2" Count="2" />
+      <LineId Id="6" Count="1" />
+      <LineId Id="1" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

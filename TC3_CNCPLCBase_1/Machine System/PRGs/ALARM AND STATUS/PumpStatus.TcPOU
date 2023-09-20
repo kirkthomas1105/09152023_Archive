@@ -1,0 +1,86 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+  <POU Name="PumpStatus" Id="{499c59ce-ce92-4a49-b813-d158d70e424e}" SpecialFunc="None">
+    <Declaration><![CDATA[PROGRAM PumpStatus
+VAR
+	
+	Pump1RuntimeFB : RunTimetracker;
+	Pump2RuntimeFB : RunTimetracker;
+	Pump3RuntimeFB : RunTimetracker;
+	Pump4RuntimeFB : RunTimetracker;
+	
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[// Link Pump status with HMI GVL
+
+	HMI.Pump1.PumpOn	:=	Resin.Pump1.PumpOn;
+	HMI.Pump2.PumpOn	:=	Resin.Pump2.PumpOn;
+	HMI.Pump3.PumpOn	:=	Resin.Pump3.PumpOn;
+	HMI.Pump4.PumpOn	:=	Resin.Pump4.PumpOn;
+		
+// Runtime Tracking Function block calls for Pumps
+	Pump1RuntimeFB(RunTimerStartSignal:=IO.Pump1On , Reset:=HMI.Pump1.RuntimeResetButton, RunTime=>HMI.Pump1Runtime);
+	Pump2RuntimeFB(RunTimerStartSignal:=IO.Pump2On , Reset:=HMI.Pump2.RuntimeResetButton, RunTime=>HMI.Pump2Runtime);
+	Pump3RuntimeFB(RunTimerStartSignal:=IO.Pump3On , Reset:=HMI.Pump3.RuntimeResetButton, RunTime=>HMI.Pump3Runtime);
+	Pump4RuntimeFB(RunTimerStartSignal:=IO.Pump4On , Reset:=HMI.Pump4.RuntimeResetButton, RunTime=>HMI.Pump4Runtime);
+// Runtime Alarms for Pump Usage
+	//Pump 1
+	IF HMI.Pump1Runtime >= HMI.Pump1.RuntimeAlarmTimeInput THEN
+		HMI.Pump1.ChangeOutNeededAlarm := 1;
+		//Eventlog Message pump 1 needs changout
+	ELSE
+		HMI.Pump1.ChangeOutNeededAlarm := 0;
+	END_IF
+	//Pump 2
+	IF HMI.Pump2Runtime >= HMI.Pump2.RuntimeAlarmTimeInput THEN
+		HMI.Pump2.ChangeOutNeededAlarm := 1;
+		//Eventlog Message pump 2 needs changout
+	ELSE
+		HMI.Pump2.ChangeOutNeededAlarm := 0;
+	END_IF
+	//Pump 3
+	IF HMI.Pump3Runtime >= HMI.Pump3.RuntimeAlarmTimeInput THEN
+		HMI.Pump3.ChangeOutNeededAlarm := 1;
+		//Eventlog Message pump 3 needs changout
+	ELSE
+		HMI.Pump3.ChangeOutNeededAlarm := 0;
+	END_IF
+	//Pump 4
+	IF HMI.Pump4Runtime >= HMI.Pump4.RuntimeAlarmTimeInput THEN
+		HMI.Pump4.ChangeOutNeededAlarm := 1;
+		//Eventlog Message pump 4 needs changout
+	ELSE
+		HMI.Pump4.ChangeOutNeededAlarm := 0;
+	END_IF
+	
+	// Manual Req Block Control - Turn Visiblity off when not in individual valve control
+	IF resin.ManualFlowState <> 70 THEN
+		HMI.Pump1.ManualRequestOn := HMI.Pump1.PumpOn;
+		HMI.Pump2.ManualRequestOn := HMI.Pump2.PumpOn;
+		HMI.Pump3.ManualRequestOn := HMI.Pump3.PumpOn;
+		HMI.Pump4.ManualRequestOn := HMI.Pump4.PumpOn;
+	END_IF]]></ST>
+    </Implementation>
+    <LineIds Name="PumpStatus">
+      <LineId Id="6" Count="0" />
+      <LineId Id="60" Count="1" />
+      <LineId Id="65" Count="2" />
+      <LineId Id="59" Count="0" />
+      <LineId Id="7" Count="8" />
+      <LineId Id="46" Count="0" />
+      <LineId Id="16" Count="5" />
+      <LineId Id="47" Count="0" />
+      <LineId Id="22" Count="5" />
+      <LineId Id="48" Count="0" />
+      <LineId Id="28" Count="5" />
+      <LineId Id="49" Count="0" />
+      <LineId Id="34" Count="2" />
+      <LineId Id="5" Count="0" />
+      <LineId Id="77" Count="0" />
+      <LineId Id="79" Count="1" />
+      <LineId Id="85" Count="2" />
+      <LineId Id="78" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

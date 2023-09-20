@@ -1,0 +1,39 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.11">
+  <POU Name="myPressure" Id="{7dc6c810-46ab-4bfa-96ec-40ac1944ad14}" SpecialFunc="None">
+    <Declaration><![CDATA[PROGRAM myPressure
+VAR
+	iResinP : UINT;
+	iAcetoneP : UINT;
+	iGunMacsP AT %I* : UINT;
+	myAir :INT;
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[
+
+//resin and MEK pump pressure
+
+
+//acetone pump pressure
+
+
+//itv for chopper (may add chopper to spindle on hmi interface to adjust the itv value
+
+
+//gun mac pressure
+]]></ST>
+    </Implementation>
+    <LineIds Name="myPressure">
+      <LineId Id="9" Count="1" />
+      <LineId Id="5" Count="0" />
+      <LineId Id="12" Count="1" />
+      <LineId Id="11" Count="0" />
+      <LineId Id="15" Count="1" />
+      <LineId Id="14" Count="0" />
+      <LineId Id="22" Count="1" />
+      <LineId Id="17" Count="0" />
+      <LineId Id="26" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

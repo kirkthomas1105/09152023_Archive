@@ -1,0 +1,15 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.11">
+  <POU Name="myCNC_Call_Roll" Id="{2378917e-6b18-4210-8389-0d29887bc909}" SpecialFunc="None">
+    <Declaration><![CDATA[PROGRAM myCNC_Call_Roll
+VAR
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[]]></ST>
+    </Implementation>
+    <LineIds Name="myCNC_Call_Roll">
+      <LineId Id="5" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

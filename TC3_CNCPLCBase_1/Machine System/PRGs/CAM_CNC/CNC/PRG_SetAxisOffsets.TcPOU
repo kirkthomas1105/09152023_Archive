@@ -1,0 +1,53 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.11">
+  <POU Name="PRG_SetAxisOffsets" Id="{9221f7b3-88a9-466b-9693-88ee2c109a05}" SpecialFunc="None">
+    <Declaration><![CDATA[PROGRAM PRG_SetAxisOffsets
+VAR
+	fbSetAxisZero_X1: FB_SetAxisZero;
+	fbSetAxisZero_X2: FB_SetAxisZero;
+	fbSetAxisZero_Y: FB_SetAxisZero;
+	bSetZeroX : BOOL;
+	bSetZeroY : BOOL;
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[//These need declared.....
+(*VAR_GLOBAL PERSISTENT
+	rX1Offset: LREAL;
+	rX2Offset: LREAL;
+	rYOffset: LREAL;
+END_VAR*)
+
+fbSetAxisZero_X1(
+	nHliAxisIdx:= 0, 
+	bExecute:= bSetZeroX, 
+	bWriteOnStart:= TRUE,
+	rOffset:= rX1Offset, 
+	bBusy=> , 
+	bDone=> , 
+	bError=> );
+
+fbSetAxisZero_X2(
+	nHliAxisIdx:= 3, 
+	bExecute:= bSetZeroX, 
+	bWriteOnStart:= TRUE,
+	rOffset:= rX2Offset, 
+	bBusy=> , 
+	bDone=> , 
+	bError=> );
+
+fbSetAxisZero_Y(
+	nHliAxisIdx:= 1, 
+	bExecute:= bSetZeroY, 
+	bWriteOnStart:= TRUE,
+	rOffset:= rYOffset, 
+	bBusy=> , 
+	bDone=> , 
+	bError=> );]]></ST>
+    </Implementation>
+    <LineIds Name="PRG_SetAxisOffsets">
+      <LineId Id="3" Count="31" />
+      <LineId Id="2" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

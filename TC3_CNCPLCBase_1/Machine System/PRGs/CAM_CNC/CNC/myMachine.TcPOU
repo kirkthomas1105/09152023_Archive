@@ -1,0 +1,242 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.11">
+  <POU Name="myMachine" Id="{c6dfae05-5bad-43fb-ad48-c3ac87cf2d4d}" SpecialFunc="None">
+    <Declaration><![CDATA[PROGRAM myMachine
+VAR
+	fbEcat1: FB_EcDiagnostics;
+	fbEcat3: FB_EcDiagnostics;
+	Device1 AT %I*: AMSNETID;
+	Device3 AT %I*: AMSNETID;
+	fbGetCommandedSpindleRpm: FB_GetSpindleRpm;
+	rX_PcsPos: DINT;
+	howknows: UDINT;
+	bTestG100 : BOOL;
+	nCase : INT;
+	bEnHBA : BOOL;
+	
+	bSendMessage : BOOL;
+	bRaiseAlarm : BOOL;
+	bConfirmAlarm : BOOL;
+	bClearAlarm: BOOL;
+
+	fbLogger : FB_TcEventLogger;
+	fbMessage : FB_TcMessage;
+	fbAlarm : FB_TcAlarm;
+	bIsInitalized : BOOL;
+	
+	bSetJsonAttribute : BOOL;
+	sJsonAttribute : STRING := '{"key":"value"}';
+	
+	hr : HRESULT;
+	hrLastError : HRESULT;
+	iCurrentMode : UDINT;
+	iCurrentState : UDINT;
+	bJunky : BOOL;
+	rX_ActVel : LREAL;
+	rY_ActVel : LREAL;
+	rChActVel : LREAL;
+	fbGetActiveGs: HLI3_GetChannelActiveG;
+	bGetActiveGs : BOOL;
+	stActiveGs : ARRAY[0..39] OF INT;
+	tmrGetGs: TON;
+	
+	
+	tmrGetTemp: TON;
+	fbGetMotorTemp: FB_EcCoESdoRead;
+	arrMotorTemp : ARRAY[0..6] OF REAL;
+	iSlaveAddr : UINT;
+	iIndex : WORD;
+	i : INT;
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[
+
+// put at beginning of MAIN
+fbEcat1(stAMSNETID:= Device1);
+fbEcat3(stAMSNETID:= Device3);
+	
+IF NOT (fbEcat1.bInitComplete AND fbEcat3.bInitComplete) THEN 
+	RETURN;
+END_IF
+
+mySafety();
+
+(* just for reference to see axis data from PLC *)
+	pX := gpAx[0]; 
+	pY := gpAx[1]; 	
+	pZ := gpAx[2];  
+	pCh0 := gpCh[0];
+	
+	howknows := pCh0[0].mc_error.satz_r.kopf.error_id;
+	
+	iCurrentMode := HLI3_GetChannelMode(nChanIdx:= 0);
+	iCurrentState := HLI3_GetChannelState(nChanIdx:= 0);
+	
+		
+	rX_ActPos := HLI3_GetActualAxisPos(0); // or rX_ActPos := pX^.lr_state.current_position_acs_r*0.0001;
+	rY_ActPos := HLI3_GetActualAxisPos(1);
+	rZ_ActPos := HLI3_GetActualAxisPos(2);
+	
+	rX_PcsPos := pch0^.bahn_state.coord_r[0].act_position_r;
+	rX_PcsPos := pch0^.bahn_state.coord_r[0].cmd_position_r;
+	rX_ActVel :=  pch0^.bahn_state.coord_r[0].w0_velocity_r;
+	rY_ActVel :=  pch0^.bahn_state.coord_r[1].w0_velocity_r;
+	rChActVel := pch0^.bahn_state.active_feed_r;
+	
+	
+// get S value of PLC controlled Spindle
+fbGetCommandedSpindleRpm(
+	nHliChannelIdx:= 0, 
+	bChannelReset:= , 
+	nRPM=> nCommandedRPM, 
+	bError=> , 
+	nErrorId=> );
+	
+myM_Codes();
+//run a saved program in cnc from plc
+IF bTestG100 AND PRG_CNCChannelHandler.CNCChannel[0].currentmode = 4 THEN
+	bTestG100 := FALSE;
+	nCase := 10;
+END_IF
+
+CASE nCase OF
+	10:
+		PLCMachineMode[0].MDI := TRUE;
+		nCase := 20;
+		
+	20:
+		IF PRG_CNCChannelHandler.CNCChannel[0].currentmode = 3 THEN
+			PLCMachineMode[0].MDIString := 'L C:\CNC\G100test.nc';
+			PLCMachineMode[0].Start := TRUE;
+			nCase := 30;
+		END_IF
+	
+	30:
+		IF PRG_CNCChannelHandler.CNCChannel[0].currentstate = 4 THEN
+			nCase := 40;
+		END_IF
+		
+	40:
+		IF PRG_CNCChannelHandler.CNCChannel[0].currentstate = 3 THEN
+			PLCMachineMode[0].Manual := TRUE;
+			nCase := 0;
+		END_IF
+END_CASE
+PRG_ManualModeVirtualHBA(nChanIdx:= 0, bEnable:= bEnHBA, stManualModeParameter:= stManualModeParameter[0], stManualModeControlElements:= stManualModeControlElements[0]);
+IF bJunky THEN
+	bJunky := FALSE;
+	HLI3_SetVEChannelLRealValue(
+	nChanIdx:=0, 
+	nVEIndex:=0, 
+	nArrayIndex:=0, 
+	bGlobal:=TRUE,
+	val:=1);
+END_IF
+tmrGetGs(IN:= NOT tmrGetGs.Q, PT:= T#500MS, Q=> , ET=> );
+fbGetActiveGs(
+	bExec:= tmrGetGs.Q, 
+	nChanIdx:= 0, 
+	ActiveG=> stActiveGs, 
+	bBusy=> , 
+	bError=> , 
+	nErrorID=> );
+	
+	
+tmrGetTemp(IN:= NOT tmrGetTemp.Q, PT:= T#10S, Q=> , ET=> );
+IF tmrGetTemp.Q THEN
+	i := i + 1;
+	IF i > 5 THEN
+		i := 0;
+	END_IF
+END_IF
+		
+IF i = 1 THEN
+	iSlaveAddr := 1060; //X1
+	iIndex := 16#32C1;
+ELSIF i = 2 THEN
+	iSlaveAddr := 1061; //X2
+	iIndex := 16#32C1;
+ELSIF i = 3 THEN
+	iSlaveAddr := 1064; //Y
+	iIndex := 16#32C1;
+ELSIF i = 4 THEN
+	iSlaveAddr := 1063; //Z
+	iIndex := 16#36C1;
+ELSIF i = 5 THEN
+	iSlaveAddr := 1063; //Pallet
+	iIndex := 16#32C1;
+END_IF
+
+fbGetMotorTemp(
+	sNetId:= '169.254.21.118.3.1', 
+	nSlaveAddr:= iSlaveAddr, 
+	nSubIndex:= 6, 
+	nIndex:= iIndex, 
+	pDstBuf:= ADR(arrMotorTemp[i]), 
+	cbBufLen:= SIZEOF(arrMotorTemp[i]), 
+	bExecute:= tmrGetTemp.Q AND i<>0, 
+	tTimeout:= , 
+	bBusy=> , 
+	bError=> , 
+	nErrId=> );	
+]]></ST>
+    </Implementation>
+    <LineIds Name="myMachine">
+      <LineId Id="129" Count="1" />
+      <LineId Id="18" Count="0" />
+      <LineId Id="23" Count="4" />
+      <LineId Id="22" Count="0" />
+      <LineId Id="19" Count="2" />
+      <LineId Id="6" Count="3" />
+      <LineId Id="11" Count="0" />
+      <LineId Id="240" Count="0" />
+      <LineId Id="72" Count="0" />
+      <LineId Id="239" Count="0" />
+      <LineId Id="192" Count="2" />
+      <LineId Id="12" Count="2" />
+      <LineId Id="5" Count="0" />
+      <LineId Id="69" Count="1" />
+      <LineId Id="161" Count="0" />
+      <LineId Id="283" Count="1" />
+      <LineId Id="287" Count="0" />
+      <LineId Id="162" Count="0" />
+      <LineId Id="50" Count="1" />
+      <LineId Id="54" Count="4" />
+      <LineId Id="52" Count="0" />
+      <LineId Id="59" Count="0" />
+      <LineId Id="68" Count="0" />
+      <LineId Id="84" Count="0" />
+      <LineId Id="83" Count="0" />
+      <LineId Id="85" Count="0" />
+      <LineId Id="88" Count="0" />
+      <LineId Id="86" Count="0" />
+      <LineId Id="91" Count="0" />
+      <LineId Id="90" Count="0" />
+      <LineId Id="92" Count="0" />
+      <LineId Id="94" Count="4" />
+      <LineId Id="100" Count="0" />
+      <LineId Id="102" Count="1" />
+      <LineId Id="101" Count="0" />
+      <LineId Id="104" Count="1" />
+      <LineId Id="110" Count="4" />
+      <LineId Id="106" Count="1" />
+      <LineId Id="109" Count="0" />
+      <LineId Id="108" Count="0" />
+      <LineId Id="93" Count="0" />
+      <LineId Id="99" Count="0" />
+      <LineId Id="273" Count="0" />
+      <LineId Id="282" Count="0" />
+      <LineId Id="275" Count="4" />
+      <LineId Id="274" Count="0" />
+      <LineId Id="280" Count="0" />
+      <LineId Id="290" Count="0" />
+      <LineId Id="292" Count="5" />
+      <LineId Id="289" Count="0" />
+      <LineId Id="309" Count="1" />
+      <LineId Id="312" Count="35" />
+      <LineId Id="311" Count="0" />
+      <LineId Id="272" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

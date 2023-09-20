@@ -1,0 +1,59 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.11">
+  <POU Name="myBUTTONS" Id="{552323b9-8f8c-4a66-883f-ecc6de76eaee}" SpecialFunc="None">
+    <Declaration><![CDATA[PROGRAM myBUTTONS
+VAR
+	rtHold: R_TRIG;
+	bHoldCmd: bool;
+	bRapidLed: BOOL;
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[PLCMachineMode[1].Start := bStartPB;
+PLCMachineMode[1].Reset := bResetPB;
+
+// Feedhold
+bHoldLed := PLCMachineMode[0].ChannelSignals.FeedHold;
+rtHold(CLK:= bHoldPB, Q=> );
+IF rtHold.Q THEN
+	bHoldCmd := NOT bHoldCmd;
+END_IF
+Global_HMI.PlcChannelSignals.FeedHold := bHoldCmd;
+
+bRapidLed := stManualModeControlElements[0].stControlKeys[0].bKeyRapid;
+
+PLCSpindleOverride := 50 + LREAL_TO_UINT(iSpindleOverridePot/32767.0*50.0); // limit overried to be 50% to 100?
+IF PLCSpindleOverride > 99 THEN
+	PLCSpindleOverride := 100;
+ELSIF PLCSpindleOverride < 51 THEN
+	PLCSpindleOverride := 50;
+END_IF
+
+PLCFeedOverride := 50 + LREAL_TO_UINT(iFeedrateOverridePot/32767.0*50.0); // limit overried to be 50% to 100?
+IF PLCFeedOverride > 99 THEN
+	PLCFeedOverride := 100;
+ELSIF PLCFeedOverride < 51 THEN
+	PLCFeedOverride := 50;
+END_IF
+
+]]></ST>
+    </Implementation>
+    <LineIds Name="myBUTTONS">
+      <LineId Id="5" Count="0" />
+      <LineId Id="7" Count="0" />
+      <LineId Id="76" Count="0" />
+      <LineId Id="13" Count="0" />
+      <LineId Id="9" Count="0" />
+      <LineId Id="18" Count="0" />
+      <LineId Id="20" Count="2" />
+      <LineId Id="6" Count="0" />
+      <LineId Id="143" Count="0" />
+      <LineId Id="141" Count="0" />
+      <LineId Id="188" Count="0" />
+      <LineId Id="176" Count="11" />
+      <LineId Id="174" Count="0" />
+      <LineId Id="196" Count="0" />
+      <LineId Id="195" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

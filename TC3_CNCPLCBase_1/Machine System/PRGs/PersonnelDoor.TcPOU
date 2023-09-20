@@ -1,0 +1,59 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+  <POU Name="PersonnelDoor" Id="{7b769278-a9dd-4399-a322-74769ac026ef}" SpecialFunc="None">
+    <Declaration><![CDATA[PROGRAM PersonnelDoor
+VAR
+	
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[IF GVL_Doors.QQ1.OpenButtonRequestInput THEN
+	GVL_Doors.QQ1.AccessAreaRequest := 1;
+	GVL_Doors.QQ1.OpenButtonLED_Output := 1;
+	GVL_Doors.QQ1.OkToUnlockDoor := 1; //Remove this once ventalation is hooked up. Ventalation and styrene sensor level will determine when this gets turned on.
+	ELSE
+	GVL_Doors.QQ1.OpenButtonLED_Output := 0;
+END_IF
+
+GVL_Doors.QQ1.OkToUnlockDoorRTRIG(CLK := GVL_Doors.QQ1.OkToUnlockDoor);
+
+
+IF GVL_Doors.QQ1.OkToUnlockDoorRTRIG.Q THEN
+	GVL_Doors.QQ1.AccessAreaRequest := 0;
+	GVL_Doors.QQ1.OpenButtonLED_Output := 0;
+	GVL_Doors.QQ1.LockButtonLED_Output := 1;
+	GVL_Doors.QQ1.LockOutput := 1;
+END_IF
+
+IF GVL_Doors.QQ1.LockButtonRequestInput THEN
+	GVL_Doors.QQ1.LockOutput := 0;	
+	GVL_Doors.QQ1.LockButtonLED_Output := 0;
+	GVL_Doors.QQ1.OkToUnlockDoor := 0; //Remove this once ventalation is hooked up.
+END_IF]]></ST>
+    </Implementation>
+    <LineIds Name="PersonnelDoor">
+      <LineId Id="5" Count="0" />
+      <LineId Id="7" Count="0" />
+      <LineId Id="14" Count="0" />
+      <LineId Id="35" Count="0" />
+      <LineId Id="37" Count="1" />
+      <LineId Id="8" Count="0" />
+      <LineId Id="27" Count="0" />
+      <LineId Id="12" Count="0" />
+      <LineId Id="33" Count="0" />
+      <LineId Id="28" Count="0" />
+      <LineId Id="11" Count="0" />
+      <LineId Id="15" Count="0" />
+      <LineId Id="17" Count="0" />
+      <LineId Id="21" Count="0" />
+      <LineId Id="25" Count="0" />
+      <LineId Id="16" Count="0" />
+      <LineId Id="19" Count="0" />
+      <LineId Id="18" Count="0" />
+      <LineId Id="24" Count="0" />
+      <LineId Id="26" Count="0" />
+      <LineId Id="36" Count="0" />
+      <LineId Id="23" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

@@ -1,0 +1,39 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+  <POU Name="F_PartPickupSuccess" Id="{93365b99-2d8f-4328-a255-2a51dc0adb9a}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION F_PartPickupSuccess : BOOL
+VAR_INPUT
+	WX : sBogie;
+END_VAR
+VAR
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[IF WX.bEnabled THEN
+	IF WX.A.bClamped AND WX.B.bClamped AND F_PartIsPresent(WX) AND WX.ConveyorLoadPos = 0 THEN
+		
+		F_PartPickupSuccess := 1;
+ 
+	ELSE
+		F_PartPickupSuccess := 0;
+		RETURN;
+	END_IF
+	
+	RETURN;
+	
+END_IF]]></ST>
+    </Implementation>
+    <LineIds Name="F_PartPickupSuccess">
+      <LineId Id="7" Count="0" />
+      <LineId Id="19" Count="0" />
+      <LineId Id="24" Count="0" />
+      <LineId Id="21" Count="0" />
+      <LineId Id="20" Count="0" />
+      <LineId Id="14" Count="0" />
+      <LineId Id="22" Count="0" />
+      <LineId Id="16" Count="0" />
+      <LineId Id="25" Count="3" />
+      <LineId Id="18" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

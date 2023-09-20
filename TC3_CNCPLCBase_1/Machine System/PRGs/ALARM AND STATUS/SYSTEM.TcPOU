@@ -1,0 +1,42 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+  <POU Name="SYSTEM" Id="{8a0e2ec5-91f0-4231-a4cd-9f6327880700}" SpecialFunc="None">
+    <Declaration><![CDATA[PROGRAM SYSTEM
+VAR
+	fbGetCurTaskIdx  : GETCURTASKINDEX; // PlcTaskSystemInfo for Cycle time
+	
+	
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[fbGetCurTaskIdx();
+GVL.CycleTime := _TaskInfo[fbGetCurTaskIdx.index].CycleTime/10000;
+
+GVL.GetLocalSystemTimeFB(
+	sNetID:= , 
+	bEnable:= TRUE, 
+	dwCycle:= 1, 
+	dwOpt:= , 
+	tTimeout:= , 
+	bValid=> , 
+	systemTime=> , 
+	tzID=> );
+	
+GVL.SystemDateTime := SYSTEMTIME_TO_STRING(GVL.GetLocalSystemTimeFB.systemTime);
+
+GVL.SystemDate := MID(STR:=GVL.SystemDateTime , LEN:=10 , POS:=1 );
+GVL.SystemTime := MID(STR:=GVL.SystemDateTime , LEN:=8 , POS:=12 );]]></ST>
+    </Implementation>
+    <LineIds Name="SYSTEM">
+      <LineId Id="7" Count="0" />
+      <LineId Id="5" Count="0" />
+      <LineId Id="9" Count="0" />
+      <LineId Id="12" Count="7" />
+      <LineId Id="8" Count="0" />
+      <LineId Id="20" Count="1" />
+      <LineId Id="23" Count="0" />
+      <LineId Id="22" Count="0" />
+      <LineId Id="24" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

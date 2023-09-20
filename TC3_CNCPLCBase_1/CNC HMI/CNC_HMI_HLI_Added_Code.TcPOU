@@ -1,0 +1,286 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+  <POU Name="CNC_HMI_HLI_Added_Code" Id="{53b81dd5-bac0-4488-8e45-257a6e2a3309}" SpecialFunc="None">
+    <Declaration><![CDATA[PROGRAM CNC_HMI_HLI_Added_Code
+VAR
+Scaler : INT :=10000; //change to a scaling variable when deciding to use inches
+mdiTest : STRING;
+//EventLogger page Reset
+	fbEventlogger : FB_TcEventLogger;
+	fbAlarm: FB_TcAlarm;
+	fbMessage: FB_TcMessage;
+	bAlarm: BOOL;
+	bMessage : BOOL;
+	bIsInitalized: BOOL;
+	bClearAlarm: BOOL;
+	bConfirmAlarm: BOOL;
+//ch1
+	SP1_X : fb_HMI_AX;
+	SP1_Y : fb_HMI_AX;
+	SP1_Z : fb_HMI_AX;
+	SP1_A : fb_HMI_AX;
+	SP1_C : fb_HMI_AX;
+//ch2
+	R1_X	: fb_HMI_AX;
+	R1_Y	: fb_HMI_AX;
+	R1_Z1	: fb_HMI_AX;
+	R1_Z2	: fb_HMI_AX;
+	R1_C	: fb_HMI_AX;
+	
+//axis1
+(*
+Spray_Axis1 : STRING;
+SP1_PCS		: STRING;
+SP1_ACS		: STRING;
+SP1_cmd		: STRING;
+SP1_Min		: STRING;
+SP1_Max		: STRING;
+//axis2
+
+Spray_Axis2 : STRING;
+SP2_PCS		: STRING;
+SP2_ACS		: STRING;
+SP2_cmd		: STRING;
+SP2_Min		: STRING;
+SP2_Max		: STRING;
+SP2_Feed	: string;
+//axis3
+Spray_Axis3 : STRING;
+SP3_PCS		: STRING;
+SP3_ACS		: STRING;
+SP3_cmd		: STRING;
+SP3_min		: STRING;
+SP3_max		: STRING;
+//axis4
+Spray_Axis4 : STRING;
+SP4_PCS		: STRING;
+SP4_ACS		: STRING;
+SP4_cmd		: STRING;
+SP4_min		: STRING;
+SP4_max		: STRING;
+//axis5
+Spray_Axis5 : STRING;
+SP5_PCS		: STRING;
+SP5_ACS		: STRING;
+SP5_cmd		: STRING;
+Sp5_min		: STRING;
+SP5_Max		: STRING;
+
+//channel 2
+//axis1
+Roll_Axis1 	: STRING;
+R1_PCS		: STRING;
+R1_ACS		: STRING;
+R1_cmd		: STRING;
+R1_Min		: STRING;
+R1_Max		: STRING;
+//axis2
+Roll_Axis2 	: STRING;
+R2_PCS		: STRING;
+R2_ACS		: STRING;
+R2_cmd		: STRING;
+//axis3
+Roll_Axis3 	: STRING;
+R3_PCS		: STRING;
+R3_ACS		: STRING;
+R3_cmd		: STRING;
+//axis4
+Roll_Axis4 	: STRING;
+R4_PCS		: STRING;
+R4_ACS		: STRING;
+R4_cmd		: STRING;
+//axis5
+Roll_Axis5 	: STRING;
+R5_PCS		: STRING;
+R5_ACS		: STRING;
+R5_cmd		: STRING;
+//axis6
+Roll_Axis6 	: STRING;
+R6_PCS		: STRING;
+R6_ACS		: STRING;
+R6_cmd		: STRING;
+*)
+//gcode access See PRG 'P_GFuctionMonitor()'
+
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[
+// read gcode buffer
+	P_GFunctionMonitor();	//Channel 1 G Code Reader
+	//P_GFunctionMonitor_2(); 	//channel 2 G Code Reader
+//EventLogger Buttons for reset
+//	IF NOT bIsInitalized THEN
+//	bIsInitalized := TRUE;
+//	fbMessage.CreateEx(TC_Events.MyEvents.Start, 0);
+//	fbAlarm.CreateEx(TC_Events.MyEvents.Stop, TRUE, 0);
+//	END_IF
+//	//Test git
+//	IF bMessage THEN
+//		bMessage := FALSE;
+//		fbMessage.Send(0);
+//	END_IF
+	
+//	IF bAlarm THEN
+//		bAlarm := FALSE;
+//		fbAlarm.Raise(0);
+//	END_IF
+	
+//	IF bClearAlarm THEN
+//		bClearAlarm := FALSE;
+//		fbAlarm.Clear(0, TRUE);
+//	END_IF
+//ch1 fb
+	SP1_X(chId:=0,chAx:=0,Scaler:=Scaler);
+	SP1_Y(chId:=0,chAx:=1,Scaler:=Scaler);
+	SP1_Z(chId:=0,chAx:=2,Scaler:=Scaler);
+	SP1_A(chId:=0,chAx:=3,Scaler:=Scaler);
+	SP1_C(chId:=0,chAx:=4,Scaler:=Scaler);
+//ch2 fb
+	R1_X(chId:=1,chAx:=0,Scaler:=Scaler);
+	R1_Y(chId:=1,chAx:=1,Scaler:=Scaler);
+	R1_Z1(chId:=1,chAx:=2,Scaler:=Scaler);
+	R1_Z2(chId:=1,chAx:=3,Scaler:=Scaler);
+	R1_C(chId:=1,chAx:=4,Scaler:=Scaler);
+	
+(*  Method for HMI before FB was added.  Use this if While loop fails
+	Spray_Axis1 := gpCh[0]^.bahn_state.coord_r[0].axis_name_r.zeichen;
+	SP1_PCS		:= FLOAT_TO_STRING(Dint_to_float(gpCh[0]^.bahn_state.coord_r[0].current_position_r)/Scaler);
+	SP1_ACS		:= FLOAT_TO_STRING(Dint_to_float(gpCh[0]^.bahn_state.coord_r[0].acs_position_r)/Scaler);
+	SP1_CMD		:= FLOAT_TO_STRING(DINT_TO_FLOAT(gpCh[0]^.bahn_state.coord_r[0].cmd_position_r)/Scaler);
+	SP1_Min 	:= FLOAT_TO_STRING(DINT_TO_FLOAT(gpAx[0]^.lr_state.conf_neg_software_limit_r)/Scaler);
+	SP1_Max 	:= FLOAT_TO_STRING(DINT_TO_FLOAT(gpAx[0]^.lr_state.conf_pos_software_limit_r)/Scaler);
+	Spray_Axis2 := gpCh[0]^.bahn_state.coord_r[1].axis_name_r.zeichen;
+	SP2_PCS		:= FLOAT_TO_STRING(Dint_to_float(gpCh[0]^.bahn_state.coord_r[1].current_position_r)/Scaler);
+	SP2_ACS		:= FLOAT_TO_STRING(Dint_to_float(gpCh[0]^.bahn_state.coord_r[1].acs_position_r)/Scaler);
+	SP2_CMD		:= FLOAT_TO_STRING(DINT_TO_FLOAT(gpCh[0]^.bahn_state.coord_r[1].cmd_position_r)/Scaler);
+	SP2_Min 	:= FLOAT_TO_STRING(DINT_TO_FLOAT(gpAx[1]^.lr_state.conf_neg_software_limit_r)/Scaler);
+	SP2_Max 	:= FLOAT_TO_STRING(DINT_TO_FLOAT(gpAx[1]^.lr_state.conf_pos_software_limit_r)/Scaler);
+	SP2_Feed	:= DINT_TO_STRING(gpch[0]^.bahn_state.coord_r[1].w0_velocity_r);
+	
+	Spray_Axis3 := gpCh[0]^.bahn_state.coord_r[2].axis_name_r.zeichen;
+	SP3_PCS		:= FLOAT_TO_STRING(Dint_to_float(gpCh[0]^.bahn_state.coord_r[2].current_position_r)/Scaler);
+	SP3_ACS		:= FLOAT_TO_STRING(Dint_to_float(gpCh[0]^.bahn_state.coord_r[2].acs_position_r)/Scaler);
+	SP3_CMD		:= FLOAT_TO_STRING(DINT_TO_FLOAT(gpCh[0]^.bahn_state.coord_r[2].cmd_position_r)/Scaler);
+	SP3_Min 	:= FLOAT_TO_STRING(DINT_TO_FLOAT(gpAx[2]^.lr_state.conf_neg_software_limit_r)/Scaler);
+	SP3_Max 	:= FLOAT_TO_STRING(DINT_TO_FLOAT(gpAx[2]^.lr_state.conf_pos_software_limit_r)/Scaler);
+	
+	Spray_Axis4 := gpCh[0]^.bahn_state.coord_r[3].axis_name_r.zeichen;
+	SP4_PCS		:= FLOAT_TO_STRING(Dint_to_float(gpCh[0]^.bahn_state.coord_r[3].current_position_r)/Scaler);
+	SP4_ACS		:= FLOAT_TO_STRING(Dint_to_float(gpCh[0]^.bahn_state.coord_r[3].acs_position_r)/Scaler);
+	SP4_CMD		:= FLOAT_TO_STRING(DINT_TO_FLOAT(gpCh[0]^.bahn_state.coord_r[3].cmd_position_r)/Scaler);
+	SP4_Min 	:= FLOAT_TO_STRING(DINT_TO_FLOAT(gpAx[3]^.lr_state.conf_neg_software_limit_r)/Scaler);
+	SP4_Max 	:= FLOAT_TO_STRING(DINT_TO_FLOAT(gpAx[3]^.lr_state.conf_pos_software_limit_r)/Scaler);
+	
+	Spray_Axis5 := gpCh[0]^.bahn_state.coord_r[4].axis_name_r.zeichen;
+	SP5_PCS		:= FLOAT_TO_STRING(Dint_to_float(gpCh[0]^.bahn_state.coord_r[4].current_position_r)/Scaler);
+	SP5_ACS		:= FLOAT_TO_STRING(Dint_to_float(gpCh[0]^.bahn_state.coord_r[4].acs_position_r)/Scaler);
+	SP5_CMD		:= FLOAT_TO_STRING(DINT_TO_FLOAT(gpCh[0]^.bahn_state.coord_r[4].cmd_position_r)/Scaler);
+	SP5_Min 	:= FLOAT_TO_STRING(DINT_TO_FLOAT(gpAx[4]^.lr_state.conf_neg_software_limit_r)/Scaler);
+	SP5_Max 	:= FLOAT_TO_STRING(DINT_TO_FLOAT(gpAx[4]^.lr_state.conf_pos_software_limit_r)/Scaler);
+	
+	//channel2
+	Roll_Axis1 	:= gpCh[1]^.bahn_state.coord_r[0].axis_name_r.zeichen;
+	R1_PCS		:= FLOAT_TO_STRING(Dint_to_float(gpCh[1]^.bahn_state.coord_r[0].current_position_r)/Scaler);
+	R1_ACS		:= FLOAT_TO_STRING(Dint_to_float(gpCh[1]^.bahn_state.coord_r[0].acs_position_r)/Scaler);
+	R1_CMD		:= FLOAT_TO_STRING(Dint_to_float(gpCh[1]^.bahn_state.coord_r[0].cmd_position_r)/Scaler);
+	R1_Min 		:= FLOAT_TO_STRING(DINT_TO_FLOAT(gpAx[0]^.lr_state.conf_neg_software_limit_r)/Scaler);
+	R1_Max 		:= FLOAT_TO_STRING(DINT_TO_FLOAT(gpAx[0]^.lr_state.conf_pos_software_limit_r)/Scaler);
+	
+	Roll_Axis2 	:= gpCh[1]^.bahn_state.coord_r[1].axis_name_r.zeichen;
+	R2_PCS		:= FLOAT_TO_STRING(Dint_to_float(gpCh[1]^.bahn_state.coord_r[1].current_position_r)/Scaler);
+	R2_ACS		:= FLOAT_TO_STRING(Dint_to_float(gpCh[1]^.bahn_state.coord_r[1].acs_position_r)/Scaler);
+	R2_CMD		:= FLOAT_TO_STRING(Dint_to_float(gpCh[1]^.bahn_state.coord_r[1].cmd_position_r)/Scaler);
+	
+	Roll_Axis3 := gpCh[1]^.bahn_state.coord_r[2].axis_name_r.zeichen;
+	R3_PCS		:= FLOAT_TO_STRING(Dint_to_float(gpCh[1]^.bahn_state.coord_r[2].current_position_r)/Scaler);
+	R3_ACS		:= FLOAT_TO_STRING(Dint_to_float(gpCh[1]^.bahn_state.coord_r[2].acs_position_r)/Scaler);
+	R3_CMD		:= FLOAT_TO_STRING(Dint_to_float(gpCh[1]^.bahn_state.coord_r[2].cmd_position_r)/Scaler);
+	
+	Roll_Axis4 := gpCh[1]^.bahn_state.coord_r[3].axis_name_r.zeichen;
+	R4_PCS		:= FLOAT_TO_STRING(Dint_to_float(gpCh[1]^.bahn_state.coord_r[3].current_position_r)/Scaler);
+	R4_ACS		:= FLOAT_TO_STRING(Dint_to_float(gpCh[1]^.bahn_state.coord_r[3].acs_position_r)/Scaler);
+	R4_CMD		:= FLOAT_TO_STRING(Dint_to_float(gpCh[1]^.bahn_state.coord_r[3].cmd_position_r)/Scaler);
+	
+	Roll_Axis5 := gpCh[1]^.bahn_state.coord_r[4].axis_name_r.zeichen;
+	R5_PCS		:= FLOAT_TO_STRING(Dint_to_float(gpCh[1]^.bahn_state.coord_r[4].current_position_r)/Scaler);
+	R5_ACS		:= FLOAT_TO_STRING(Dint_to_float(gpCh[1]^.bahn_state.coord_r[4].acs_position_r)/Scaler);
+	R5_CMD		:= FLOAT_TO_STRING(Dint_to_float(gpCh[1]^.bahn_state.coord_r[4].cmd_position_r)/Scaler);
+	
+	Roll_Axis6 := gpCh[1]^.bahn_state.coord_r[5].axis_name_r.zeichen;
+	R6_PCS		:= FLOAT_TO_STRING(Dint_to_float(gpCh[1]^.bahn_state.coord_r[5].current_position_r)/Scaler);
+	R6_ACS		:= FLOAT_TO_STRING(Dint_to_float(gpCh[1]^.bahn_state.coord_r[5].acs_position_r)/Scaler);
+	R6_CMD		:= FLOAT_TO_STRING(Dint_to_float(gpCh[1]^.bahn_state.coord_r[5].cmd_position_r)/Scaler);
+*)]]></ST>
+    </Implementation>
+    <LineIds Name="CNC_HMI_HLI_Added_Code">
+      <LineId Id="230" Count="0" />
+      <LineId Id="502" Count="0" />
+      <LineId Id="531" Count="0" />
+      <LineId Id="725" Count="0" />
+      <LineId Id="900" Count="0" />
+      <LineId Id="902" Count="18" />
+      <LineId Id="901" Count="0" />
+      <LineId Id="728" Count="0" />
+      <LineId Id="727" Count="0" />
+      <LineId Id="758" Count="3" />
+      <LineId Id="768" Count="1" />
+      <LineId Id="779" Count="2" />
+      <LineId Id="783" Count="0" />
+      <LineId Id="778" Count="0" />
+      <LineId Id="753" Count="0" />
+      <LineId Id="791" Count="4" />
+      <LineId Id="790" Count="0" />
+      <LineId Id="16" Count="0" />
+      <LineId Id="138" Count="1" />
+      <LineId Id="63" Count="0" />
+      <LineId Id="240" Count="0" />
+      <LineId Id="70" Count="0" />
+      <LineId Id="331" Count="0" />
+      <LineId Id="241" Count="0" />
+      <LineId Id="20" Count="0" />
+      <LineId Id="140" Count="1" />
+      <LineId Id="71" Count="0" />
+      <LineId Id="242" Count="0" />
+      <LineId Id="142" Count="0" />
+      <LineId Id="243" Count="0" />
+      <LineId Id="30" Count="0" />
+      <LineId Id="143" Count="1" />
+      <LineId Id="75" Count="0" />
+      <LineId Id="252" Count="0" />
+      <LineId Id="72" Count="0" />
+      <LineId Id="253" Count="0" />
+      <LineId Id="76" Count="0" />
+      <LineId Id="145" Count="1" />
+      <LineId Id="31" Count="0" />
+      <LineId Id="254" Count="0" />
+      <LineId Id="37" Count="0" />
+      <LineId Id="255" Count="0" />
+      <LineId Id="17" Count="0" />
+      <LineId Id="39" Count="0" />
+      <LineId Id="119" Count="0" />
+      <LineId Id="118" Count="0" />
+      <LineId Id="95" Count="0" />
+      <LineId Id="730" Count="0" />
+      <LineId Id="729" Count="0" />
+      <LineId Id="98" Count="0" />
+      <LineId Id="122" Count="3" />
+      <LineId Id="40" Count="0" />
+      <LineId Id="102" Count="0" />
+      <LineId Id="147" Count="1" />
+      <LineId Id="104" Count="0" />
+      <LineId Id="41" Count="0" />
+      <LineId Id="105" Count="0" />
+      <LineId Id="149" Count="1" />
+      <LineId Id="107" Count="0" />
+      <LineId Id="42" Count="1" />
+      <LineId Id="151" Count="1" />
+      <LineId Id="111" Count="0" />
+      <LineId Id="108" Count="0" />
+      <LineId Id="112" Count="0" />
+      <LineId Id="153" Count="1" />
+      <LineId Id="114" Count="0" />
+      <LineId Id="38" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

@@ -1,0 +1,599 @@
+<div id="MoldList_1" data-tchmi-type="TcHmi.Controls.System.TcHmiContent" data-tchmi-top="0" data-tchmi-left="0" data-tchmi-width="100" data-tchmi-width-unit="%" data-tchmi-height="100" data-tchmi-height-unit="%" data-tchmi-height-mode="Content">
+
+  <div data-tchmi-grid-row-index="0" data-tchmi-grid-column-index="0" id="TcHmiTextblock_MoldList_34" data-tchmi-type="TcHmi.Controls.Beckhoff.TcHmiTextblock" data-tchmi-height="5" data-tchmi-height-unit="%" data-tchmi-left="1" data-tchmi-left-unit="%" data-tchmi-text="MoldList" data-tchmi-top="1" data-tchmi-top-unit="%" data-tchmi-width-unit="px" data-tchmi-word-wrap="True" data-tchmi-right="17">
+    <script data-tchmi-target-attribute="data-tchmi-class-names" type="application/json">
+      [
+      "headline-2"
+      ]
+    </script>
+  </div>
+<div data-tchmi-grid-row-index="0" data-tchmi-grid-column-index="0" id="TcHmiContainer_MoldList_6" data-tchmi-type="TcHmi.Controls.System.TcHmiContainer" data-tchmi-height-unit="px" data-tchmi-left="0" data-tchmi-left-unit="%" data-tchmi-width-unit="%" data-tchmi-height="732" data-tchmi-top-unit="%" data-tchmi-top="6" data-tchmi-width="100" data-tchmi-background-image-horizontal-alignment="Center" data-tchmi-background-image-vertical-alignment="Center">
+<script data-tchmi-target-attribute="data-tchmi-class-names" type="application/json">
+        [
+        "background-container"
+        ]
+      </script>
+<div data-tchmi-grid-row-index="0" data-tchmi-grid-column-index="0" id="TcHmiDatagrid_3" data-tchmi-type="TcHmi.Controls.Beckhoff.TcHmiDatagrid" data-tchmi-height="70.0" data-tchmi-height-unit="%" data-tchmi-left="12" data-tchmi-left-unit="px" data-tchmi-top="12" data-tchmi-top-unit="px" data-tchmi-width="96.6" data-tchmi-width-unit="%" data-tchmi-is-enabled="true" data-tchmi-show-row-numbers="false" data-tchmi-row-numbers-resizable="false" data-tchmi-width-mode="Value" data-tchmi-background-image-horizontal-alignment="Center" data-tchmi-background-image-vertical-alignment="Center" data-tchmi-row-numbers-horizontal-alignment="Center" data-tchmi-row-numbers-vertical-alignment="Center" data-tchmi-row-height="30" data-tchmi-grid-font-size="18">
+<script data-tchmi-target-attribute="data-tchmi-src-column" type="application/json">
+[
+  {
+    "name": "MoldID",
+    "label": "Mold ID",
+    "control": "TextBlock",
+    "width": 1,
+    "widthUnit": "factor",
+    "resize": true,
+    "sortable": true,
+    "minWidth": 5,
+    "minWidthUnit": "%",
+    "cellBackground": null,
+    "textColor": null,
+    "editable": false,
+    "horizontalAlignment": "Center",
+    "verticalAlignment": "Center",
+    "headerHorizontalAlignment": "Center",
+    "headerVerticalAlignment": "Center",
+    "ignoreEscapeSequences": false
+  },
+  {
+    "name": "Status",
+    "label": "Status",
+    "control": "ComboBox",
+    "width": 1,
+    "widthUnit": "factor",
+    "resize": true,
+    "sortable": true,
+    "minWidth": 5,
+    "minWidthUnit": "%",
+    "cellBackground": null,
+    "textColor": null,
+    "editable": true,
+    "horizontalAlignment": "Center",
+    "verticalAlignment": "Center",
+    "headerHorizontalAlignment": "Center",
+    "headerVerticalAlignment": "Center",
+    "ignoreEscapeSequences": false,
+    "dataDefinitions": [
+      {
+        "value": "Ready",
+        "text": "Ready"
+      },
+      {
+        "value": "NeedsMaint",
+        "text": "Needs Maintenance"
+      },
+      {
+        "value": "InProcess",
+        "text": "In Process"
+      }
+    ]
+  },
+  {
+    "name": "DateAdded",
+    "label": "Date Added",
+    "control": "TextBlock",
+    "width": 1,
+    "widthUnit": "factor",
+    "resize": true,
+    "sortable": true,
+    "minWidth": 5,
+    "minWidthUnit": "%",
+    "cellBackground": null,
+    "textColor": null,
+    "editable": false,
+    "horizontalAlignment": "Center",
+    "verticalAlignment": "Center",
+    "headerHorizontalAlignment": "Center",
+    "headerVerticalAlignment": "Center",
+    "ignoreEscapeSequences": false
+  },
+  {
+    "name": "AddedBy",
+    "label": "Added By",
+    "control": "TextBlock",
+    "width": 1,
+    "widthUnit": "factor",
+    "resize": true,
+    "sortable": true,
+    "minWidth": 5,
+    "minWidthUnit": "%",
+    "cellBackground": null,
+    "textColor": null,
+    "editable": false,
+    "horizontalAlignment": "Center",
+    "verticalAlignment": "Center",
+    "headerHorizontalAlignment": "Center",
+    "headerVerticalAlignment": "Center",
+    "ignoreEscapeSequences": false
+  },
+  {
+    "name": "MaintenanceNotes",
+    "label": "Maintenance Notes",
+    "control": "TextBox",
+    "width": 2,
+    "widthUnit": "factor",
+    "resize": true,
+    "sortable": false,
+    "minWidth": 12,
+    "minWidthUnit": "%",
+    "cellBackground": null,
+    "textColor": null,
+    "editable": true,
+    "horizontalAlignment": "Center",
+    "verticalAlignment": "Center",
+    "headerHorizontalAlignment": "Center",
+    "headerVerticalAlignment": "Center",
+    "ignoreEscapeSequences": false
+  }
+]
+</script>
+
+<script data-tchmi-target-attribute="data-tchmi-cell-content-padding" type="application/json">
+{"left":3,"leftUnit":"px","right":3,"rightUnit":"px","top":0,"topUnit":"px","bottom":0,"bottomUnit":"px"}
+</script>
+
+
+<script data-tchmi-target-attribute="data-tchmi-trigger" type="application/json">
+[
+  {
+    "event": "TcHmiDatagrid_3.onAttached",
+    "actions": [
+      {
+        "objectType": "WriteToSymbol",
+        "active": true,
+        "symbolExpression": "%s%ServerExtensionCSharpEmpty1.WriteValueInit%/s%",
+        "value": {
+          "objectType": "StaticValue",
+          "valueType": "tchmi:general#/definitions/String",
+          "value": "doingInit"
+        },
+        "asyncWait": true
+      }
+    ]
+  }
+]
+</script>
+
+<script data-tchmi-target-attribute="data-tchmi-src-data" type="application/json">
+[
+  {
+    "Sample": "THIS IS SAMPLE DATA",
+    "MoldID": "DTPF4-V-1",
+    "Status": "Ready",
+    "DateAdded": "8:30:00 AM 2/31/23",
+    "AddedBy": "Jeff",
+    "MaintenanceNotes": "Mold has new casters"
+  },
+  {
+    "Sample": "THIS IS SAMPLE DATA",
+    "MoldID": "DTPF4-V-3",
+    "Status": "NeedsMaint",
+    "DateAdded": "8:30:00 AM 3/31/23",
+    "AddedBy": "Bob",
+    "MaintenanceNotes": "Mold needs to be cleaned"
+  },
+  {
+    "Sample": "THIS IS SAMPLE DATA",
+    "MoldID": "DTPF4-V-4",
+    "Status": "NeedsMaint",
+    "DateAdded": "8:30:00 AM 3/31/23",
+    "AddedBy": "Bob",
+    "MaintenanceNotes": "Mold needs to be cleaned"
+  },
+  {
+    "Sample": "THIS IS SAMPLE DATA",
+    "MoldID": "DTPF4-V-5",
+    "Status": "NeedsMaint",
+    "DateAdded": "8:30:00 AM 3/31/23",
+    "AddedBy": "Bob",
+    "MaintenanceNotes": "Mold needs to be cleaned"
+  },
+  {
+    "Sample": "THIS IS SAMPLE DATA",
+    "MoldID": "DTPF4-V-6",
+    "Status": "NeedsMaint",
+    "DateAdded": "8:30:00 AM 3/31/23",
+    "AddedBy": "Bob",
+    "MaintenanceNotes": "Mold needs to be cleaned"
+  },
+  {
+    "Sample": "THIS IS SAMPLE DATA",
+    "MoldID": "DTPF4-V-7",
+    "Status": "InProcess",
+    "DateAdded": "8:30:00 AM 3/30/23",
+    "AddedBy": "Bob",
+    "MaintenanceNotes": " "
+  },
+  {
+    "Sample": "THIS IS SAMPLE DATA",
+    "MoldID": "DTPF8-V-6",
+    "Status": "NeedsMaint",
+    "DateAdded": "8:30:00 AM 3/31/23",
+    "AddedBy": "Bob",
+    "MaintenanceNotes": "Mold has broken caster"
+  },
+  {
+    "Sample": "THIS IS SAMPLE DATA",
+    "MoldID": "DTPF8-V-7",
+    "Status": "InProcess",
+    "DateAdded": "8:30:00 AM 3/30/23",
+    "AddedBy": "Bob",
+    "MaintenanceNotes": " "
+  },
+  {
+    "Sample": "THIS IS SAMPLE DATA",
+    "MoldID": "DTPF8-V-33",
+    "Status": "InProcess",
+    "DateAdded": "8:30:00 AM 3/31/23",
+    "AddedBy": "Jeff",
+    "MaintenanceNotes": "Mold needs to be cleaned"
+  },
+  {
+    "Sample": "THIS IS SAMPLE DATA",
+    "MoldID": "DTPF8-V-22",
+    "Status": "InProcess",
+    "DateAdded": "8:30:00 AM 3/30/23",
+    "AddedBy": "Bob",
+    "MaintenanceNotes": " "
+  },
+  {
+    "Sample": "THIS IS SAMPLE DATA",
+    "MoldID": "DTPF4-V-1",
+    "Status": "Ready",
+    "DateAdded": "8:30:00 AM 2/31/23",
+    "AddedBy": "Jeff",
+    "MaintenanceNotes": "Mold has new casters"
+  },
+  {
+    "Sample": "THIS IS SAMPLE DATA",
+    "MoldID": "DTPF4-V-3",
+    "Status": "NeedsMaint",
+    "DateAdded": "8:30:00 AM 3/31/23",
+    "AddedBy": "Bob",
+    "MaintenanceNotes": "Mold needs to be cleaned"
+  },
+  {
+    "Sample": "THIS IS SAMPLE DATA",
+    "MoldID": "DTPF4-V-4",
+    "Status": "NeedsMaint",
+    "DateAdded": "8:30:00 AM 3/31/23",
+    "AddedBy": "Bob",
+    "MaintenanceNotes": "Mold needs to be cleaned"
+  },
+  {
+    "Sample": "THIS IS SAMPLE DATA",
+    "MoldID": "DTPF4-V-5",
+    "Status": "NeedsMaint",
+    "DateAdded": "8:30:00 AM 3/31/23",
+    "AddedBy": "Bob",
+    "MaintenanceNotes": ""
+  },
+  {
+    "Sample": "THIS IS SAMPLE DATA",
+    "MoldID": "DTPF4-V-6",
+    "Status": "NeedsMaint",
+    "DateAdded": "8:30:00 AM 3/31/23",
+    "AddedBy": "Bob",
+    "MaintenanceNotes": ""
+  },
+  {
+    "Sample": "THIS IS SAMPLE DATA",
+    "MoldID": "DTPF4-V-7",
+    "Status": "InProcess",
+    "DateAdded": "8:30:00 AM 3/30/23",
+    "AddedBy": "Bob",
+    "MaintenanceNotes": " "
+  },
+  {
+    "Sample": "THIS IS SAMPLE DATA",
+    "MoldID": "DTPF8-V-6",
+    "Status": "NeedsMaint",
+    "DateAdded": "8:30:00 AM 3/31/23",
+    "AddedBy": "Bob",
+    "MaintenanceNotes": " "
+  },
+  {
+    "Sample": "THIS IS SAMPLE DATA",
+    "MoldID": "DTPF8-V-7",
+    "Status": "InProcess",
+    "DateAdded": "8:30:00 AM 3/30/23",
+    "AddedBy": "Bob",
+    "MaintenanceNotes": " "
+  },
+  {
+    "Sample": "THIS IS SAMPLE DATA",
+    "MoldID": "DTPF8-V-33",
+    "Status": "InProcess",
+    "DateAdded": "8:30:00 AM 3/31/23",
+    "AddedBy": "Jeff",
+    "MaintenanceNotes": " "
+  },
+  {
+    "Sample": "THIS IS SAMPLE DATA",
+    "MoldID": "DTPF8-V-22",
+    "Status": "InProcess",
+    "DateAdded": "8:30:00 AM 3/30/23",
+    "AddedBy": "Bob",
+    "MaintenanceNotes": " "
+  }
+]
+</script>
+</div>
+<div id="TcHmiButton_Delete_69" data-tchmi-type="TcHmi.Controls.Beckhoff.TcHmiButton" data-tchmi-height="50" data-tchmi-height-unit="px" data-tchmi-left="24" data-tchmi-left-unit="px" data-tchmi-text="Delete" data-tchmi-top="542" data-tchmi-top-unit="px" data-tchmi-width="100" data-tchmi-width-unit="px" data-tchmi-word-wrap="true" data-tchmi-is-enabled="true">
+<script data-tchmi-target-attribute="data-tchmi-trigger" type="application/json">
+[
+  {
+    "event": "TcHmiButton_Delete_69.onPressed",
+    "actions": [
+      {
+        "objectType": "JavaScript",
+        "active": true,
+        "sourceLines": [
+          "//Delete Job from Current joblist",
+          "",
+          "",
+          "//Example found:",
+          "var firstNameControl = TcHmi.Controls.get(\"TcHmiDatagrid\");",
+          "if (firstNameControl != undefined)",
+          "\t{\t",
+          "\tvar index = firstNameControl.getSelectedRowIndex();",
+          "\tconsole.log(`Cell changes  getSelectedRowIndex = ${index}`);",
+          "\t",
+          "    TcHmi.Symbol.writeEx('%s%ServerExtensionCSharpEmpty1.WriteValueDelete%/s%', index, function (data) {",
+          "    if (data.error === TcHmi.Errors.NONE) {",
+          "        console.log(\"Delete OK\");",
+          "    } else {",
+          "        console.log(\"Delete Not OK\");",
+          "    }",
+          "    });\t",
+          "\t",
+          "\t}"
+        ],
+        "injectContextObject": false,
+        "asyncWait": true,
+        "waitMode": "Synchronous"
+      }
+    ]
+  }
+]
+</script>
+
+<script data-tchmi-target-attribute="data-tchmi-border-style" type="application/json">
+{
+  "left": "Solid",
+  "right": "Solid",
+  "top": "Solid",
+  "bottom": "Solid"
+}
+</script>
+
+<script data-tchmi-target-attribute="data-tchmi-border-radius" type="application/json">
+{
+  "topLeft": 5.0,
+  "topRight": 5.0,
+  "bottomLeft": 5.0,
+  "bottomRight": 5.0,
+  "topLeftUnit": "px",
+  "topRightUnit": "px",
+  "bottomLeftUnit": "px",
+  "bottomRightUnit": "px"
+}
+</script>
+</div>
+<div data-tchmi-grid-row-index="0" data-tchmi-grid-column-index="0" id="TcHmiButton_Add_69" data-tchmi-type="TcHmi.Controls.Beckhoff.TcHmiButton" data-tchmi-height="50" data-tchmi-height-unit="px" data-tchmi-left="138" data-tchmi-left-unit="px" data-tchmi-text="Add" data-tchmi-top="542" data-tchmi-top-unit="px" data-tchmi-width="100" data-tchmi-width-unit="px" data-tchmi-word-wrap="true" data-tchmi-is-enabled="true">
+<script data-tchmi-target-attribute="data-tchmi-trigger" type="application/json">
+[
+  {
+    "event": "TcHmiButton_Add_69.onPressed",
+    "actions": [
+      {
+        "objectType": "JavaScript",
+        "active": true,
+        "sourceLines": [
+          "//ADD Job Number, Mold ID, and Current Date/Time to Active Job list",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "//Example found:",
+          "",
+          "console.log('Pressing Add button');",
+          "var JobNumber = TcHmi.Controls.get(\"TcHmiTextbox_Test1\");",
+          "\t\t",
+          "\tlet timeString = new Date().toLocaleString();",
+          "\tconst person = {",
+          "\t\tTest1: test1.getText(),",
+          "\t\tTest2: parseInt(test2.getText()),",
+          "\t\tTest3: checkBoxStateChecked,",
+          "\t\tCurrentTime: timeString,",
+          "\t\tComboBox : comboboxState",
+          "\t};\t",
+          "\tvar myJSONString = JSON.stringify(person);",
+          "\tconsole.log(myJSONString);",
+          "\tTcHmi.Symbol.writeEx('%s%ServerExtensionCSharpEmpty1.WriteValueAdd%/s%', myJSONString, function (data) {",
+          "    if (data.error === TcHmi.Errors.NONE) {",
+          "        console.log('Write OK');",
+          "    } else {",
+          "        console.log('Write NOT OK');",
+          "    }",
+          "\t});"
+        ],
+        "injectContextObject": false,
+        "asyncWait": true,
+        "waitMode": "Synchronous"
+      },
+      {
+        "objectType": "JavaScript",
+        "active": true,
+        "sourceLines": [
+          "//Example found:",
+          "",
+          "",
+          "",
+          "console.log('Edit source code 2nd ');",
+          "",
+          "var newText = TcHmi.Controls.get(\"TcHmiDatagrid_1\");",
+          "if(newText != undefined) {",
+          "    let dataText = newText.getSrcData();",
+          "    console.log(dataText.length);",
+          "    //const myArr = JSON.parse(dataText);",
+          "    console.log(dataText.toString());",
+          "    ",
+          "var vals=[];",
+          "for(var i=0;i<dataText.length;i++){",
+          "   vals.push(dataText[i]);",
+          "}    ",
+          "    ",
+          "",
+          "",
+          "",
+          "var test1 = TcHmi.Controls.get(\"TcHmiTextbox_Test1\");",
+          "var test2 = TcHmi.Controls.get(\"TcHmiTextbox_Test2\");",
+          "var checkbox = TcHmi.Controls.get(\"TcHmiCheckbox\");",
+          "var combobox = TcHmi.Controls.get(\"TcHmiCombobox\");",
+          "var checkBoxStateChecked = false;",
+          "   ",
+          "\tlet checkboxState = checkbox.getToggleState();",
+          "\tif(checkboxState == 'Active') {\t",
+          "\t\tcheckBoxStateChecked = true;",
+          "\t\t}",
+          "\telse",
+          "\t\t{",
+          "\t\tcheckBoxStateChecked = false;\t",
+          "\t\t}",
+          "",
+          "const person = {CurrentTime:\"sdfsd\", Test1:test1.getText(), Test2:checkBoxStateChecked, Test3:!checkBoxStateChecked, Test4:\"fdss\"};",
+          " vals.push(person);",
+          "\t",
+          "        console.log(vals.length);",
+          "newText.setSrcData(vals);     ",
+          "    ",
+          "}"
+        ],
+        "injectContextObject": false,
+        "asyncWait": true,
+        "waitMode": "Synchronous"
+      }
+    ]
+  }
+]
+</script>
+
+<script data-tchmi-target-attribute="data-tchmi-border-style" type="application/json">
+{
+  "left": "Solid",
+  "right": "Solid",
+  "top": "Solid",
+  "bottom": "Solid"
+}
+</script>
+
+<script data-tchmi-target-attribute="data-tchmi-border-radius" type="application/json">
+{
+  "topLeft": 5.0,
+  "topRight": 5.0,
+  "bottomLeft": 5.0,
+  "bottomRight": 5.0,
+  "topLeftUnit": "px",
+  "topRightUnit": "px",
+  "bottomLeftUnit": "px",
+  "bottomRightUnit": "px"
+}
+</script>
+</div>
+</div>
+<div id="TcHmiGrid_9" data-tchmi-type="TcHmi.Controls.System.TcHmiGrid" data-tchmi-height="8" data-tchmi-height-unit="%" data-tchmi-left="23" data-tchmi-left-unit="px" data-tchmi-top="650" data-tchmi-top-unit="px" data-tchmi-width="98" data-tchmi-width-unit="%">
+<script data-tchmi-target-attribute="data-tchmi-column-options" type="application/json">
+[
+  {
+    "width": 1.0,
+    "widthUnit": "factor",
+    "widthMode": "Value",
+    "maxWidthUnit": "px",
+    "minWidthUnit": "px",
+    "overflow": false
+  },
+  {
+    "width": 1.0,
+    "widthUnit": "factor",
+    "widthMode": "Value",
+    "maxWidthUnit": "px",
+    "minWidthUnit": "px",
+    "overflow": false
+  },
+  {
+    "width": 1.0,
+    "widthUnit": "factor",
+    "widthMode": "Value",
+    "maxWidthUnit": "px",
+    "minWidthUnit": "px",
+    "overflow": false
+  },
+  {
+    "width": 1.0,
+    "widthUnit": "factor",
+    "widthMode": "Value",
+    "maxWidthUnit": "px",
+    "minWidthUnit": "px",
+    "overflow": false
+  },
+  {
+    "width": 1.0,
+    "widthUnit": "factor",
+    "widthMode": "Value",
+    "maxWidthUnit": "px",
+    "minWidthUnit": "px",
+    "overflow": false
+  },
+  {
+    "width": 1.0,
+    "widthUnit": "factor",
+    "widthMode": "Value",
+    "maxWidthUnit": "px",
+    "minWidthUnit": "px",
+    "overflow": false
+  }
+]
+</script>
+
+<script data-tchmi-target-attribute="data-tchmi-row-options" type="application/json">
+[
+  {
+    "height": 1.0,
+    "heightUnit": "factor",
+    "heightMode": "Value",
+    "maxHeightUnit": "px",
+    "minHeightUnit": "px",
+    "overflow": false
+  },
+  {
+    "height": 1.0,
+    "heightUnit": "factor",
+    "heightMode": "Value",
+    "maxHeightUnit": "px",
+    "minHeightUnit": "px",
+    "overflow": false
+  }
+]
+</script>
+<div data-tchmi-grid-row-index="1" data-tchmi-grid-column-index="0" id="TcHmiTextbox_Test1_2" data-tchmi-type="TcHmi.Controls.Beckhoff.TcHmiTextbox" data-tchmi-height="100" data-tchmi-height-unit="%" data-tchmi-left="0" data-tchmi-left-unit="%" data-tchmi-text="ADDED MOLD ID" data-tchmi-top="0" data-tchmi-top-unit="%" data-tchmi-width="100" data-tchmi-width-unit="%" data-tchmi-is-enabled="true" data-tchmi-word-wrap="false" data-tchmi-multiline="false" data-tchmi-auto-focus-out="false" data-tchmi-auto-select-text="false" data-tchmi-text-horizontal-alignment="Center" data-tchmi-text-font-size-unit="%" data-tchmi-text-font-size="200">
+<script data-tchmi-target-attribute="data-tchmi-content-padding" type="application/json">
+{"top":3,"right":3,"bottom":3,"left":3}
+</script>
+
+</div>
+<div data-tchmi-grid-row-index="1" data-tchmi-grid-column-index="1" id="TcHmiTextbox_Test2_4" data-tchmi-type="TcHmi.Controls.Beckhoff.TcHmiTextbox" data-tchmi-height="100" data-tchmi-height-unit="%" data-tchmi-left="0" data-tchmi-left-unit="%" data-tchmi-text="NAME" data-tchmi-top="0" data-tchmi-top-unit="%" data-tchmi-width="100" data-tchmi-width-unit="%" data-tchmi-is-enabled="true" data-tchmi-word-wrap="false" data-tchmi-multiline="false" data-tchmi-auto-focus-out="false" data-tchmi-auto-select-text="false" data-tchmi-text-horizontal-alignment="Center" data-tchmi-text-font-size-unit="%" data-tchmi-text-font-size="200">
+<script data-tchmi-target-attribute="data-tchmi-content-padding" type="application/json">
+{"top":3,"right":3,"bottom":3,"left":3}
+</script>
+
+</div>
+<div id="TcHmiTextblock_34" data-tchmi-type="TcHmi.Controls.Beckhoff.TcHmiTextblock" data-tchmi-height="100" data-tchmi-height-unit="%" data-tchmi-left="0" data-tchmi-left-unit="px" data-tchmi-text="Mold ID" data-tchmi-top="0" data-tchmi-top-unit="px" data-tchmi-width="100" data-tchmi-width-unit="%" data-tchmi-word-wrap="true" data-tchmi-text-font-size="200" data-tchmi-text-font-size-unit="%" data-tchmi-text-vertical-alignment="Center" data-tchmi-text-horizontal-alignment="Center">
+</div>
+<div id="TcHmiTextblock_35" data-tchmi-type="TcHmi.Controls.Beckhoff.TcHmiTextblock" data-tchmi-grid-column-index="1" data-tchmi-grid-row-index="0" data-tchmi-height="100" data-tchmi-height-unit="%" data-tchmi-left="1" data-tchmi-left-unit="px" data-tchmi-text="Added by" data-tchmi-top="0" data-tchmi-top-unit="px" data-tchmi-width="100" data-tchmi-width-unit="%" data-tchmi-word-wrap="true" data-tchmi-text-font-size="200" data-tchmi-text-font-size-unit="%" data-tchmi-text-vertical-alignment="Center" data-tchmi-text-horizontal-alignment="Center">
+</div>
+<div id="TcHmiTextblock_36" data-tchmi-type="TcHmi.Controls.Beckhoff.TcHmiTextblock" data-tchmi-grid-column-index="2" data-tchmi-grid-row-index="0" data-tchmi-height="100" data-tchmi-height-unit="%" data-tchmi-left="0" data-tchmi-left-unit="px" data-tchmi-text="" data-tchmi-top="0" data-tchmi-top-unit="px" data-tchmi-width="100" data-tchmi-width-unit="%" data-tchmi-word-wrap="true" data-tchmi-text-font-size="200" data-tchmi-text-font-size-unit="%" data-tchmi-text-vertical-alignment="Center" data-tchmi-text-horizontal-alignment="Center">
+</div>
+</div>
+</div>

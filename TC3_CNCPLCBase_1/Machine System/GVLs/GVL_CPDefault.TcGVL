@@ -1,0 +1,488 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+  <GVL Name="GVL_CPDefault" Id="{1ecd0fa7-6abf-4f93-b87b-f37308454d63}">
+    <Declaration><![CDATA[{attribute 'qualified_only'}
+VAR_GLOBAL
+	
+	
+	WX1A_CP1_CIn		: 	CpABS_CI := (
+						//bHomeStart_PI:= , 
+						//Stop_PI:= , 
+						//Reset_VI:= , 
+						//JogExecute_VI:= , 
+						//JogSlow_VI:= , 
+						//CW_VI:= , 
+						MotorName := 'WX1AVERT',
+						PPRset_CI:= 2 , 
+						cntPulseSet_CI:= 32000 , 
+						HomingSet_CI:= 3 ,
+						GearRatio_CI:= 3 , 
+						Lead_CI:= 8 , 
+						MechDriveType_CI:= 2, 
+						InputFilter_CI:= 7 , 
+						SWLimit_Hi_CI:= 12920, 
+						SWLimit_Lo_CI:= -1, //JOSEPHBARTONCHANGE1-18-2023 Changed the lo switch to -1, so we can actually move off of the Zero point.
+						Limit_NC_NO_CI:= 1, 
+						ABSEncoderScaler_CI := 100,
+						DisPerPulse_CI :=1,
+						MoveABSTol_CI :=1.5,
+						ABSEncoderZero_CI := 2117604771 //JosephBartonChange1-12-2023
+						);
+	WX1A_CP1_Out	:	CpABS_Out;	
+	WX1A_CP2_CIn 	:	CPABS_CI := ( //JOSEPHBARTONCHANGE1-19-2023 added the entire configuration for this motor.
+						
+						//bHomeStart_PI:= , 
+						//Stop_PI:= , 
+						//Reset_VI:= , 
+						//JogExecute_VI:= , 
+						//JogSlow_VI:= , 
+						//CW_VI:= , 
+						PPRset_CI:= 2 , 
+						cntPulseSet_CI:= 32000 , 
+						HomingSet_CI:= 3 ,
+						GearRatio_CI:= 3 , 
+						Lead_CI:= 8 , 
+						MechDriveType_CI:= 2, 
+						InputFilter_CI:= 7 , 
+						SWLimit_Hi_CI:= 1292, 
+						SWLimit_Lo_CI:= -1000, 
+						Limit_NC_NO_CI:= 1, 
+						ABSEncoderScaler_CI := 950,		//converts 1 cp pulse to encoder counts (scale and adjust this and cntPulseSet_CI to scale to imperial or metric)
+						//ABSEncoderZero_CI  , //will need to change if 'cntPulseSet_CI' is changed or the tolerance will need to be checked to see how close to limit
+						DisPerPulse_CI :=1,
+						MoveABSTol_CI :=1.5,
+						ABSEncoderZero_CI := 2121093328, //JosephBartonChange1-12-2023
+						MotorName := 'WX1AROT' //JOSEPHBARTONCHANGE1-16-2023
+						);
+	WX1A_CP2_Out 	: 	CpABS_Out;
+	WX1A_CP3_CI		: 	CpABS_CI;
+	WX1A_CP3_Out	: 	CpABS_Out;
+	
+	WX1B_CP1_CIn		: 	CpABS_CI := (
+						//bHomeStart_PI:= , 
+						//Stop_PI:= , 
+						//Reset_VI:= , 
+						//JogExecute_VI:= , 
+						//JogSlow_VI:= , 
+						//CW_VI:= , 
+						MotorName := 'WX1BVERT',
+						PPRset_CI:= 2 , 
+						cntPulseSet_CI:= 32000 , 
+						HomingSet_CI:= 3 ,
+						GearRatio_CI:= 3 , 
+						Lead_CI:= 8 , 
+						MechDriveType_CI:= 2, 
+						InputFilter_CI:= 7 , 
+						SWLimit_Hi_CI:= 1292, 
+						SWLimit_Lo_CI:= -1, //JOSEPHBARTONCHANGE1-18-2023 Changed the lo switch to -1, so we can actually move off of the Zero point.
+						Limit_NC_NO_CI:= 1, 
+						ABSEncoderScaler_CI := 100,
+						DisPerPulse_CI :=1,
+						MoveABSTol_CI :=1.5,
+						ABSEncoderZero_CI := 2117501600 //JosephBartonChange1-12-2023
+						);		
+	WX1B_CP1_Out	:	CpABS_Out;		
+	WX1B_CP2_CI 	:	CPABS_CI ;
+	WX1B_CP2_Out 	: 	CpABS_Out;
+	WX1B_CP3_CI		: 	CpABS_CI ;
+	WX1B_CP3_Out	: 	CpABS_Out;	
+				
+	WX2A_CP1_CI		: 	CpABS_CI := (
+					
+						//bHomeStart_PI:= , 
+						//Stop_PI:= , 
+						//Reset_VI:= , 
+						//JogExecute_VI:= , 
+						//JogSlow_VI:= , 
+						//CW_VI:= , 
+						PPRset_CI:= 2 , 
+						cntPulseSet_CI:= 32000 , 
+						HomingSet_CI:= 3 ,
+						GearRatio_CI:= 3 , 
+						Lead_CI:= 8 , 
+						MechDriveType_CI:= 2, 
+						InputFilter_CI:= 7 , 
+						SWLimit_Hi_CI:= 2604, 
+						SWLimit_Lo_CI:= -1, 
+						Limit_NC_NO_CI:= 1, 
+						ABSEncoderScaler_CI := 50,		//converts 1 cp pulse to encoder counts (scale and adjust this and cntPulseSet_CI to scale to imperial or metric)
+						//ABSEncoderZero_CI  , //will need to change if 'cntPulseSet_CI' is changed or the tolerance will need to be checked to see how close to limit
+						DisPerPulse_CI := 19,
+						MoveABSTol_CI :=1.5,
+						ABSEncoderZero_CI := 2117501369, //JosephBartonChange1-12-2023
+						MotorName := 'WX2AVERT' //JOSEPHBARTONCHANGE1-16-2023
+						);			 
+	WX2A_CP1_Out	:	CpABS_Out;
+	WX2A_CP2_CI 	:	CPABS_CI := ( //JOSEPHBARTONCHANGE1-19-2023 added the entire configuration for this motor.
+						
+						//bHomeStart_PI:= , 
+						//Stop_PI:= , 
+						//Reset_VI:= , 
+						//JogExecute_VI:= , 
+						//JogSlow_VI:= , 
+						//CW_VI:= , 
+						PPRset_CI:= 2 , 
+						cntPulseSet_CI:= 32000 , 
+						HomingSet_CI:= 3 ,
+						GearRatio_CI:= 3 , 
+						Lead_CI:= 8 , 
+						MechDriveType_CI:= 2, 
+						InputFilter_CI:= 7 , 
+						SWLimit_Hi_CI:= 10000, 
+						SWLimit_Lo_CI:= -10000, 
+						Limit_NC_NO_CI:= 1, 
+						ABSEncoderScaler_CI := 50,		//converts 1 cp pulse to encoder counts (scale and adjust this and cntPulseSet_CI to scale to imperial or metric)
+						//ABSEncoderZero_CI  , //will need to change if 'cntPulseSet_CI' is changed or the tolerance will need to be checked to see how close to limit
+						DisPerPulse_CI := 20,
+						MoveABSTol_CI :=1.5,
+						ABSEncoderZero_CI := 2121092380, //JosephBartonChange1-12-2023
+						MotorName := 'WX2AROT' //JOSEPHBARTONCHANGE1-16-2023
+	
+						);
+	WX2A_CP2_Out 	: 	CpABS_Out;
+	WX2A_CP3_CI	:   CpABS_CI := (
+					
+						//bHomeStart_PI:= , 
+						//Stop_PI:= , 
+						//Reset_VI:= , 
+						//JogExecute_VI:= , 
+						//JogSlow_VI:= , 
+						//CW_VI:= , 
+						PPRset_CI:= 2 , 
+						cntPulseSet_CI:= 800 , 
+						HomingSet_CI:= 3 ,
+						GearRatio_CI:= 3 , 
+						Lead_CI:= 8 , 
+						MechDriveType_CI:= 2, 
+						InputFilter_CI:= 7 , 
+						SWLimit_Hi_CI:= 3340, 
+						SWLimit_Lo_CI:= -1, 
+						Limit_NC_NO_CI:= 1, 
+						ABSEncoderScaler_CI := 50,		//converts 1 cp pulse to encoder counts (scale and adjust this and cntPulseSet_CI to scale to imperial or metric)
+						//ABSEncoderZero_CI  , //will need to change if 'cntPulseSet_CI' is changed or the tolerance will need to be checked to see how close to limit
+						DisPerPulse_CI := 30,
+						MoveABSTol_CI :=1.5,
+						ABSEncoderZero_CI := 31405249, //JosephBartonChange1-12-2023
+						MotorName := 'WX2ACLAMP' //JOSEPHBARTONCHANGE1-16-2023
+						);
+	WX2A_CP3_Out	: 	CpABS_Out;
+	
+	WX2B_CP1_CIn		: 	CpABS_CI := (
+						//bHomeStart_PI:= , 
+						//Stop_PI:= , 
+						//Reset_VI:= , 
+						//JogExecute_VI:= , 
+						//JogSlow_VI:= , 
+						//CW_VI:= , 
+						PPRset_CI:= 2 , 
+						cntPulseSet_CI:= 32000 , 
+						HomingSet_CI:= 3 ,
+						GearRatio_CI:= 3 , 
+						Lead_CI:= 8 , 
+						MechDriveType_CI:= 2, 
+						InputFilter_CI:= 7 , 
+						SWLimit_Hi_CI:= 2907 , 
+						SWLimit_Lo_CI:= -1, //JOSEPHBARTONCHANGE1-18-2023 Changed the lo switch to -1, so we can actually move off of the Zero point.
+						Limit_NC_NO_CI:= 1, 
+						ABSEncoderScaler_CI := 50,
+						DisPerPulse_CI :=1,
+						MoveABSTol_CI :=1.5,
+						ABSEncoderZero_CI := 34655813, //JOSEPHBARTONCHANGE1-18-2023
+						MotorName := 'WX2BVERT' //JOSEPHBARTONCHANGE1-16-2023
+						);			
+	WX2B_CP1_Out	:	CpABS_Out;
+	
+	WX2B_CP2_CI 	:	CPABS_CI := ( //JOSEPHBARTONCHANGE1-19-2023 added the entire configuration for this motor.
+						//bHomeStart_PI:= , 
+						//Stop_PI:= , 
+						//Reset_VI:= , 
+						//JogExecute_VI:= , 
+						//JogSlow_VI:= , 
+						//CW_VI:= , 
+						PPRset_CI:= 2 , 
+						cntPulseSet_CI:= 91 , 
+						HomingSet_CI:= 3 ,
+						GearRatio_CI:= 3 , 
+						Lead_CI:= 8 , 
+						MechDriveType_CI:= 2, 
+						InputFilter_CI:= 7 , 
+						SWLimit_Hi_CI:= 10000, 
+						SWLimit_Lo_CI:= -10000, 
+						Limit_NC_NO_CI:= 1, 
+						ABSEncoderScaler_CI := 50,		//converts 1 cp pulse to encoder counts (scale and adjust this and cntPulseSet_CI to scale to imperial or metric)
+						//ABSEncoderZero_CI  , //will need to change if 'cntPulseSet_CI' is changed or the tolerance will need to be checked to see how close to limit
+						DisPerPulse_CI :=1,
+						MoveABSTol_CI :=1.5,
+						ABSEncoderZero_CI := 2118667153, //JosephBartonChange1-12-2023
+						MotorName := 'WX2BROT' //JOSEPHBARTONCHANGE1-16-2023
+						); 
+	WX2B_CP2_Out 	: 	CpABS_Out;
+	
+	WX2B_CP3_CI		: 	CpABS_CI := (
+					
+						//bHomeStart_PI:= , 
+						//Stop_PI:= , 
+						//Reset_VI:= , 
+						//JogExecute_VI:= , 
+						//JogSlow_VI:= , 
+						//CW_VI:= , 
+						PPRset_CI:= 2 , 
+						cntPulseSet_CI:= 800 , 
+						HomingSet_CI:= 3 ,
+						GearRatio_CI:= 3 , 
+						Lead_CI:= 8 , 
+						MechDriveType_CI:= 2, 
+						InputFilter_CI:= 7 , 
+						SWLimit_Hi_CI:= 10000, 
+						SWLimit_Lo_CI:= -100, 
+						Limit_NC_NO_CI:= 1, 
+						ABSEncoderScaler_CI := 50,		//converts 1 cp pulse to encoder counts (scale and adjust this and cntPulseSet_CI to scale to imperial or metric)
+						//ABSEncoderZero_CI  , //will need to change if 'cntPulseSet_CI' is changed or the tolerance will need to be checked to see how close to limit
+						DisPerPulse_CI :=1,
+						MoveABSTol_CI :=1.5,
+						ABSEncoderZero_CI := 2117680977, //JosephBartonChange1-12-2023
+						MotorName := 'WX2BCLAMP' //JOSEPHBARTONCHANGE1-16-2023
+						);
+	WX2B_CP3_Out	: 	CpABS_Out;
+	
+	WX3A_CP1_CI		: 	CpABS_CI := (
+						//bHomeStart_PI:= , 
+						//Stop_PI:= , 
+						//Reset_VI:= , 
+						//JogExecute_VI:= , 
+						//JogSlow_VI:= , 
+						//CW_VI:= , 
+						PPRset_CI:= 2 , 
+						cntPulseSet_CI:= 32000 , 
+						HomingSet_CI:= 3 ,
+						GearRatio_CI:= 3 , 
+						Lead_CI:= 8 , 
+						MechDriveType_CI:= 2, 
+						InputFilter_CI:= 7 , 
+						SWLimit_Hi_CI:= -0 , 
+						SWLimit_Lo_CI:= -125, 
+						Limit_NC_NO_CI:= 0, 
+						ABSEncoderScaler_CI := 100,
+						DisPerPulse_CI :=1,
+						MoveABSTol_CI :=1.5,
+						MotorName := 'WX3AVERT' //JOSEPHBARTONCHANGE1-16-2023
+						);			
+	WX3A_CP1_Out	:	CpABS_Out;
+	WX3A_CP2_CI		: 	CpABS_CI;
+	WX3A_CP2_Out	:	CpABS_OUt;
+	WX3A_CP3_CI		: 	LinPPR_CI := (
+						//bHomeStart_PI:= , 
+						//Stop_PI:= , 
+						//Reset_VI:= , 
+						//JogExecute_VI:= , 
+						//JogSlow_VI:= , 
+						//CW_VI:= , 
+						PPRset_CI:= 2 , 
+						cntPulseSet_CI:= 800 , 
+						HomingSet_CI:= 2 ,
+						GearRatio_CI:= 3 , 
+						Lead_CI:= 8 , 
+						MechDriveType_CI:= 2, 
+						InputFilter_CI:= 7 , 
+						SWLimit_Hi_CI:= 100 , 
+						SWLimit_Lo_CI:= -125, 
+						Limit_NC_NO_CI:= 1,
+						DisPerPulse_CI :=1,
+						MoveABSTol_CI :=1.5
+						);			
+	WX3A_CP3_Out	:	LinPPR_Out;
+	WX3B_CP1_CI		: 	CpABS_CI := (
+						//bHomeStart_PI:= , 
+						//Stop_PI:= , 
+						//Reset_VI:= , 
+						//JogExecute_VI:= , 
+						//JogSlow_VI:= , 
+						//CW_VI:= , 
+						PPRset_CI:= 2 , 
+						cntPulseSet_CI:= 32000 , 
+						HomingSet_CI:= 3 ,
+						GearRatio_CI:= 3 , 
+						Lead_CI:= 8 , 
+						MechDriveType_CI:= 2, 
+						InputFilter_CI:= 7 , 
+						SWLimit_Hi_CI:= 0 , 
+						SWLimit_Lo_CI:= -125, 
+						Limit_NC_NO_CI:= 0, 
+						ABSEncoderScaler_CI := 100,
+						DisPerPulse_CI :=1,
+						MoveABSTol_CI :=1.5,
+						MotorName := 'WX3BVERT' //JOSEPHBARTONCHANGE1-16-2023
+						);			
+	WX3B_CP1_Out	:	CpABS_Out;
+	WX3B_Cp2_CI		: 	CpABS_CI;
+	WX3B_Cp2_out	:	CpABS_Out;
+	WX3B_CP3_CI		: 	LinPPR_CI := (
+						//bHomeStart_PI:= , 
+						//Stop_PI:= , 
+						//Reset_VI:= , 
+						//JogExecute_VI:= , 
+						//JogSlow_VI:= , 
+						//CW_VI:= , 
+						PPRset_CI:= 2 , 
+						cntPulseSet_CI:= 800 , 
+						HomingSet_CI:= 2 ,
+						GearRatio_CI:= 3 , 
+						Lead_CI:= 8 , 
+						MechDriveType_CI:= 2, 
+						InputFilter_CI:= 7 , 
+						SWLimit_Hi_CI:= 100 , 
+						SWLimit_Lo_CI:= -125, 
+						Limit_NC_NO_CI:= 1,
+						DisPerPulse_CI :=1,
+						MoveABSTol_CI :=1.5
+						
+						);			
+	WX3B_CP3_Out	:	LinPPR_Out;
+	
+	WX4A_CP1_CI		: 	CpABS_CI := (
+						//bHomeStart_PI:= , 
+						//Stop_PI:= , 
+						//Reset_VI:= , 
+						//JogExecute_VI:= , 
+						//JogSlow_VI:= , 
+						//CW_VI:= , 
+						PPRset_CI:= 2 , 
+						cntPulseSet_CI:= 32000 , 
+						HomingSet_CI:= 3 ,
+						GearRatio_CI:= 3 , 
+						Lead_CI:= 8 , 
+						MechDriveType_CI:= 2, 
+						InputFilter_CI:= 7 , 
+						SWLimit_Hi_CI:= 150 , 
+						SWLimit_Lo_CI:= 0, 
+						Limit_NC_NO_CI:= 0, 
+						ABSEncoderScaler_CI := 950,		//converts 1 cp pulse to encoder counts (scale and adjust this and cntPulseSet_CI to scale to imperial or metric)
+						//ABSEncoderZero_CI  , //will need to change if 'cntPulseSet_CI' is changed or the tolerance will need to be checked to see how close to limit
+						DisPerPulse_CI :=1,
+						MoveABSTol_CI :=1.5,
+						MotorName := 'WX4AVERT'
+						);			
+	WX4A_CP1_Out	:	CpABS_Out;
+	WX4A_CP2_CI		: 	CpABS_CI := (
+						//bHomeStart_PI:= , 
+						//Stop_PI:= , 
+						//Reset_VI:= , 
+						//JogExecute_VI:= , 
+						//JogSlow_VI:= , 
+						//CW_VI:= , 
+						PPRset_CI:= 2 , 
+						cntPulseSet_CI:= 32778 , //set for 1 degree per pulse
+						HomingSet_CI:= 3 ,
+						GearRatio_CI:= 3 , 
+						Lead_CI:= 8 , 
+						MechDriveType_CI:= 2, 
+						InputFilter_CI:= 7 , 
+						SWLimit_Hi_CI:= 180 , 
+						SWLimit_Lo_CI:= -90, 
+						Limit_NC_NO_CI:= 1, 	//add sensor if more protection needed
+						ABSEncoderScaler_CI := 131,		//converts 1 cp pulse to encoder counts (scale and adjust this and cntPulseSet_CI to scale to imperial or metric)
+						ABSEncoderZero_CI := 2089769026 , //will need to change if 'cntPulseSet_CI' is changed or the tolerance will need to be checked to see how close to limit
+						//abs currently set for -90 deg to 180 deg
+						
+						DisPerPulse_CI :=1,
+						MoveABSTol_CI :=1.5
+						);			
+	WX4A_CP2_Out	:	CpABS_Out;
+	WX4A_CP3_CI		: 	LinPPR_CI := (
+						//bHomeStart_PI:= , 
+						//Stop_PI:= , 
+						//Reset_VI:= , 
+						//JogExecute_VI:= , 
+						//JogSlow_VI:= , 
+						//CW_VI:= , 
+						PPRset_CI:= 2 , 
+						cntPulseSet_CI:= 800 , 
+						HomingSet_CI:= 2 ,
+						GearRatio_CI:= 3 , 
+						Lead_CI:= 8 , 
+						MechDriveType_CI:= 2, 
+						InputFilter_CI:= 7 , 
+						SWLimit_Hi_CI:= 100 , 
+						SWLimit_Lo_CI:= -125, 
+						Limit_NC_NO_CI:= 1,
+						DisPerPulse_CI :=1,
+						MoveABSTol_CI :=1.5
+						
+						);			
+	WX4A_CP3_Out	:	LinPPR_Out;
+	WX4B_CP1_CI		: 	CpABS_CI := (
+						//bHomeStart_PI:= , 
+						//Stop_PI:= , 
+						//Reset_VI:= , 
+						//JogExecute_VI:= , 
+						//JogSlow_VI:= , 
+						//CW_VI:= , 
+						PPRset_CI:= 2 , 
+						cntPulseSet_CI:= 32000 , 
+						HomingSet_CI:= 3 ,
+						GearRatio_CI:= 3 , 
+						Lead_CI:= 8 , 
+						MechDriveType_CI:= 2, 
+						InputFilter_CI:= 7 , 
+						SWLimit_Hi_CI:= 150 , 
+						SWLimit_Lo_CI:= 0, 
+						Limit_NC_NO_CI:= 0, 
+						ABSEncoderScaler_CI := -950,		//converts 1 cp pulse to encoder counts (scale and adjust this and cntPulseSet_CI to scale to imperial or metric)
+						ABSEncoderZero_CI := 2117612704 , //will need to change if 'cntPulseSet_CI' is changed or the tolerance will need to be checked to see how close to limit
+						DisPerPulse_CI :=1,
+						MoveABSTol_CI :=1.5,
+						MotorName := 'WX4BVERT'
+						);			
+	WX4B_CP1_Out	:	CpABS_Out;
+	WX4B_CP2_CI		: 	CpABS_CI := (
+						//bHomeStart_PI:= , 
+						//Stop_PI:= , 
+						//Reset_VI:= , 
+						//JogExecute_VI:= , 
+						//JogSlow_VI:= , 
+						//CW_VI:= , 
+						PPRset_CI:= 2 , 
+						cntPulseSet_CI:= 32778 , //set for 1 degree per pulse
+						HomingSet_CI:= 3 ,
+						GearRatio_CI:= 3 , 
+						Lead_CI:= 8 , 
+						MechDriveType_CI:= 2, 
+						InputFilter_CI:= 7 , 
+						SWLimit_Hi_CI:= 180 , 
+						SWLimit_Lo_CI:= -90, 
+						Limit_NC_NO_CI:= 1, 	//add sensor if more protection needed later
+						ABSEncoderScaler_CI := 132,		//converts 1 cp pulse to encoder counts (scale and adjust this and cntPulseSet_CI to scale to imperial or metric)
+						ABSEncoderZero_CI := 2117532059	 , //will need to change if 'cntPulseSet_CI' is changed or the tolerance will need to be checked to see how close to limit
+						
+						DisPerPulse_CI :=1,
+						MoveABSTol_CI :=1.5
+						);
+	WX4B_CP2_Out	:	CpABS_Out;
+	
+	WX4B_CP3_CI		: 	LinPPR_CI := ( //not config yet
+						//bHomeStart_PI:= , 
+						//Stop_PI:= , 
+						//Reset_VI:= , 
+						//JogExecute_VI:= , 
+						//JogSlow_VI:= , 
+						//CW_VI:= , 
+						PPRset_CI:= 2 , 
+						cntPulseSet_CI:= 800 , 
+						HomingSet_CI:= 2 ,
+						GearRatio_CI:= 3 , 
+						Lead_CI:= 8 , 
+						MechDriveType_CI:= 2, 
+						InputFilter_CI:= 7 , 
+						SWLimit_Hi_CI:= 150 , 
+						SWLimit_Lo_CI:= 0, 
+						Limit_NC_NO_CI:= 1,
+						DisPerPulse_CI :=1,
+						MoveABSTol_CI :=1.5
+						
+						
+						);			
+	WX4B_CP3_Out	:	LinPPR_Out;
+		
+END_VAR]]></Declaration>
+  </GVL>
+</TcPlcObject>

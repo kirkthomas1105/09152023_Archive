@@ -1,0 +1,42 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.11">
+  <POU Name="myPRG_AxisHomeSwitches" Id="{cbf9ca43-13ed-4e06-b4de-4c065a7175d6}" SpecialFunc="None">
+    <Declaration><![CDATA[PROGRAM myPRG_AxisHomeSwitches
+VAR
+	
+	i: USINT;
+	xHomed_X: BOOL;
+	xHomed_Y: BOOL;
+	xHomed_Z: BOOL;
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[
+HLI3_SetAxisReferenceCam(nHliAxisIdx := 0, bReferenceCam := bXHomeSwitch);
+HLI3_SetAxisReferenceCam(nHliAxisIdx := 1, bReferenceCam := bYHomeSwitch);
+HLI3_SetAxisReferenceCam(nHliAxisIdx := 2, bReferenceCam := bZHomeSwitch);
+
+// Below sets all axis positions to zero and sets "homed" flag
+//HLI3_SetAxisReferencePosition(bSetRefpos:= bSet, nHliAxisIdx:= 0); // cannot be done in manual mode
+//HLI3_SetAxisReferencePosition(bSetRefpos:= bSet, nHliAxisIdx:= 1); // cannot be done in manual mode
+//HLI3_SetAxisReferencePosition(bSetRefpos:= bSet, nHliAxisIdx:= 2); // cannot be done in manual mode
+
+//Axis Home Status i.e. is the axis home
+xHomed_X := gpAx[0]^.lr_state.homing_done_r;
+xHomed_Y := gpAx[1]^.lr_state.homing_done_r;
+xHomed_Z := gpAx[2]^.lr_state.homing_done_r;
+]]></ST>
+    </Implementation>
+    <LineIds Name="myPRG_AxisHomeSwitches">
+      <LineId Id="19" Count="1" />
+      <LineId Id="93" Count="1" />
+      <LineId Id="96" Count="0" />
+      <LineId Id="95" Count="0" />
+      <LineId Id="68" Count="0" />
+      <LineId Id="97" Count="1" />
+      <LineId Id="92" Count="0" />
+      <LineId Id="69" Count="3" />
+      <LineId Id="5" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

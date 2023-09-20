@@ -1,0 +1,23 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+  <POU Name="F_PartIsClamped" Id="{e822ac70-9b0f-43d9-a087-9cebb42b8f20}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION F_PartIsClamped : BOOL
+VAR_INPUT
+	WX : sBogie;
+END_VAR
+VAR
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[IF WX.A.bClamped AND WX.B.bClamped THEN
+	F_PartIsClamped := 1;
+	ELSE
+		F_PartIsClamped := 0;
+END_IF]]></ST>
+    </Implementation>
+    <LineIds Name="F_PartIsClamped">
+      <LineId Id="20" Count="3" />
+      <LineId Id="10" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

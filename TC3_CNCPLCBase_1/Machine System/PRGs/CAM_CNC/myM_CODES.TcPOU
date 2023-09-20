@@ -1,0 +1,233 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.11">
+  <POU Name="myM_CODES" Id="{71237f1b-9c4a-4115-acd6-8202daaafc1a}" SpecialFunc="None">
+    <Declaration><![CDATA[PROGRAM myM_CODES
+VAR
+	testbit:BOOL;
+	rtM2: R_TRIG; 
+	rtM30: R_TRIG;
+	rtM35: R_TRIG;  //Laser Off
+	
+	//Spray Gantry MCOdes
+		rtM100 : R_TRIG; //spray on  //note current type MOS if delay is too slow for motion use FastMcode or use MNS_SNS type
+		rtM101 : R_TRIG; //spray off
+		rtM102 : R_TRIG; //Fiber on
+		rtM103 : R_TRIG; //Fiber off
+		
+		rtM910: R_TRIG; //Acetone off
+		rtM911: R_Trig; //acetone on
+		
+	//Roll & Place MCodes
+	
+	//SD1 & SD2 MCodes
+		rtM590 : R_trig; 	//SD1 Move Execute
+		rtM591 : R_TRIG; 	//SD2 Move Execute
+	//Door MCodes
+		rtM600 : R_Trig;	//SD1 Door 	Open
+		rtM601 : R_Trig; 	//SD1 Door Close
+		rtM602 : R_Trig;	//SD2 Door Open
+		rtM603 : R_TRIG;	//SD2 Door Close
+		rtM604 : R_TRIG;	//Staging Door Open
+		rtM605 : R_TRIG;	//Staging Door Close
+		rtM606 : R_TRIG;	//Loading Door Open
+		rtM607 : R_TRIG;	//Loading Door Close
+		rtM608 : R_TRIG;	//Spray Door Open
+		rtM609 : R_TRIG;	//Spray Door Close
+		rtM610 : R_TRIG;	//Spray acetone Open
+		rtM611 : R_TRIG;	//Spray acetone Close
+		rtM612 : R_TRIG;	//Roll acetone Open
+		rtM613 : R_TRIG;	//Roll Acetone Close
+		rtM614 : R_TRIG;	//Rib Door Open
+		rtM615 : R_TRIG;	//Rib Door Close
+		rtM616 : R_TRIG;	//Edge Door Open
+		rtM617 : R_TRIG; 	//Edge Door Close
+		
+	//Bogie WX M Codes
+		//WX1
+		rtM510: R_Trig;	//WX1VertExecute 	[synced A&B]
+		rtM511: R_trig; //WX1RotExecute 	[synced A&B]
+		rtM512: R_trig; //WX1ClampExecute 	[synced A&B]
+		rtM519: R_trig;	//WX1FollowSyncExe	[resync Rot]
+		
+		//WX2
+		rtM520: R_Trig;	//WX2VertExecute 	[synced A&B]
+		rtM521: R_trig; //WX2RotExecute 	[synced A&B]
+		rtM522: R_trig; //WX2ClampExecute 	[synced A&B]
+		rtM529: R_trig;	//WX2FollowSyncExe	[resync Rot]
+		
+		//WX3
+		rtM530: R_Trig;	//WX3VertExecute 	[synced A&B]
+		rtM531: R_trig; //WX3RotExecute 	[synced A&B]
+		rtM532: R_trig; //WX3ClampExecute	[synced A&B]
+		rtM539: R_trig;	//WX3FollowSyncExe	[resync Rot]
+		
+		//WX4
+		rtM540: R_Trig;	//WX4VertExecute 	[synced A&B]
+		rtM541: R_trig; //WX4RotExecute 	[synced A&B]
+		rtM542: R_trig; //WX4ClampExecute 	[synced A&B]
+		rtM549: R_trig;	//WX4FollowSyncExe	[resync Rot]
+		
+		
+	bLaserBeamOn AT %Q* : BOOL;
+	bGasOn: BOOL;
+	rtReset : R_TRIG;
+	iM2Counter : INT;
+	iM30Counter : INT;
+	iTrunnionMotor : DINT;
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[(*Use Fast MCode POu and task if these are too slow to respond - Move the code to the other POU and check that it is attached to the Fast MCode Task -  See example*)
+
+rtM35(CLK:= CNCSystem.Channel[0].M[35].bState_rw, Q=> );
+IF rtM35.Q THEN 
+	bLaserBeamOn := FALSE;
+	bSprayOn :=FALSE;
+	bGasOn := FALSE;
+	CNCSystem.Channel[0].M[35].bState_rw := FALSE;
+END_IF
+
+rtM2(CLK:= CNCSystem.Channel[0].M[2].bState_rw, Q=> );
+IF rtM2.Q THEN 
+	iM2Counter := iM2Counter + 1;
+END_IF
+
+rtM30(CLK:= CNCSystem.Channel[0].M[30].bState_rw, Q=> );
+IF rtM30.Q THEN 
+	iM30Counter := iM30Counter + 1;
+END_IF
+
+//add a check in check out variable for each gantry to signal that the SD1 or SD2 rail is in use in a given cell
+//Spray Gantry MCodes	
+	rtM100(CLK:= CNCSystem.Channel[0].M[100].bState_rw, Q=> ); // spray gun mac valve on
+	IF rtM100.Q THEN 
+	//	bLaserBeamOn := TRUE;
+	//	bGasOn := TRUE;
+		GVL_IO.bSprayOn :=TRUE;
+		CNCSystem.Channel[0].M[100].bState_rw := FALSE;
+	END_IF
+	rtM101(CLK:= CNCSystem.Channel[0].M[101].bState_rw, Q=> );	// spray gun mac valve off
+	IF rtM101.Q THEN 
+	//	bLaserBeamOn := TRUE;
+		//bGasOn := TRUE;
+		GVL_IO.bSprayOn :=FALSE;
+		//test sync req in mdi with this if then using outside of auto rtrig one shot mcode uncomment to use like above and change to MOS type
+	(*
+		IF TestBit THEN
+			CNCSystem.Channel[0].M[101].bState_rw := FALSE;
+		END_IF *)
+	END_IF
+	(*example for flipping Mcode acknowledgment outside of rtrig [useful for aux plc axis or actuators...etc] *)
+	IF TestBit THEN
+		CNCSystem.Channel[0].M[101].bState_rw := FALSE;
+	End_if
+	(*end M101 example*)
+	
+	rtM910 (CLK:=CNCSystem.Channel[0].M[910].bState_rw, Q=>); //M910 aceton mac valve off
+	IF rtM910.Q THEN
+		GVL_IO.bAceOn := FALSE;
+	END_IF
+	
+	rtM911 (CLK:=CNCSystem.Channel[0].M[911].bState_rw, Q=>);  //M911 acetone mac valve on
+	IF rtM911.Q THEN
+		GVL_IO.bAceOn := TRUE;
+	END_IF
+	
+//Roll & Place Gantry MCodes
+
+//SD Rails MCodes
+
+//Door MCodes
+	(* Add rt and io mapping for each door actuator *)
+	
+//Bogie MCodes
+	rtM510 (Clk:=CNCSystem.Channel[0].M[510].bState_rw, Q=>);
+	rtM511 (Clk:=CNCSystem.Channel[0].M[511].bState_rw, Q=>);
+	rtM512 (Clk:=CNCSystem.Channel[0].M[512].bState_rw, Q=>);
+	rtM519 (Clk:=CNCSystem.Channel[0].M[519].bState_rw, Q=>);
+	rtM520 (Clk:=CNCSystem.Channel[0].M[520].bState_rw, Q=>);
+	rtM521 (Clk:=CNCSystem.Channel[0].M[521].bState_rw, Q=>);
+	rtM522 (Clk:=CNCSystem.Channel[0].M[522].bState_rw, Q=>);
+	rtM529 (Clk:=CNCSystem.Channel[0].M[529].bState_rw, Q=>);
+	rtM530 (Clk:=CNCSystem.Channel[0].M[530].bState_rw, Q=>);
+	rtM531 (Clk:=CNCSystem.Channel[0].M[531].bState_rw, Q=>);
+	rtM532 (Clk:=CNCSystem.Channel[0].M[532].bState_rw, Q=>);
+	rtM539 (Clk:=CNCSystem.Channel[0].M[539].bState_rw, Q=>);
+	rtM540 (Clk:=CNCSystem.Channel[0].M[540].bState_rw, Q=>);
+	rtM541 (Clk:=CNCSystem.Channel[0].M[541].bState_rw, Q=>);
+	rtM542 (Clk:=CNCSystem.Channel[0].M[542].bState_rw, Q=>);
+	rtM549 (Clk:=CNCSystem.Channel[0].M[549].bState_rw, Q=>);
+	(* bogie Mcode unlatch and bstate calls are handled in CP_GCode *)
+	IF rtm510.Q THEN GVL_M.m510Latch:=1; END_IF
+	IF rtm511.Q THEN GVL_M.m511Latch:=1; END_IF
+	IF rtm512.Q THEN GVL_M.m512Latch:=1; END_IF
+	IF rtm519.Q THEN GVL_M.M519Latch:=1; END_IF
+	IF rtm520.Q THEN GVL_M.m520Latch:=1; END_IF
+	IF rtm521.Q THEN GVL_M.m521Latch:=1; END_IF
+	IF rtm522.Q THEN GVL_M.m522Latch:=1; END_IF
+	IF rtm529.Q THEN GVL_M.M529Latch:=1; END_IF
+	IF rtm530.Q THEN GVL_M.m530Latch:=1; END_IF
+	IF rtm531.Q THEN GVL_M.m531Latch:=1; END_IF
+	IF rtm532.Q THEN GVL_M.m532Latch:=1; END_IF
+	IF rtm539.Q THEN GVL_M.M539Latch:=1; END_IF
+	IF rtm540.Q THEN GVL_M.m540Latch:=1; END_IF
+	IF rtm541.Q THEN GVL_M.m541Latch:=1; END_IF
+	IF rtm542.Q THEN GVL_M.M542Latch:=1; END_IF
+	IF rtm549.Q THEN GVL_M.M549Latch:=1; END_IF]]></ST>
+    </Implementation>
+    <LineIds Name="myM_CODES">
+      <LineId Id="1139" Count="0" />
+      <LineId Id="1141" Count="0" />
+      <LineId Id="3" Count="0" />
+      <LineId Id="155" Count="0" />
+      <LineId Id="876" Count="0" />
+      <LineId Id="916" Count="0" />
+      <LineId Id="877" Count="0" />
+      <LineId Id="6" Count="1" />
+      <LineId Id="914" Count="0" />
+      <LineId Id="888" Count="0" />
+      <LineId Id="2" Count="0" />
+      <LineId Id="889" Count="0" />
+      <LineId Id="892" Count="4" />
+      <LineId Id="890" Count="0" />
+      <LineId Id="1101" Count="0" />
+      <LineId Id="1100" Count="0" />
+      <LineId Id="1138" Count="0" />
+      <LineId Id="1150" Count="21" />
+      <LineId Id="1143" Count="0" />
+      <LineId Id="1175" Count="8" />
+      <LineId Id="1174" Count="0" />
+      <LineId Id="1172" Count="0" />
+      <LineId Id="1142" Count="0" />
+      <LineId Id="1145" Count="0" />
+      <LineId Id="1144" Count="0" />
+      <LineId Id="1147" Count="0" />
+      <LineId Id="1146" Count="0" />
+      <LineId Id="1148" Count="0" />
+      <LineId Id="1173" Count="0" />
+      <LineId Id="978" Count="0" />
+      <LineId Id="1184" Count="2" />
+      <LineId Id="1537" Count="0" />
+      <LineId Id="1187" Count="2" />
+      <LineId Id="1536" Count="0" />
+      <LineId Id="1190" Count="1" />
+      <LineId Id="1193" Count="0" />
+      <LineId Id="1535" Count="0" />
+      <LineId Id="1194" Count="2" />
+      <LineId Id="1459" Count="0" />
+      <LineId Id="1298" Count="0" />
+      <LineId Id="1375" Count="2" />
+      <LineId Id="1540" Count="0" />
+      <LineId Id="1380" Count="1" />
+      <LineId Id="1379" Count="0" />
+      <LineId Id="1539" Count="0" />
+      <LineId Id="1383" Count="1" />
+      <LineId Id="1382" Count="0" />
+      <LineId Id="1538" Count="0" />
+      <LineId Id="1378" Count="0" />
+      <LineId Id="1369" Count="0" />
+      <LineId Id="1385" Count="0" />
+      <LineId Id="1457" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

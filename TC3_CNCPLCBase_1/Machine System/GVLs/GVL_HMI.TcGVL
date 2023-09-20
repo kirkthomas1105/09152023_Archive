@@ -1,0 +1,182 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+  <GVL Name="GVL_HMI" Id="{eb48b56a-6ce6-4568-8160-6fdef96c4100}">
+    <Declaration><![CDATA[{attribute 'qualified_only'}
+VAR_GLOBAL
+	//Measure Laser pointer
+	MeasureNow		:	BOOL;	//Button for measure recording
+	ExportMeasure	:	BOOL;	//button for exporting measurement to file
+	SetReferenceNow	:	BOOL;	//Button for setting reference point
+	sReferenceDis		:	STRING;	//Show xyz for reference of measuring location
+	sMeasurePointDis	:	STRING;	//Show xyz for recently measured point
+	LogEveryDis		:	INT;	//log every 10mm or set distance
+	LogByDis		: 	BOOL;	//log a point every 'logEveryDis' 
+	LastLogDisX		:	LREAL;	//last axes position from last log
+	LastLogDisY		:	LREAL;	//last axes position from last log
+	LIMIT_BYPASS_PB: BOOL; // Byoss button for limit switches
+	HMI_PB_JOG_POS: BOOL;
+	HMI_PB_JOG_NEG: BOOL;
+	HMI_PB_CASE_STOP1_EXTEND: BOOL;
+	HMI_PB_CASE_STOP2_EXTEND: BOOL;
+	HMI_PB_CASE_STOP1_RETRACT: BOOL;
+	HMI_PB_CASE_STOP2_RETRACT: BOOL;
+
+	
+	// Conveyor Variable from the HMI to input buffering timer presets
+	
+	VI_Selected_Conveyor : INT;
+	
+	
+	//Enable all
+	EnableAll	: BOOL;
+	
+	// Mode Request Buttons (0: No Mode, 1: Auto Mode, 2: Manual Mode)
+	ModeReq			: INT;
+	Mode 			: INT := 0;			//Automatic or manual mode (0: No Mode (neutral), 1: Automatic Mode, 2: Manual Mode)
+	NoMode			: BOOL;
+	ManualMode		: BOOL;
+	AutoMode		: BOOL;
+	
+	//MCR
+	MCR				: BOOL;			//Master Control Reset
+	ModeReqAuto 	: BOOL;			//HMI Auto Mode Request Button
+	ModeReqManual	: BOOL;			//HMI Manual Mode Request Button
+	ModeReqNo		: BOOL;			//HMI No Mode Request Button
+	
+	//SD Manual Request
+	SD1_ManualPositionRequest : INT;
+	SD2_ManualPositionRequest : INT;
+	
+	test : BOOL;
+	
+	
+	
+	
+END_VAR
+
+VAR_GLOBAL PERSISTENT 
+	
+	GL1LowLimitOnPresetTime : TIME ; //:= T#500MS; 
+	GL1LowLimitOffPresetTime : TIME ;//:= T#500MS;
+	GL1HighLimitOnPresetTime : TIME ;//:= T#500MS;
+	GL1HighLimitOffPresetTime : TIME; //:= T#500MS;
+	GL2PPEnterOnPresetTime: TIME ;//:= T#500MS;
+	GL2PPEnterOffPresetTime: TIME ;//:= T#3500MS;
+	GL2PPExitOnPresetTime: TIME ;//:= T#500MS;
+	GL2PPExitOffPresetTime: TIME ;//:= T#2000MS;
+	GL2CaseStopIsRaisedPresetTime: TIME; //:= T#500MS;
+	GL2CaseStopIsLoweredPresetTime: TIME; //:= T#500MS;
+	GL2ATGL5BPositionProx1OnPresetTime: TIME; //:= T#0MS;
+	GL2ATGL5BPositionProx2OnPresetTime: TIME; //:= T#0MS;
+	GL2ATGL5BPositionProx1OffPresetTime: TIME; //:= T#0MS;
+	GL2ATGL5BPositionProx2OffPresetTime: TIME; //:= T#0MS;
+	GL2ATGL6PositionProx1OnPresetTime: TIME; //:= T#12MS;
+	GL2ATGL6PositionProx2OnPresetTime: TIME; //:= T#12MS;
+	GL2ATGL6PositionProx1OffPresetTime: TIME; //:= T#500MS;
+	GL2ATGL6PositionProx2OffPresetTime: TIME; //:= T#500MS;
+	GL2ATGL8PositionProx1OnPresetTime: TIME ;//:= T#12MS;
+	GL2ATGL8PositionProx2OnPresetTime: TIME ;//:= T#12MS;
+	GL2ATGL8PositionProx1OffPresetTime: TIME ;//:= T#500MS;
+	GL2ATGL8PositionProx2OffPresetTime: TIME ;//:= T#500MS;
+	GL10LowLimitOnPresetTime : TIME ; //:= T#500MS; 
+	GL10LowLimitOffPresetTime : TIME ;//:= T#500MS;
+	GL10HighLimitOnPresetTime : TIME ;//:= T#500MS;
+	GL10HighLimitOffPresetTime : TIME ;//:= T#500MS;
+	GL11PPEnterOnPresetTime: TIME ;//:= T#500MS;
+	GL11PPEnterOffPresetTime: TIME ;//:= T#500MS;
+	GL11PPExitOnPresetTime: TIME; //:= T#500MS;
+	GL11PPExitOffPresetTime: TIME; //:= T#500MS;
+	GL11CaseStopIsRaisedPresetTime: TIME; //:= T#500MS;
+	GL11CaseStopIsLoweredPresetTime: TIME; //:= T#500MS;
+	GL11ATGL3PositionProx1OnPresetTime: TIME; //:= T#500MS;
+	GL11ATGL3PositionProx2OnPresetTime: TIME; //:= T#500MS;
+	GL11ATGL3PositionProx1OffPresetTime: TIME; //:= T#500MS;
+	GL11ATGL3PositionProx2OffPresetTime: TIME ;//:= T#500MS;
+	GL11ATGL7PositionProx1OnPresetTime: TIME; //:= T#500MS;
+	GL11ATGL7PositionProx2OnPresetTime: TIME; //:= T#500MS;
+	GL11ATGL7PositionProx1OffPresetTime: TIME; //:= T#500MS;
+	GL11ATGL7PositionProx2OffPresetTime: TIME; //:= T#500MS;
+	GL11ATGL9PositionProx1OnPresetTime: TIME; ///:= T#500MS;
+	GL11ATGL9PositionProx2OnPresetTime: TIME; //:= T#500MS;
+	GL11ATGL9PositionProx1OffPresetTime: TIME; //:= T#500MS;
+	GL11ATGL9PositionProx2OffPresetTime: TIME; //:= T#500MS;
+	GL11ATGL12PositionProx1OnPresetTime: TIME; //:= T#500MS;
+	GL11ATGL12PositionProx2OnPresetTime: TIME; //:= T#500MS;
+	GL11ATGL12PositionProx1OffPresetTime: TIME; //:= T#500MS;
+	GL11ATGL12PositionProx2OffPresetTime: TIME; //:= T#500MS;
+	GL3PPEnterOnPresetTime: TIME; //:= T#500MS;
+	GL3PPEnterOffPresetTime: TIME; //:= T#500MS;
+	GL3PPExitOnPresetTime: TIME; //:= T#500MS;
+	GL3PPExitOffPresetTime: TIME; //:= T#500MS;
+	GL3CaseStopIsRaisedPresetTime: TIME; //:= T#500MS;
+	GL3CaseStopIsLoweredPresetTime: TIME; //:= T#500MS;
+	GL4PPEnterOnPresetTime: TIME; //:= T#500MS;
+	GL4PPEnterOffPresetTime: TIME; //:= T#500MS;
+	GL4PPExitOnPresetTime: TIME; //:= T#500MS;
+	GL4PPExitOffPresetTime: TIME; //:= T#500MS;
+	GL4CaseStopIsRaisedPresetTime: TIME; //:= T#500MS;
+	GL4CaseStopIsLoweredPresetTime: TIME; //:= T#500MS;
+	GL5APPEnterOnPresetTime: TIME; //:= T#500MS;
+	GL5APPEnterOffPresetTime: TIME; //:= T#500MS;
+	GL5APPExitOnPresetTime: TIME; //:= T#500MS;
+	GL5APPExitOffPresetTime: TIME; //:= T#500MS;
+	GL5ACaseStopIsRaisedPresetTime: TIME; //:= T#500MS;
+	GL5ACaseStopIsLoweredPresetTime: TIME; //:= T#500MS;
+	GL5BPPEnterOnPresetTime: TIME; //:= T#500MS;
+	GL5BPPEnterOffPresetTime: TIME; //:= T#500MS;
+	GL5BPPExitOnPresetTime: TIME; //:= T#500MS;
+	GL5BPPExitOffPresetTime: TIME; //:= T#500MS;
+	GL5BCaseStopIsRaisedPresetTime: TIME; //:= T#500MS;
+	GL5BCaseStopIsLoweredPresetTime: TIME; //:= T#500MS;
+	GL6PPLoadPos1OnPresetTime: TIME; //:= T#500MS;
+	GL6PPLoadPos1OffPresetTime: TIME; //:= T#500MS;
+	GL6PPLoadPos2OnPresetTime: TIME; //:= T#500MS;
+	GL6PPLoadPos2OffPresetTime: TIME; //:= T#500MS;
+	GL6PPEnterOnPresetTime: TIME; //:= T#500MS;
+	GL6PPEnterOffPresetTime: TIME; //:= T#500MS;
+	GL6PPExitOnPresetTime: TIME; //:= T#500MS;
+	GL6PPExitOffPresetTime: TIME; //:= T#500MS;
+	GL6CaseStop1IsRaisedPresetTime: TIME; //:= T#500MS;
+	GL6CaseStop1IsLoweredPresetTime: TIME; //:= T#500MS;
+	GL6CaseStop2IsRaisedPresetTime: TIME; //:= T#500MS;
+	GL6CaseStop2IsLoweredPresetTime: TIME; //:= T#500MS;
+	GL7PPEnterOnPresetTime: TIME; //:= T#500MS;
+	GL7PPEnterOffPresetTime: TIME; //:= T#500MS;
+	GL7PPExitOnPresetTime: TIME; //:= T#500MS;
+	GL7PPExitOffPresetTime: TIME; //:= T#500MS;
+	GL7CaseStopIsRaisedPresetTime: TIME; //:= T#500MS;
+	GL7CaseStopIsLoweredPresetTime: TIME; //:= T#500MS;
+	GL8PPLoadPos1OnPresetTime: TIME; //:= T#500MS;
+	GL8PPLoadPos1OffPresetTime: TIME; //:= T#500MS;
+	GL8PPLoadPos2OnPresetTime: TIME; //:= T#500MS;
+	GL8PPLoadPos2OffPresetTime: TIME; //:= T#500MS;
+	GL8PPEnterOnPresetTime: TIME; //:= T#500MS;
+	GL8PPEnterOffPresetTime: TIME; //:= T#500MS;
+	GL8PPExitOnPresetTime: TIME; //:= T#500MS;
+	GL8PPExitOffPresetTime: TIME; //:= T#500MS;
+	GL8CaseStop1IsRaisedPresetTime: TIME; //:= T#500MS;
+	GL8CaseStop1IsLoweredPresetTime: TIME; //:= T#500MS;
+	GL8CaseStop2IsRaisedPresetTime: TIME; //:= T#500MS;
+	GL8CaseStop2IsLoweredPresetTime: TIME; //:= T#500MS;
+	GL9PPEnterOnPresetTime: TIME; //:= T#500MS;
+	GL9PPEnterOffPresetTime: TIME; //:= T#500MS;
+	GL9PPExitOnPresetTime: TIME; //:= T#500MS;
+	GL9PPExitOffPresetTime: TIME; //:= T#500MS;
+	GL9CaseStopIsRaisedPresetTime: TIME; //:= T#500MS;
+	GL9CaseStopIsLoweredPresetTime: TIME; //:= T#500MS;
+	GL12PPEnterOnPresetTime: TIME; //:= T#500MS;
+	GL12PPEnterOffPresetTime: TIME; //:= T#500MS;
+	GL12PPExitOnPresetTime: TIME; //:= T#500MS;
+	GL12PPExitOffPresetTime: TIME; //:= T#500MS;
+	GL12CaseStopIsRaisedPresetTime: TIME; //:= T#500MS;
+	GL12CaseStopIsLoweredPresetTime: TIME; //:= T#500MS;
+
+	
+	WX1Enable		: BOOL; 		//Enable station for use
+	WX2Enable		: BOOL; 		//Enable station for use
+	WX3Enable		: BOOL; 		//Enable station for use
+	WX4Enable		: BOOL; 		//Enable station for use
+	
+END_VAR]]></Declaration>
+  </GVL>
+</TcPlcObject>

@@ -1,0 +1,149 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.0">
+  <POU Name="FB_GetSpindleRpm" Id="{4112ed49-6c1f-4347-bad1-b3868608b398}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION_BLOCK FB_GetSpindleRpm
+VAR_INPUT
+	nHliChannelIdx: INT;	
+	bChannelReset: BOOL;
+END_VAR
+VAR_OUTPUT
+	nRPM : DINT;
+	bError: BOOL;
+	nErrorId: UDINT;
+END_VAR
+VAR		
+	nHliAxisIdx: INT;
+	bIsChannelSpecific: BOOL;	
+	nOpenTechnoCount: UINT;	
+	bAcknowledge: BOOL;
+	nHliAxIfcIdx: UDINT;
+	nTechFctMaxIdx: UINT;
+	nLoop: UINT;
+	pActTechnoUnit: POINTER TO TECHNO_UNIT_AX;
+	pSProcess: POINTER TO HLI_S_PROZESS;
+	pMProcess: POINTER TO HLI_M_H_PROZESS;
+	fbRtrigChannelReset: R_TRIG;
+	nLastRPM: DINT;
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[
+(****************************************************************************************)
+(*							  Check for valid logical axis no.							*)
+(****************************************************************************************)
+IF NOT HLI3_CheckAxisValid(nHliAxisIdx := nHliAxisIdx) THEN
+	bError									:= TRUE;
+	nErrorId								:= 10000;
+	RETURN;
+END_IF
+
+IF NOT HLI3_CheckChannelValid(nChannel := nHliChannelIdx) THEN
+	bError									:= TRUE;
+	nErrorId								:= 20000;
+	RETURN;	
+END_IF
+
+(****************************************************************************************)
+(*											Reset										*)
+(****************************************************************************************)
+fbRtrigChannelReset
+	(CLK := bChannelReset);
+
+IF fbRtrigChannelReset.Q THEN
+	bAcknowledge	:= FALSE;
+END_IF
+
+(****************************************************************************************)
+(*									Receive requests from cnc							*)
+(****************************************************************************************)
+(* Look out for open technology function either on the channel or the axis specific		*)
+(* section of the HLI, depending on parameter ''.										*)
+IF bIsChannelSpecific THEN
+	nOpenTechnoCount	:= gpCh[nHliChannelIdx]^.used_units_std_sync_r;
+	nTechFctMaxidx 		:= gpCh[nHliChannelIdx]^.used_units_std_sync_r - 1;
+ELSE
+	nOpenTechnoCount	:= gpAx[nHliAxisIdx]^.used_units_std_sync_r;
+	nTechFctMaxidx 		:= gpAx[nHliAxisIdx]^.used_units_std_sync_r - 1;
+END_IF
+
+IF nOpenTechnoCount > 0 THEN
+	FOR nLoop := 0 TO nTechFctMaxIdx DO
+		(* Depending on the source determined by parameter 'bIsChannelSpecific', the		*)
+		(* channel or axis specific section of the HLI will be examined.					*)
+		IF bIsChannelSpecific THEN
+			pActTechnoUnit	:= ADR(gpCh[nHliChannelIdx]^.techno_unit_std_sync[nLoop]);
+		ELSE
+			(* Get current axis specifc technology data *)
+			pActTechnoUnit	:= ADR(gpAx[nHliAxisIdx]^.techno_unit_std_sync[nLoop]);
+		END_IF
+		
+
+		(* Check request *)
+		IF pActTechnoUnit^.please_rw AND
+		   NOT pActTechnoUnit^.done_w
+		THEN
+			CASE UINT_TO_UDINT(pActTechnoUnit^.fkt_ctrl_r) OF
+		     (* -------------------------------------------------------------------------- *)
+			 (* Handle M function *)
+			 HLI_INTF_M_FKT:
+				pMProcess					:= ADR(pActTechnoUnit^.attribut_r.data[0]);
+				
+				
+			 (* -------------------------------------------------------------------------- *)
+			 (* Handle S function *)
+			 HLI_INTF_SPINDEL:
+				pSProcess					:= ADR(pActTechnoUnit^.attribut_r.data[0]);
+				nRPM := pSProcess^.rev/6000;
+				(* If we are working with spindle functions provided by the channel 		*)
+				(* specific section of the HLI the logical axis number transmitted from the *)
+				(* CNC must fit the one given in parameter 'nLogAxisNo'!					*)												
+				IF bIsChannelSpecific AND (pSProcess^.log_achs_nr <> INT_TO_UINT(HLI3_GetLogAxisId(nHliAxisIdx:=nHliAxisIdx))) THEN
+					RETURN;
+				END_IF
+	
+			END_CASE
+	
+			(* Handle acknowledgement *)
+			IF bAcknowledge THEN
+				bAcknowledge				:= FALSE;
+				pActTechnoUnit^.please_rw 	:= FALSE;
+		   		pActTechnoUnit^.done_w		:= TRUE;
+			END_IF
+		END_IF
+	END_FOR
+
+END_IF
+bIsChannelSpecific := TRUE;
+IF nLastRPM <> nRPM THEN
+	nLastRPM := nRPM;
+	bIsChannelSpecific := FALSE;
+END_IF]]></ST>
+    </Implementation>
+    <Method Name="M_ManageAcknowledgement" Id="{83c48ffe-4bdd-4bf0-82c0-efa37f443eb3}">
+      <Declaration><![CDATA[METHOD PRIVATE M_ManageAcknowledgement
+VAR_INPUT
+	pInternal			: POINTER TO BOOL;
+	pPublic				: POINTER TO BOOL;
+	pAcknowledgement	: POINTER TO BOOL;
+END_VAR
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[IF NOT pInternal^ THEN
+	pInternal^			:= TRUE;
+	pPublic^			:= TRUE;	
+ELSIF NOT pPublic^ THEN
+	pInternal^			:= FALSE;
+	pAcknowledgement^	:= TRUE;
+END_IF]]></ST>
+      </Implementation>
+    </Method>
+    <LineIds Name="FB_GetSpindleRpm">
+      <LineId Id="3" Count="89" />
+      <LineId Id="2" Count="0" />
+    </LineIds>
+    <LineIds Name="FB_GetSpindleRpm.M_ManageAcknowledgement">
+      <LineId Id="3" Count="5" />
+      <LineId Id="2" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

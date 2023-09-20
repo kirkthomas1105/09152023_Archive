@@ -1,0 +1,144 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.11">
+  <POU Name="myPRG_CNCManualMode_1" Id="{5598aead-e2da-4af0-83ea-6b51b60129ba}" SpecialFunc="None">
+    <Declaration><![CDATA[PROGRAM myPRG_CNCManualMode_1
+VAR
+	fbUintUdInt: FB_Uint_Udint;
+	nHandwheelSmall AT %I*: UINT;		(* increments for handwheel (e.g. EL5101   *)
+	nHandwheelPreset AT %Q* : UINT := 32767;
+	nHandWheelBig: UDINT;
+	bZeroHandWheel AT %Q* : BOOL;
+	
+	rtHandWheelEnable: R_TRIG;
+	nCase: INT;
+	bHandWheelEnabled: BOOL;
+	ftHandWheelEnabled: F_TRIG;
+	nHwCounts : UINT;
+	nLastCounts : UINT;
+	tmrHandWheelOnDelay: TON;
+	tmrJogX: TON;
+	tmrJogY: TON;
+	tmrJogZ: TON;
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[// edited to for use of physical push buttons instead of touch screen buttons
+//FOR i := 0 TO MAX_USED_CHANNEL_IDX DO
+
+	IF (HLI3_CheckChannelValid(0)) THEN
+
+		stManualModeParameter[0].stChannelParameter.nChanIdx := 0;       (* Channel 1 *)
+		stManualModeParameter[0].stChannelParameter.nInc := PLCMachineMode[0].ManualMode.nInc;
+		stManualModeParameter[0].stChannelParameter.eManualType := UINT_TO_INT(PLCMachineMode[0].ManualMode.nManualTyp);
+		stManualModeParameter[0].stChannelParameter.nHandwheelResolution := PLCMachineMode[0].ManualMode.nHwResolution;    (* 0.1 µm /rev (from HMI) *)
+		stManualModeParameter[0].stAxisParameter.stControlUnit[0].nLogAxisNr := PLCMachineMode[0].ManualMode.nLogAxisNumber;   (* Log. Achs Nummer *)
+		IF stManualModeParameter[0].stAxisParameter.stControlUnit[0].nLogAxisNr = 0 THEN
+			stManualModeParameter[0].stAxisParameter.stControlUnit[0].nLogAxisNr := gpCh[0]^.bahn_state.coord_r[0].log_achs_nr_r;
+			PLCMachineMode[0].ManualMode.nLogAxisNumber := gpCh[0]^.bahn_state.coord_r[0].log_achs_nr_r;
+		END_IF
+		stManualModeParameter[0].stAxisParameter.stControlUnit[0].nSpeed := LREAL_TO_UINT(PLCMachineMode[0].ManualMode.nSpeed * 16.666);
+		stManualModeControlElements[0].stControlKeys[0].bKeyRapid := PLCMachineMode[0].ManualMode.bKeyRapid := bRapidPB;
+		//stManualModeControlElements[0].nHandwheelInc
+		
+  END_IF
+//END_FOR
+
+
+(* edited for handwheel axis selection *)
+bHandWheelEnabled := bMpgSelect1 OR bMpgSelect10 OR bMpgSelect100;
+rtHandWheelEnable(CLK:= bHandWheelEnabled);
+IF rtHandWheelEnable.Q THEN
+	nCase := 10;
+END_IF
+ftHandWheelEnabled(CLK:= bHandWheelEnabled, Q=> );
+IF ftHandWheelEnabled.Q THEN
+	PLCMachineMode[1].ManualMode.nManualTyp := 2;
+	nCase := 0;
+END_IF
+tmrHandWheelOnDelay(IN:= bHandWheelEnabled, PT:= t#150ms, Q=> , ET=> );
+CASE nCase OF
+	10:
+		IF tmrHandWheelOnDelay.Q THEN
+			nCase := 20;
+		END_IF
+		
+	20:
+		bZeroHandWheel := true;
+		IF nHandwheelSmall = 32767 THEN
+			nLastCounts := nHandwheelSmall;
+			bZeroHandWheel := false;
+			nCase := 30;
+		END_IF
+		
+	30:
+		IF nLastCounts <> nHandwheelSmall THEN
+			nHwCounts := nHwCounts + (nHandwheelSmall - nLastCounts);
+			nLastCounts := nHandwheelSmall;
+		END_IF
+		PLCMachineMode[0].ManualMode.nManualTyp := 1;
+		IF bMpgSelectX THEN
+			PLCMachineMode[0].ManualMode.nLogAxisNumber := 1;
+		ELSIF bMpgSelectY THEN
+			PLCMachineMode[0].ManualMode.nLogAxisNumber := 2;
+		ELSIF bMpgSelectZ THEN
+			PLCMachineMode[0].ManualMode.nLogAxisNumber := 3;
+		ELSE
+			PLCMachineMode[0].ManualMode.nLogAxisNumber := -1;
+		END_IF
+		
+		IF bMpgSelect1 THEN
+			PLCMachineMode[0].ManualMode.nHwResolution := 1;
+		ELSIF bMpgSelect10 THEN
+			PLCMachineMode[0].ManualMode.nHwResolution := 10;
+		ELSIF bMpgSelect100 THEN
+			PLCMachineMode[0].ManualMode.nHwResolution := 100;
+		END_IF
+	
+END_CASE
+fbUintUdInt(nInSmall := nHwCounts, nBig := nHandWheelBig);
+stManualModeControlElements[0].nHandwheelInc[0] :=  nHandWheelBig *100;
+
+(* edited for manual jog buttons *)
+
+IF bJogRevX OR bJogFwdX THEN
+	PLCMachineMode[0].ManualMode.nLogAxisNumber := 1;
+ELSIF bJogRevY OR bJogFwdY THEN
+	PLCMachineMode[0].ManualMode.nLogAxisNumber := 2;
+ELSIF bJogRevZ OR bJogFwdZ THEN
+	PLCMachineMode[0].ManualMode.nLogAxisNumber := 3;
+END_IF
+
+tmrJogX(IN:= bJogRevX OR bJogFwdX, PT:= T#80MS);
+tmrJogY(IN:= bJogRevY OR bJogFwdY, PT:= T#80MS);
+tmrJogZ(IN:= bJogRevZ OR bJogFwdZ, PT:= T#80MS);
+IF stManualModeParameter[0].stAxisParameter.stControlUnit[0].nLogAxisNr = 1 AND tmrJogX.Q THEN
+	stManualModeControlElements[0].stControlKeys[0].bKeyNeg	:= PLCMachineMode[0].ManualMode.bKeyNeg := bJogRevX;
+	stManualModeControlElements[0].stControlKeys[0].bKeyPos	:= PLCMachineMode[0].ManualMode.bKeyPos := bJogFwdX;
+ELSIF stManualModeParameter[0].stAxisParameter.stControlUnit[0].nLogAxisNr = 2 AND tmrJogY.Q THEN
+	stManualModeControlElements[0].stControlKeys[0].bKeyNeg	:= PLCMachineMode[0].ManualMode.bKeyNeg := bJogRevY;
+	stManualModeControlElements[0].stControlKeys[0].bKeyPos	:= PLCMachineMode[0].ManualMode.bKeyPos := bJogFwdY;
+ELSIF stManualModeParameter[0].stAxisParameter.stControlUnit[0].nLogAxisNr = 3 AND tmrJogZ.Q THEN
+	stManualModeControlElements[0].stControlKeys[0].bKeyNeg	:= PLCMachineMode[0].ManualMode.bKeyNeg := bJogRevZ;
+	stManualModeControlElements[0].stControlKeys[0].bKeyPos	:= PLCMachineMode[0].ManualMode.bKeyPos := bJogFwdZ;
+ELSE
+	stManualModeControlElements[0].stControlKeys[0].bKeyNeg	:= PLCMachineMode[0].ManualMode.bKeyNeg := FALSE;
+	stManualModeControlElements[0].stControlKeys[0].bKeyPos	:= PLCMachineMode[0].ManualMode.bKeyPos := FALSE;
+END_IF
+
+
+
+
+]]></ST>
+    </Implementation>
+    <LineIds Name="myPRG_CNCManualMode_1">
+      <LineId Id="3" Count="4" />
+      <LineId Id="82" Count="10" />
+      <LineId Id="197" Count="0" />
+      <LineId Id="81" Count="0" />
+      <LineId Id="39" Count="2" />
+      <LineId Id="93" Count="64" />
+      <LineId Id="198" Count="16" />
+      <LineId Id="42" Count="2" />
+      <LineId Id="2" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

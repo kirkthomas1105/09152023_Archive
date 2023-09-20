@@ -1,0 +1,23 @@
+{
+  "parameters": [
+    {
+      "name": "data-tchmi-timetag",
+      "displayName": "TimeTag",
+      "visible": true,
+      "type": "tchmi:general#/definitions/TIME",
+      "category": "",
+      "description": "",
+      "requiredOnCompile": false,
+      "readOnly": false,
+      "bindable": true,
+      "heritable": true,
+      "propertyName": "TimeTag",
+      "propertySetterName": "setTimeTag",
+      "propertyGetterName": "getTimeTag",
+      "refTo": ""
+    }
+  ],
+  "virtualRights": [],
+  "$schema": "./../../../Packages/Beckhoff.TwinCAT.HMI.Framework.12.756.1/runtimes/native1.12-tchmi/Schema/UserControlConfig.Schema.json",
+  "description": ""
+}

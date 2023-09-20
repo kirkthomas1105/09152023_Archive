@@ -1,0 +1,40 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+  <POU Name="PRG_PID_CALL" Id="{92b1ff5d-55bb-49fa-97be-bafe0d32ba6a}" SpecialFunc="None">
+    <Declaration><![CDATA[PROGRAM PRG_PID_CALL
+VAR
+	
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[
+
+
+// C3 EL3024 Channel 3 analog 4-20mA from thermocouple range 0-32767
+// Measure -40F to 140F
+GVL_IO.rAIInput3 := (Thermocouple/(32767.0 - 0.0))* 100;
+
+HeaterOnRequest := PRG_FB_CTRL_PID.fOut;
+PRG_FB_CTRL_PID();
+
+//Call simulated PID for debugging locally. Comment out after commissioning
+//PRG_SIM_PROCESS();
+
+
+
+]]></ST>
+    </Implementation>
+    <LineIds Name="PRG_PID_CALL">
+      <LineId Id="86" Count="1" />
+      <LineId Id="91" Count="2" />
+      <LineId Id="88" Count="0" />
+      <LineId Id="94" Count="1" />
+      <LineId Id="89" Count="0" />
+      <LineId Id="97" Count="0" />
+      <LineId Id="96" Count="0" />
+      <LineId Id="90" Count="0" />
+      <LineId Id="6" Count="2" />
+      <LineId Id="5" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

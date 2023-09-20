@@ -1,0 +1,62 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+  <POU Name="P_Timer" Id="{b796bff4-8afc-416b-99ab-75c379271d1f}" SpecialFunc="None">
+    <Declaration><![CDATA[PROGRAM P_Timer 
+VAR
+	fbSystemTime 		: FB_LocalSystemTime;
+	dtCurrentDateTime 	: DT;
+	sCurrentDateTime 	: STRING;
+	sDateTime			: STRING;		
+	bSecond				: BOOL;
+	nSecond 			: WORD;
+	bPulsels			: BOOL;
+	
+	fbRtSecond 			: R_TRIG;
+	fbLow_ls			: TON;
+	fbHigh_ls 			: TOF;
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[// synchronize system time 
+	fbSystemTime(
+		bEnable		:= TRUE, 
+		dwCycle		:= 5, 
+		dwOpt		:= 1
+	);
+
+	dtCurrentDateTime	:= SYSTEMTIME_TO_DT(fbSystemTime.systemTime); 
+	sCurrentDateTime	:= MID(DT_TO_STRING(dtCurrentDateTime), 19, 4);
+
+// convert timestamp because ':' invalid in file name 
+	sDateTime := sCurrentDateTime; 
+	sDateTime := replace (sDateTime,'-', 1, 11); 
+	sDateTime := replace (sDateTime,'-', 1, 14); 
+	sDateTime := replace (sDateTime,'-', 1, 17);
+	
+// 1 sec. trigger
+	fbRtSecond (CLK 	:= fbSystemTime.systemTime.wSecond <> nSecond, Q => bSecond);
+ 	nSecond				:= fbSystemTime.systemTime.wSecond;
+	
+// 1 sec. blinking puls
+	fbLow_ls(IN 		:= NOT bPulsels, PT:= T#500MS);
+	fbHigh_ls(IN		:= fbLow_ls.Q,   PT:= T#500MS, Q => bPulsels);
+
+]]></ST>
+    </Implementation>
+    <LineIds Name="P_Timer">
+      <LineId Id="26" Count="0" />
+      <LineId Id="41" Count="3" />
+      <LineId Id="30" Count="0" />
+      <LineId Id="45" Count="0" />
+      <LineId Id="31" Count="0" />
+      <LineId Id="47" Count="0" />
+      <LineId Id="32" Count="1" />
+      <LineId Id="48" Count="4" />
+      <LineId Id="34" Count="2" />
+      <LineId Id="54" Count="0" />
+      <LineId Id="37" Count="1" />
+      <LineId Id="55" Count="0" />
+      <LineId Id="40" Count="0" />
+      <LineId Id="5" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

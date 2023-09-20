@@ -1,0 +1,14 @@
+{
+    "LIMIT_EVENT_COUNT": 1000,
+    "TARGET_SYSTEMS": {
+        "DTST2-AUTO-FRP": {
+            "ADDRESS": "5.89.144.144.1.1",
+            "ENABLED": true
+        },
+        "Local": {
+            "ADDRESS": "127.0.0.1.1.1",
+            "ENABLED": true
+        }
+    },
+    "TIMEOUT": "PT5S"
+}

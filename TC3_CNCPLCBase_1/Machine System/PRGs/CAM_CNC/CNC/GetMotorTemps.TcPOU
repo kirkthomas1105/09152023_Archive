@@ -1,0 +1,72 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.11">
+  <POU Name="GetMotorTemps" Id="{0b209f17-0a5e-4dc9-90d1-a3f775f467ea}" SpecialFunc="None">
+    <Declaration><![CDATA[PROGRAM GetMotorTemps
+VAR
+	tmrGetTemp: TON;
+	fbGetMotorTemp: FB_EcCoESdoRead;
+	arrMotorTemp : ARRAY[0..6] OF REAL;
+	iSlaveAddr : UINT;
+	iIndex : WORD;
+	i : INT;
+	X1MotorTemp : REAL;
+	X2MotorTemp : REAL;
+	YMotorTemp : REAL;
+	ZMotorTemp : REAL;
+	PMotorTemp : REAL;
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[	
+tmrGetTemp(IN:= NOT tmrGetTemp.Q, PT:= T#10S, Q=> , ET=> );
+IF tmrGetTemp.Q THEN
+	i := i + 1;
+	IF i > 5 THEN
+		i := 0;
+	END_IF
+END_IF
+		
+IF i = 1 THEN
+	iSlaveAddr := 1060; //X1
+	iIndex := 16#32C1;
+ELSIF i = 2 THEN
+	iSlaveAddr := 1061; //X2
+	iIndex := 16#32C1;
+ELSIF i = 3 THEN
+	iSlaveAddr := 1064; //Y
+	iIndex := 16#32C1;
+ELSIF i = 4 THEN
+	iSlaveAddr := 1063; //Z
+	iIndex := 16#36C1;
+ELSIF i = 5 THEN
+	iSlaveAddr := 1063; //Pallet
+	iIndex := 16#32C1;
+END_IF
+
+fbGetMotorTemp(
+	sNetId:= '169.254.21.118.3.1', 
+	nSlaveAddr:= iSlaveAddr, 
+	nSubIndex:= 6, 
+	nIndex:= iIndex, 
+	pDstBuf:= ADR(arrMotorTemp[i]), 
+	cbBufLen:= SIZEOF(arrMotorTemp[i]), 
+	bExecute:= tmrGetTemp.Q AND i<>0, 
+	tTimeout:= , 
+	bBusy=> , 
+	bError=> , 
+	nErrId=> );	
+
+X1MotorTemp := arrMotorTemp[1];	
+X2MotorTemp := arrMotorTemp[2];	
+YMotorTemp := arrMotorTemp[3];	
+ZMotorTemp := arrMotorTemp[4];	
+PMotorTemp := arrMotorTemp[5];	]]></ST>
+    </Implementation>
+    <LineIds Name="GetMotorTemps">
+      <LineId Id="6" Count="37" />
+      <LineId Id="55" Count="0" />
+      <LineId Id="5" Count="0" />
+      <LineId Id="56" Count="3" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

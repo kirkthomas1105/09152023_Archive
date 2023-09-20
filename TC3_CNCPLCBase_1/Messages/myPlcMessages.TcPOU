@@ -1,0 +1,36 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.11">
+  <POU Name="myPlcMessages" Id="{c8cfff72-9dac-49cd-bfc3-3b7d01fcc7d6}" SpecialFunc="None">
+    <Declaration><![CDATA[PROGRAM myPlcMessages
+VAR
+	nAirPressureValue :int;
+	nCycleCounts: INT;
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[HmiMessages[0] := 'Air Pressure';
+HmiMessagesValues[0] := INT_TO_STRING(nAirPressureValue);
+IF nAirPressureValue < 120 THEN
+	HmiMessagesColor[0] := 16#FFFF0000; // RED box
+ELSE
+	HmiMessagesColor[0] := 0;
+END_IF
+
+HmiMessages[1] := 'Cycle Counter';
+HmiMessagesValues[1] := INT_TO_STRING(nCycleCounts);
+
+]]></ST>
+    </Implementation>
+    <LineIds Name="myPlcMessages">
+      <LineId Id="6" Count="0" />
+      <LineId Id="8" Count="0" />
+      <LineId Id="14" Count="1" />
+      <LineId Id="17" Count="1" />
+      <LineId Id="16" Count="0" />
+      <LineId Id="9" Count="1" />
+      <LineId Id="7" Count="0" />
+      <LineId Id="13" Count="0" />
+      <LineId Id="11" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

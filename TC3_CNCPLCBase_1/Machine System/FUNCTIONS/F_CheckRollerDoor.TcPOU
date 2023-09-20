@@ -1,0 +1,33 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+  <POU Name="F_CheckRollerDoor" Id="{d7eec0a7-838b-4787-a890-8069ae873d55}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION F_CheckRollerDoor : BOOL
+VAR_INPUT
+	CurrentPos 		: REAL;
+	RequestedPos 	: REAL;
+	Door 			: sRollerDoor;
+END_VAR
+VAR
+	DoorPos : REAL := 100000;
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[IF (CurrentPos < DoorPos AND RequestedPos > DoorPos) OR (CurrentPos > DoorPos AND RequestedPos < DoorPos) THEN
+	Door.AutoOpenRequest := 1;
+	IF Door.StatusOpenedInput THEN
+		F_CheckRollerDoor := 1;
+	END_IF
+	ELSE
+	F_CheckRollerDoor := 1;	
+END_IF]]></ST>
+    </Implementation>
+    <LineIds Name="F_CheckRollerDoor">
+      <LineId Id="7" Count="0" />
+      <LineId Id="12" Count="0" />
+      <LineId Id="19" Count="1" />
+      <LineId Id="18" Count="0" />
+      <LineId Id="21" Count="1" />
+      <LineId Id="13" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

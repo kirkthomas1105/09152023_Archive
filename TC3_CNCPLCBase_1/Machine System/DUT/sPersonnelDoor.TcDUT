@@ -1,0 +1,25 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+  <DUT Name="sPersonnelDoor" Id="{9b131f89-1409-42bf-a7ff-29c27a433169}">
+    <Declaration><![CDATA[TYPE sPersonnelDoor :
+STRUCT
+	OpenButtonRequestInput AT %I* : BOOL; 
+	LockButtonRequestInput AT %I* : BOOL; 
+	
+	OpenButtonLED_Output AT %Q* : BOOL;
+	LockButtonLED_Output AT %Q* : BOOL;
+	
+	OpenButtonRequestSafetyOutput : BOOL; //For Safety program
+	LockButtonRequestSafetyOutput : BOOL; //For Safety program
+	
+	LockOutput AT %Q* : BOOL;	// (Un)Lock Door
+	
+	OkToUnlockDoor : BOOL;	//turn on when ventilation and CNC says its ok to enter the zone
+	OkToUnlockDoorRTRIG : R_TRIG;
+	
+	AccessAreaRequest : BOOL; // tell the ventilation to start cleaning the air and tell the CNC to stop when able
+END_STRUCT
+END_TYPE
+]]></Declaration>
+  </DUT>
+</TcPlcObject>

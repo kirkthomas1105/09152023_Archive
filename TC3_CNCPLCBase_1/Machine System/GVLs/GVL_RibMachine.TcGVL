@@ -1,0 +1,106 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+  <GVL Name="GVL_RibMachine" Id="{68619fd8-1903-4351-bb06-889614ac66f8}">
+    <Declaration><![CDATA[{attribute 'qualified_only'}
+VAR_GLOBAL
+	aMotorFaultTimer : ARRAY[1..32] OF TON; // Array of fault  timers
+	aMtrFltTimerQ:ARRAY[1..32] OF BOOL; //Array for timer done
+	aMtrFltELAPSED: ARRAY [1..32]OF TIME; //Array for elapsed time
+	MtrFlt_PT : TIME; //Timer preset
+	MotorFaultWord:DINT; //Motor fault bits to HMI
+	JamFaultWord:DINT; // Jam fault bits to HMI
+	aJamFaultTimer : ARRAY[1..32] OF TON; // Array of fault  timers
+	aJamTimerQ:ARRAY[1..32] OF BOOL; //Array for timer done
+	aJamELAPSED: ARRAY [1..32]OF TIME; //Array for elapsed time
+	JamFlt_PT : TIME; //Timer preset
+	RibMachineFaulted: BOOL; // Fault condition detected
+	InCycle: BOOL; // Machine is running in automatic
+	DustCollectionStart AT %Q* : BOOL; // Output to motor starter for dust collection
+	Mtr1AuxContactFwd AT %I* :  BOOL;  // Motor Starter Auxilliary Contact
+	Mtr1AuxContactRev AT %I* :  BOOL;  // Motor Starter Auxilliary Contact
+	Mtr2AuxContactFwd AT %I* :  BOOL;  // Motor Starter Auxilliary Contact
+	Mtr2AuxContactRev AT %I* :  BOOL;  // Motor Starter Auxilliary Contact
+    Mtr3AuxContact AT %I* :  BOOL;  // Motor Starter Auxilliary Contact
+	Mtr4AuxContact AT %I* :  BOOL;  // Motor Starter Auxilliary Contact
+	CloseSawClampSol AT %Q*: BOOL; // solenoid output to clase saw clamp
+	OpenSawClampSol AT %Q*: BOOL; // solenoid output to open saw clamp
+	CloseTranserClampSol AT %Q*: BOOL; // solenoid output to clase transfer clamp
+	OpenTranserClampSol AT %Q*: BOOL; // solenoid output to clase transfer clamp
+	ExtendTransferSol AT %Q*: BOOL; // Extend transfer clamp to outfeed bed
+	RetractTransferSol AT %Q*: BOOL; // Retract transfer clamp from outfeed bed
+    LiftMotorFwd AT %Q*: BOOL; // Start lift motor forward
+	LiftMotorRev AT %Q*: BOOL; // Start lift motor reverse
+	RaiseLift AT %Q*: BOOL; // Start lift motor forward
+	LowerLift AT %Q*: BOOL; // Start lift motor reverse
+	CP1Enable AT %Q*: BOOL; //Clear path motor enable
+	CP1InputA AT %Q*: BOOL; //Clear path motor input A
+	CP1InputB AT %Q*: BOOL; //Clear path motor input B
+	SawStart AT %Q*: BOOL; // Output bit to start motor
+	StackerPartPresentOn :  BOOL;  // Stacker Part Present
+	StackerPinExtendedOn:  BOOL;  // Stacker Pin Extended
+	StackerPinRetractedOn :  BOOL;  // Stacker Pin Retracted
+	IndexerPartPresentOn: BOOL;  // Indexer Part Present
+	SawExtendedOn :  BOOL;  // Saw Extended
+	SawRetractedOn :  BOOL;  // Saw Retracted
+	SawClampOpenOn: BOOL; // Saw clamp is open
+	SawClampClosedOn: BOOL; //Saw clamp is closed
+	SawClampExtendedOn :  BOOL;  // Saw Clamp Closed
+	SawClampRetractedOn:  BOOL;  // Saw Clamp Open
+	TransferClampOpenOn :  BOOL;  //Transfer Clamp Open
+	TransferClampClosedOn :  BOOL;  //Transfer Clamp Closed
+	TransferClampExtdOn :  BOOL;  //Transfer Clamp Extd
+	TransferClampRetdOn :  BOOL;  //Transfer Clamp Retd
+	RibHoistUpOn :  BOOL;  //Rib Hoist Up
+	RibHoistDownOn :  BOOL;  //Rib Hoist Down
+	EjectExtendedOn :  BOOL;  //Eject Extended
+	EjectRetractedOn :  BOOL;  //Eject Retracted
+	AirPressureSwitchOn :  BOOL;  // Buffered Air Pressure Switch
+	IndexerHomeOn :  BOOL;  // Indexer is retracted to HOME switch
+	
+	StackerPartPresent AT %I* :  BOOL;  // Stacker Part Present
+	StackerPinExtended AT %I* :  BOOL;  // Stacker Pin Extended
+	StackerPinRetracted AT %I* :  BOOL;  // Stacker Pin Retracted
+	IndexerPartPresent AT %I* :  BOOL;  // Indexer Part Present
+	SawExtended AT %I* :  BOOL;  // Saw Extended
+	SawRetracted AT %I* :  BOOL;  // Saw Retracted
+	SawClampExtended AT %I* :  BOOL;  // Saw Clamp Extended
+	SawClampRetracted AT %I* :  BOOL;  // Saw Clamp Retracted
+	SawClampOpen AT %I*: BOOL; //Saw clamp Open
+	SawClampClosed AT %I*: BOOL; //Saw Clamp Closed
+	TransferClampOpen AT %I* :  BOOL;  //Transfer Clamp Open
+	TransferClampClosed AT %I* :  BOOL;  //Transfer Clamp Closed
+	TransferClampExtd AT %I* :  BOOL;  //Transfer Clamp Extd
+	TransferClampRetd AT %I* :  BOOL;  //Transfer Clamp Retd
+	TransferExtd AT %I* :  BOOL;  //Transfer Extd
+	TransferRetd AT %I* :  BOOL;  //Transfer Retd
+	RibHoistUp AT %I* :  BOOL;  //Rib Hoist Up
+	RibHoistDown AT %I* :  BOOL;  //Rib Hoist Down
+	EjectExtended AT %I* :  BOOL;  //Eject Extended
+	EjectRetracted AT %I* :  BOOL;  //Eject Retracted
+	AirPressureSwitch AT %I* :  BOOL;  // Air Pressure Switch
+	IndexerHome AT %I* :  BOOL;  // Indexer HOME (retracted)
+	
+		
+	AirPresSwitch AT %I*:  BOOL; // Air Pressure OK Switch
+	MeasureComplete: BOOL; // Indexer = requested cut length
+	IndexCurrentPos: DINT; // Current position of indexer in ppi pulses
+	PickAndPlaceClear: BOOL; // Pick and place is clear of the hoist area
+	aDEBUG_KIRK_BIT:ARRAY[1..32] OF BOOL; //Array for debug bits
+	ReadyToCut : BOOL; // in cycle, safety ok, clamp closed = ReadyToCut
+	FaultReset: BOOL; // Universal fault reset bit
+	TraverseStartFwd: BOOL; // Logic bit to start saw traverse motor forward
+	TraverseStartRev: BOOL; // Logic bit to start saw traverse motor reverse
+	CutComplete: BOOL; // Saw cycle complete
+	
+		
+	
+	
+	
+	
+	
+END_VAR
+VAR_GLOBAL
+    SystemTime: TIME ;  (* Global variable to store system time *)
+END_VAR]]></Declaration>
+  </GVL>
+</TcPlcObject>

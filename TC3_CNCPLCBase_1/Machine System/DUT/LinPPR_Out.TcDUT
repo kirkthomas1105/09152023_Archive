@@ -1,0 +1,41 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.11">
+  <DUT Name="LinPPR_Out" Id="{60722305-59f3-4cf0-a33a-0dbb543fc1b0}">
+    <Declaration><![CDATA[TYPE LinPPR_Out :
+STRUCT
+(***   Outputs   ***)
+//Program Outputs
+	Homed_PO				: BOOL;		//true if axis is homed
+	DistancePos_PO			: REAL;		//current position
+	LastDistancePos_PO		: REAL;		//last position
+	ExpDistancePos_PO		: REAL;		//expected position if all pulses are executed
+	ReadyForMove_PO			: BOOL;		//ready for ABSMove Command
+	Moving_PO				: BOOL;		//Moving in auto mode
+	MCodeRec				: BOOL;		//MCode Command Received
+	MCodeComp				: BOOL;		//MCode Command Completed
+	InPosition				: BOOL;		//In commanded position
+	InTargetPosition		: BOOL;		//Current Pos matches last req position
+	InMPos					: bool;		//Current POS matches VE Var Req
+//Visual outputs (VO)
+	MechTypeMsg_VO			: STRING;	//comment for mech config type
+	ConfigMSG_VO			: STRING;	//comment for config settings
+	ErrorMsg_VO				: STRING;	//message for error description
+	Error2Msg_VO			: STRING;	//second message for error description
+	Error3Msg_VO			: STRING;	//third message for error description
+	Error4Msg_VO			: STRING;	//fourth message for error description
+	HomeMsg_VO				: STRING;	//homed status message
+	LimitsMsg_VO			: STRING; 	//limits status message
+	ABSMoveMsg_VO			: STRING;	//ABSMOve Status message
+	SuperJogMsg_VO			: STRING;	//superjog status message
+	DisToGoMsg_VO			: STRING; 	//dis to go status message
+	CanceledMsg_VO			: STRING;	//Canceled status message
+	ModeMsg_VO				: STRING;	//mode message
+	
+(***   Field  in var section of fb ***)	
+
+
+END_STRUCT
+END_TYPE
+]]></Declaration>
+  </DUT>
+</TcPlcObject>

@@ -1,0 +1,29 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+  <POU Name="F_CheckMoldData" Id="{5a85a692-5d41-4720-8147-eea3710ddf9e}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION F_CheckMoldData : BOOL
+VAR_INPUT
+	MoldID 		: INT;
+	WX_Enable	: BOOL;
+END_VAR
+VAR
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[//Function to check the database for each file string and check for the file on the system 
+IF WX_Enable THEN
+	IF MoldID = 0 THEN
+		RETURN;
+		ELSE
+			F_CheckMoldData := 1;
+		END_IF
+	ELSE
+		F_CheckMoldData := 1;
+END_IF]]></ST>
+    </Implementation>
+    <LineIds Name="F_CheckMoldData">
+      <LineId Id="34" Count="8" />
+      <LineId Id="16" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

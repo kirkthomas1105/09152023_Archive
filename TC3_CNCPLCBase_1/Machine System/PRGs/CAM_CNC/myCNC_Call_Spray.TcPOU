@@ -1,0 +1,162 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+  <POU Name="myCNC_Call_Spray" Id="{5397c634-f696-4050-905c-03239cd7dd2d}" SpecialFunc="None">
+    <Declaration><![CDATA[PROGRAM myCNC_Call_Spray
+VAR
+	ncase : INT;
+	
+	JobCase 	: INT;
+	SD1State 	: INT; //0:Pickup, 1:SprayA, 2: rollA, 3:placeA, 4:cureA, 5:SprayB, 6:RollB, 7:PlaceB, 8:CureB, 9:SetDown, 10:Traveling
+	SD2State 	: INT;	//0:Pickup, 1:SprayA, 2: rollA, 3:placeA, 4:cureA, 5:SprayB, 6:RollB, 7:PlaceB, 8:CureB, 9:SetDown, 10:Traveling
+	
+	RailPriority	: INT;
+	SprayQue	: ARRAY[0..20] OF STRING;
+	
+	WX1SprayJob		: MoldJob;
+	WX2SprayJob		: MoldJob;
+	WX3SprayJob		: MoldJob;
+	WX4SprayJob		: MoldJob;
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[(* adjust for wxjob and start calls in the JobCase instead of Ncase 10-25-22
+IF SectionAKey AND PRG_CNCChannelHandler.CNCChannel[0].currentmode = 4 THEN
+	SectionAKey := FALSE;
+	nCase := 10;
+END_IF
+
+*)
+//add job to spray que from Job Que
+	//set priority to SD1 or SD2 based on FIFO skip adding to que and just change job priority
+	// If SD1 complete then RailPriority = 2
+//check which rail is prio and which job
+
+//check if next job  boige is in position [ie. in zone]
+	//if so select odd bogie to start then even
+	//if not check if other rail is in position
+		//if so select
+CASE JobCase OF
+	0: //Select new GCode File to Execute
+	10: //Check RailPriority
+		IF RailPriority = 1 AND (SD1State=1 OR SD1State=5) THEN (* in position for SprayA or SprayB *)
+			IF SD1State=1 THEN JobCase:=15; END_IF
+			IF SD1State=5 THEN JobCase:=25; END_IF
+			ELSIF RailPriority =2 AND (SD2State=1 OR SD2State=5) THEN (* in position for SprayA or SprayB *)
+				IF SD2State= 1 THEN JobCase:=215; END_IF
+				IF SD2State= 5 THEN JobCase:=225; END_IF
+			//No movement from this statement until a bogie is in position
+		END_IF
+	15: //SD1 Prio and in position for SprayA
+		IF WX1SprayJob.AKeyDone=0 THEN
+			// call WX1SprayJob.AKeyFile 
+		END_IF
+		IF WX1SPrayJob.AKeyDone AND WX1sprayjob.AMacroDone=0 THEN
+			// if AKeyFile Complete then call Macro file
+		END_IF
+		IF WX1SprayJob.AKeyDone AND WX1SprayJob.AMacroDone THEN
+			JobCase:=17; //move to WX2jobs
+		END_IF
+	17: //SD1 Wx2SprayA
+		IF WX2SprayJob.AKeyDone=0 THEN
+			// call WX1SprayJob.AKeyFile 
+		END_IF
+		IF Wx2SPrayJob.AKeyDone AND Wx2sprayjob.AMacroDone=0 THEN
+			// if AKeyFile Complete then call Macro file
+		END_IF
+		IF WX2SprayJob.AKeyDone AND WX2SprayJob.AMacroDone THEN
+			JobCase:=0; //move to new selection
+		END_IF
+		
+	25: //SD1 Prio and In position for SprayB
+		IF WX1SprayJob.BKeyDone=0 THEN
+			// call WX1SprayJob.AKeyFile 
+		END_IF
+		IF WX1SPrayJob.BKeyDone AND WX1sprayjob.BMacroDone=0 THEN
+			// if AKeyFile Complete then call Macro file
+		END_IF
+		IF WX1SprayJob.BKeyDone AND WX1SprayJob.BMacroDone THEN
+			JobCase:=27; //move to WX2jobs
+		END_IF
+	27: //SD1 WX2 SPrayB
+		IF WX2SprayJob.BKeyDone=0 THEN
+			// call WX1SprayJob.AKeyFile 
+		END_IF
+		IF Wx2SPrayJob.BKeyDone AND Wx2sprayjob.BMacroDone=0 THEN
+			// if AKeyFile Complete then call Macro file
+		END_IF
+		IF WX2SprayJob.BKeyDone AND WX2SprayJob.BMacroDone THEN
+			JobCase:=0; //move to new selection
+		END_IF
+	215: //SD2 Prio and in Position for SprayA
+	225: //SD2 Prio and in Position for SprayB
+END_CASE
+
+
+CASE nCase OF
+	10:
+		PLCMachineMode[0].MDI := TRUE;
+		nCase := 20;
+		
+	20:
+		IF PRG_CNCChannelHandler.CNCChannel[0].currentmode = 3 THEN
+			PLCMachineMode[0].MDIString := Wx4sprayjob.AKeyFile;
+			PLCMachineMode[0].Start := TRUE;
+			nCase := 30;
+		END_IF
+	
+	30:
+		IF PRG_CNCChannelHandler.CNCChannel[0].currentstate = 4 THEN
+			nCase := 40;
+		END_IF
+		
+	40:
+		IF PRG_CNCChannelHandler.CNCChannel[0].currentstate = 3 THEN
+			PLCMachineMode[0].Manual := TRUE;
+			nCase := 0;
+		END_IF
+END_CASE]]></ST>
+    </Implementation>
+    <LineIds Name="myCNC_Call_Spray">
+      <LineId Id="143" Count="0" />
+      <LineId Id="6" Count="3" />
+      <LineId Id="144" Count="0" />
+      <LineId Id="54" Count="0" />
+      <LineId Id="52" Count="0" />
+      <LineId Id="56" Count="0" />
+      <LineId Id="60" Count="0" />
+      <LineId Id="55" Count="0" />
+      <LineId Id="63" Count="0" />
+      <LineId Id="62" Count="0" />
+      <LineId Id="64" Count="3" />
+      <LineId Id="70" Count="0" />
+      <LineId Id="74" Count="1" />
+      <LineId Id="85" Count="0" />
+      <LineId Id="93" Count="0" />
+      <LineId Id="83" Count="1" />
+      <LineId Id="91" Count="0" />
+      <LineId Id="94" Count="0" />
+      <LineId Id="77" Count="0" />
+      <LineId Id="73" Count="0" />
+      <LineId Id="107" Count="7" />
+      <LineId Id="106" Count="0" />
+      <LineId Id="99" Count="0" />
+      <LineId Id="115" Count="7" />
+      <LineId Id="100" Count="0" />
+      <LineId Id="123" Count="0" />
+      <LineId Id="86" Count="0" />
+      <LineId Id="124" Count="7" />
+      <LineId Id="95" Count="0" />
+      <LineId Id="132" Count="0" />
+      <LineId Id="134" Count="5" />
+      <LineId Id="142" Count="0" />
+      <LineId Id="141" Count="0" />
+      <LineId Id="133" Count="0" />
+      <LineId Id="72" Count="0" />
+      <LineId Id="92" Count="0" />
+      <LineId Id="71" Count="0" />
+      <LineId Id="53" Count="0" />
+      <LineId Id="10" Count="22" />
+      <LineId Id="5" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

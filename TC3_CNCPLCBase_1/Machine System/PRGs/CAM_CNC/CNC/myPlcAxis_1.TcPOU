@@ -1,0 +1,225 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.11">
+  <POU Name="myPlcAxis_1" Id="{72753a28-3738-4934-8e35-13d5f47648f6}" SpecialFunc="None">
+    <Declaration><![CDATA[PROGRAM myPlcAxis_1
+VAR
+	fbAxis_X 					:  FB_CNCAxis; 
+	fbMoveAbsolute 				: MC_MOVEAbsolute;	
+	fbMoveafterTipTouch			: MC_MoveSuperImposed;
+	
+	fbTouchProbe				: MC_TouchProbe;
+	fbMoveIncrement				: MC_MOVERelative; 
+	 
+	
+	fbSetOverride 				: MC_SetOverride;	
+	fbStop						: MC_Halt;	
+	bStop 						: BOOL;
+	bSetRefPos: BOOL;
+	bExecuteMoveAbsolute: BOOL;
+	rXposReq: LREAL;
+	rXvelReq: LREAL := 1000;
+	rtAxPlcMode: R_TRIG;
+	bEnterAxPlcMode: BOOL;
+	nCase: INT;
+	
+	startZCal: BOOL;
+	rZposReq: INT;
+	rZvelReq: INT;
+	
+	tipTouch : BOOL; 
+	CalibrateHSS: BOOL;
+	Zat12MM: BOOL;
+	ZatTipTouch: BOOL := FALSE;
+	Failedtoreach12mm: BOOL;
+	travelto100mmDone: BOOL;
+	
+	// Fbstop
+	PlCmoveStopped: BOOL;
+	PLCstopAborted: BOOL;
+	PLCstopError: BOOL;
+	
+	// Absolute
+	travelto100mmAborted: BOOL;
+	travelto100mmError: BOOL;
+	// Increment
+	ErrortoReach12mm: BOOL;
+	
+//	ZmovetotipTouch : ZaxisAbsolute;
+//	Zmoveto12MM		: HSSCalibrationat12MM;
+	ErrId: WORD;
+	bExecuteMoveIncrement: BOOL;
+	rZ_ActPos: LREAL;
+	ZPosatTipTouch: LREAL;
+	Zto12MM: LREAL;
+	CalTmr : TON;
+	wHS_DigInputs: WORD;
+	nZCalStep : INT;
+	rtZcal: R_TRIG;
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[
+// HSS Calibration Variable Init
+tipTouch := wHS_DigInputs.1;			// Tip touch from the FC2D cutting head
+//OUT.wHS_DigOutputs.0 := CalibrateHSS; 		// Set Calibrate HSS output
+
+rZ_ActPos := HLI3_GetActualAxisPos(nHliAxisIdx:= 2) * 0.0001;
+
+// Z-axis absolute and increment move setup
+HLI3_SetAxisReferencePosition(bSetRefpos:= bSetRefPos, nHliAxisIdx:= 2);	// Z axis
+
+rtAxPlcMode(CLK:= bEnterAxPlcMode, Q=> );
+IF rtAxPlcMode.Q AND fbAxis_X.stStatus.bHomingDone AND fbAxis_X.stStatus.bIsEnabled THEN
+	nCase := 10;
+END_IF
+
+CASE nCase OF
+	10: // channel 0 to select, then wait for acutal state to be select
+		PLCMachineMode[0].Select := TRUE;
+		IF PRG_CNCChannelHandler.CNCChannel[0].currentstate = 2 THEN
+			nCase := 20;
+		END_IF
+		
+	20: // channel 0 to ready, then wait for acutal state to be ready
+		PLCMachineMode[0].Ready := TRUE;
+		IF PRG_CNCChannelHandler.CNCChannel[0].currentstate = 3 THEN
+			nCase := 100;
+		END_IF
+END_CASE
+
+
+	
+rtZcal(CLK:= startZCal, Q=> );			
+IF rtZcal.Q THEN	
+	startZCal := FALSE;
+	bEnterAxPlcMode := TRUE;
+	nZcalStep := 10;
+END_IF
+		
+CASE nZCalStep OF
+	10:
+		IF nCase = 100 THEN
+			IF NOT tipTouch THEN
+				// Travel to negative limit until tip touch
+				bExecuteMoveAbsolute := TRUE;
+				nZcalStep := 20;
+				//ZatTipTouch := TRUE;	
+			END_IF
+		END_IF
+		
+	20:
+		IF tipTouch THEN
+			bExecuteMoveAbsolute := FALSE;
+			bExecuteMoveIncrement := TRUE;
+			nZcalStep := 30;
+		ELSIF fbMoveAbsolute.Done THEN
+			bExecuteMoveAbsolute := FALSE;
+			nZcalStep := 999;
+		END_IF
+	30:
+		CalibrateHSS := TRUE;
+		IF CalTmr.Q THEN
+			CalibrateHSS := FALSE;
+			nZCalStep := 40;
+		END_IF 
+		
+	40:
+		IF fbMoveIncrement.Done THEN
+			bExecuteMoveAbsolute := FALSE;
+			bExecuteMoveIncrement := FALSE;
+			bEnterAxPlcMode := FALSE;
+			nZCalStep := 100;
+		END_IF
+		
+END_CASE
+		
+CalTmr (IN := CalibrateHSS, PT := T#0.1S);		
+		
+fbAxis_X(
+	nLogAxisNo:= 3, 
+	bEnable:= PLCAxisEnable, 
+	bCalibrationCam:=, 
+	bSetRefOffset:= , 
+	fRefOffset:= , 
+	bFeedhold:= ,		 
+	stStatus=> );
+
+
+fbSetOverride(
+	Axis:= g_array_axis_ref[CNCSystem.LogAxisNo[3].nHliAxisIdx],  
+	Enable:= bEnterAxPlcMode, 
+	VelFactor:= 1, 
+	VelFactorMaxShift := 1 , 
+	Enabled=> , 
+	Error=> , 
+	ErrorID=> );
+
+// Absolute
+fbMoveAbsolute(
+	Axis:= g_array_axis_ref[CNCSystem.LogAxisNo[3].nHliAxisIdx], 
+	Execute:= bExecuteMoveAbsolute AND (PRG_CNCChannelHandler.CNCChannel[0].currentstate = 3), 
+	Position:= -40*10000, 
+	Velocity:= 150 * 16.6666, 
+	Acceleration:= 200, // adj per application
+	Deceleration:= 200, // adj per application
+	Jerk:= 500,         // adj per application
+	Direction:= , 
+	Done=> travelto100mmDone, 
+	CommandAborted=> travelto100mmAborted, 
+	Error=> travelto100mmError, 
+	ErrorID=> ErrId);
+
+
+// Increment
+fbMoveIncrement(
+	Axis:= g_array_axis_ref[CNCSystem.LogAxisNo[3].nHliAxisIdx], 
+	Execute:= bExecuteMoveIncrement AND (PRG_CNCChannelHandler.CNCChannel[0].currentstate = 3),
+	Distance:= 12*10000, 
+	Velocity := 150 * 16.6666, 
+	Acceleration:= 200, // adj per application
+	Deceleration:= 200, // adj per application
+	Jerk:= 500,         // adj per application
+	Done=> Zat12MM, 
+	CommandAborted=> Failedtoreach12mm, 
+	Error=> ErrortoReach12mm, 
+	ErrorID=> ErrId);
+	
+]]></ST>
+    </Implementation>
+    <LineIds Name="myPlcAxis_1">
+      <LineId Id="257" Count="28" />
+      <LineId Id="333" Count="3" />
+      <LineId Id="467" Count="0" />
+      <LineId Id="345" Count="0" />
+      <LineId Id="427" Count="0" />
+      <LineId Id="450" Count="0" />
+      <LineId Id="428" Count="2" />
+      <LineId Id="465" Count="0" />
+      <LineId Id="433" Count="2" />
+      <LineId Id="437" Count="0" />
+      <LineId Id="436" Count="0" />
+      <LineId Id="432" Count="0" />
+      <LineId Id="466" Count="0" />
+      <LineId Id="438" Count="3" />
+      <LineId Id="443" Count="2" />
+      <LineId Id="448" Count="0" />
+      <LineId Id="446" Count="0" />
+      <LineId Id="442" Count="0" />
+      <LineId Id="451" Count="0" />
+      <LineId Id="454" Count="1" />
+      <LineId Id="457" Count="0" />
+      <LineId Id="573" Count="4" />
+      <LineId Id="458" Count="2" />
+      <LineId Id="468" Count="0" />
+      <LineId Id="453" Count="0" />
+      <LineId Id="452" Count="0" />
+      <LineId Id="431" Count="0" />
+      <LineId Id="346" Count="0" />
+      <LineId Id="351" Count="0" />
+      <LineId Id="358" Count="0" />
+      <LineId Id="469" Count="46" />
+      <LineId Id="2" Count="0" />
+      <LineId Id="516" Count="1" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

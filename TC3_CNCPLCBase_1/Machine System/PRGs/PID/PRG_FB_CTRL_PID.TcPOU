@@ -1,0 +1,127 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+  <POU Name="PRG_FB_CTRL_PID" Id="{ab4b9d68-903a-4dd7-8d89-3218bcdb26f1}" SpecialFunc="None">
+    <Declaration><![CDATA[PROGRAM PRG_FB_CTRL_PID
+VAR
+	fSetpointValue					: LREAL		:= 85.0;
+	fActualValue					: LREAL;
+	fManSyncValue					: LREAL;
+	bSync							: BOOL;
+
+	fOut							: LREAL;
+	
+	bHold							: BOOL;
+
+	eMode							: E_CTRL_MODE;
+	stCTRL_PID_PARAMS				: ST_CTRL_PID_PARAMS;
+
+	eErrorId						: E_CTRL_ERRORCODES;
+	bError							: BOOL;
+	bARWactive						: BOOL;
+
+	(* controller *)
+	fbCTRL_PID						: FB_CTRL_PID;
+
+	bInit							: BOOL	:= TRUE;
+	fbTON							: TON;
+	TcHmiToggleButtonHeaterOnOff    : BOOL;
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[
+	
+
+IF bInit THEN
+	(* init parameter struct *)
+	stCTRL_PID_PARAMS.tCtrlCycleTime		:= T#500MS;
+	stCTRL_PID_PARAMS.tTaskCycleTime		:= T#100MS;
+	stCTRL_PID_PARAMS.fKp					:= 3.0;			(* proportional gain Kp				*)
+	stCTRL_PID_PARAMS.tTn					:= T#20S;		(*  Tn								*)
+	stCTRL_PID_PARAMS.tTv					:= T#200MS;		(*  Tv								*)
+	stCTRL_PID_PARAMS.tTd					:= T#100MS;		(*  Td								*)
+	stCTRL_PID_PARAMS.fOutMaxLimit			:=  100;		(* maximum output limit				*)
+	stCTRL_PID_PARAMS.fOutMinLimit			:=  0.0;		(* minimum output limit				*)
+
+	(* set the mode to ACTIVE --> normal operation *)
+	eMode := eCTRL_MODE_ACTIVE;
+
+	(* reset the init flag *)
+	bInit := FALSE;
+END_IF
+
+(*TYPE E_CTRL_MODE :
+(
+    eCTRL_MODE_IDLE     := 0, 
+    eCTRL_MODE_PASSIVE     := 1, 
+    eCTRL_MODE_ACTIVE     := 2, 
+    eCTRL_MODE_RESET     := 3, 
+    eCTRL_MODE_MANUAL     := 4, 
+    eCTRL_MODE_TUNE     := 5, 
+    eCTRL_MODE_SELFTEST    := 6, 
+    eCTRL_MODE_SYNC_MOVEMENT := 7 
+)
+END_TYPE*)
+
+fActualValue := GVL_IO.rAIInput3; //Get process variable Temperature from analog input C3, AI1 Channel 3 value
+
+(* copy var to scope var *)
+GVL_Machine.fSetpointValueToScope 	:= fSetpointValue;
+GVL_Machine.fActualValueToScope 	:= fActualValue;
+GVL_Machine.fOutToScope 			:= fOut;
+
+(* call controller *)
+fbCTRL_PID(		fSetpointValue		:= fSetpointValue,
+				fActualValue		:= fActualValue,
+				fManSyncValue		:= fOut,
+				bSync				:= bSync,
+				eMode				:= eMode,
+				bHold				:= bHold,
+				stParams			:= stCTRL_PID_PARAMS,
+				fOut				=> fOut,
+				bARWactive			=> bARWactive,
+				eErrorId			=> eErrorId,
+				bError				=> bError
+				);
+
+(*IF eMode = 	eCTRL_MODE_ACTIVE THEN // Bumpless switch logic for switching PID for Manual to Automatic. The setpoint value needs TO follow the process value feedback
+	fOut := fOut;		
+END_IF				
+
+IF eMode = 	eCTRL_MODE_ACTIVE THEN // Bumpless switch logic for switching PID for Automatic to Manual. The setpoint value needs to follow the process value feedback
+	fSetpointValue := fActualValue;		
+END_IF	*)
+
+IF 	GVL_Machine.fOutToScope >= 10 OR TcHmiToggleButtonHeaterOnOff THEN
+	 GVL_Machine.HeatOnRequest := TRUE;
+	ELSE
+	 GVL_Machine.HeatOnRequest := FALSE;
+END_IF
+
+
+
+]]></ST>
+    </Implementation>
+    <LineIds Name="PRG_FB_CTRL_PID">
+      <LineId Id="115" Count="0" />
+      <LineId Id="117" Count="0" />
+      <LineId Id="116" Count="0" />
+      <LineId Id="3" Count="16" />
+      <LineId Id="129" Count="0" />
+      <LineId Id="79" Count="10" />
+      <LineId Id="20" Count="1" />
+      <LineId Id="77" Count="0" />
+      <LineId Id="30" Count="18" />
+      <LineId Id="121" Count="0" />
+      <LineId Id="49" Count="0" />
+      <LineId Id="124" Count="0" />
+      <LineId Id="122" Count="0" />
+      <LineId Id="125" Count="2" />
+      <LineId Id="123" Count="0" />
+      <LineId Id="161" Count="0" />
+      <LineId Id="155" Count="5" />
+      <LineId Id="2" Count="0" />
+      <LineId Id="78" Count="0" />
+      <LineId Id="90" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

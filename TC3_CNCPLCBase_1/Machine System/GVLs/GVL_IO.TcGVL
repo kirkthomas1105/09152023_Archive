@@ -1,0 +1,101 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+  <GVL Name="GVL_IO" Id="{eb67a244-3aaf-42fc-a623-6c7573fe571e}">
+    <Declaration><![CDATA[VAR_GLOBAL
+	//Digital Inputs
+	bEstopPB AT %I* : BOOL; 
+	iFeedrateOverridePot AT %I* : INT := 32767;
+	iSpindleOverridePot AT %I* : INT := 32767;
+	iSpindleLoad AT %I* : INT;
+	//home and limit sensors
+	bXHomeSwitch AT %I* : BOOL;
+	bYHomeSwitch AT %I* : BOOL;
+	bZHomeSwitch AT %I* : BOOL;
+	bAHomeSwitch AT %I* : BOOL;
+	bCHomeSwitch AT %I* : BOOL;
+	bHi_A AT %I* : BOOL;
+	bLo_A AT %I* : BOOL;
+	bHi_C AT %I* : BOOL;
+	bLo_C AT %I* : BOOL;
+	
+	// Temperature Analog
+	Thermocouple AT %I*: REAL := 0; // C3 EL3024 Channel 3 analog 4-20mA from thermocouple range 0-32767
+	rAIInput1 : REAL;
+	rAIInput2 : REAL;
+	rAIInput3 : REAL;
+	
+	//Distance Analog
+	iDistSens	AT %I*	: INT;	//analog distance sensor on z axis to measure tool
+	
+	//trunnion sensors
+	bTrunCW AT %I* : BOOL;
+	bTrunCCW AT %I* : BOOL;
+	bTrun0 AT %I* : BOOL;
+	bTrunOver AT %I* : BOOL;
+	bTrunClampOn : BOOL :=true; // Trunnion clamp
+	bTrunClampOnLast : BOOL :=TRUE; //Track state of clamp to disallow change while estop or enable off
+	bTrunClampEn : BOOL;
+	
+	iTrunSig AT %Q*: INT;
+	//Trunion Clearpath rotary
+	//bEnable 	AT 	%Q* 	: BOOL;		//found in cprot function
+	bEnableCom	AT 	%I* 	: BOOL;
+	bAcom		AT	%I* 	: BOOL;
+	//bAout		AT 	%Q*		: BOOL;		//found in cprot function
+	bBcom		AT	%I* 	: BOOL;
+	//bBout		AT 	%Q*		: BOOL;		//found in cprot function
+	bHLFBcom	AT	%I* 	: BOOL;		//red wire
+	bHLFB24V	AT 	%Q*		: BOOL; 	//green wire
+	
+	// gun valves
+	bAceOn AT %Q* : BOOL;	// acetone gun mac valve
+	bSprayOn AT %Q* : BOOL; // spray gun mac valve
+	// smc valve outputs - one must be true and one must be false (a true b false or A false B true)
+	bVa1A AT %Q* :BOOL;
+	bVa1B AT %Q* :BOOL;
+	bVa2A AT %Q* :BOOL;
+	bVa2B AT %Q* :BOOL;
+	bVa3A AT %Q* :BOOL;
+	bVa3B AT %Q* :BOOL;
+	bva4A AT %Q* : BOOL;
+	bVa4B AT %Q* :BOOL;
+	bVa5A AT %Q* :BOOL;
+	bVa5B AT %Q* :BOOL;
+	bVa6A AT %Q* :BOOL;
+	bVa6B AT %Q* :BOOL;
+	bVa7A AT %Q* :BOOL;
+	bVa7B AT %Q* :BOOL;
+	bVa8A AT %Q* :BOOL;
+	bVa8B AT %Q* :BOOL;
+	bVa9A AT %Q* :BOOL;
+	bVa9B AT %Q* :BOOL;
+	bVa10A AT %Q* :BOOL;
+	bVa10B AT %Q* :BOOL;
+	bVa11A AT %Q* :BOOL;
+	bVa11B AT %Q* :BOOL;
+	bVa12A AT %Q* :BOOL;
+	bVa12B AT %Q* :BOOL;
+	bVa13A AT %Q* :BOOL;	
+	bVa13B AT %Q* :BOOL;
+	bVa14A AT %Q* :BOOL;
+	bVa14B AT %Q* :BOOL;
+	bVa15A AT %Q* :BOOL;
+	bVa15B AT %Q* :BOOL;
+	bVa16A AT %Q* :BOOL;
+	bVa16B AT %Q* :BOOL;
+	
+	WX1 : sBogie;
+	WX2 : sBogie;
+	WX3 : sBogie;
+	WX4 : sBogie;
+	
+	//C6
+	KM1_ContactorOn  AT %Q* : BOOL;
+	KM2_ContactorOn  AT %Q* : BOOL;
+	//C3
+	FilterManometer AT %I*: INT; // Air Filter Elements differential pressure sensor
+	gasSensor AT %I* : INT; // Styrene level sensor
+	
+END_VAR]]></Declaration>
+  </GVL>
+</TcPlcObject>

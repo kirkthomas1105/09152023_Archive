@@ -1,0 +1,23 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+  <DUT Name="sWX_Side" Id="{203df805-a01c-480e-8dbe-0e1f28e85fe1}">
+    <Declaration><![CDATA[TYPE sWX_Side :
+STRUCT
+	bPP1_Input		AT %I* : BOOL;
+	bPP2_Input		AT %I* : BOOL;
+	
+	bClampLimitHigh AT %I* : BOOL;
+	bClampLimitLow 	AT %I* : BOOL;
+	
+	bVertLimitHigh	AT %I* : BOOL;
+	bVertLimitLow 	AT %I* : BOOL;
+	
+	bRotLimitLow 	AT %I* : BOOL;
+	
+	bClamped		: BOOL;
+	
+END_STRUCT
+END_TYPE
+]]></Declaration>
+  </DUT>
+</TcPlcObject>

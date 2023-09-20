@@ -1,0 +1,101 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+  <POU Name="RollerDoors" Id="{aad74c2c-9c6d-4819-9303-0b638a485edc}" SpecialFunc="None">
+    <Declaration><![CDATA[PROGRAM RollerDoors
+VAR
+	FQ1_FB : FB_RollerDoor;
+	FQ2_FB : FB_RollerDoor;
+	FQ3_FB : FB_RollerDoor;
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[//The Bogies control FQ2 and FQ3 on SD1 and SD2, respectively. 
+//the conveyors are controlling all other doors
+
+//FQ1 shuttle Roller Door
+IF GVL_Doors.FQ1.StatusOpenedInput THEN 
+	GVL_Doors.FQ1.AutoOpenRequest := 0;
+END_IF
+
+IF GVL_Doors.FQ1.StatusClosedInput THEN 
+	GVL_Doors.FQ1.AutoCloseRequest := 0;
+END_IF
+
+FQ1_FB(	AutoMode				:= GVL_HMI.AutoMode,
+		ManualMode 				:= GVL_HMI.ManualMode,
+		ManualDoorOpenRequest	:= GVL_Doors.FQ1.ManualOpenRequest,
+		ManualDoorCloseRequest 	:= GVL_Doors.FQ1.ManualCloseRequest,
+		AutoDoorOpenRequest 	:= GVL_Doors.FQ1.AutoOpenRequest,
+		AutoDoorCloseRequest 	:= GVL_Doors.FQ1.AutoCloseRequest,);
+		
+GVL_Doors.FQ1.CommandOpenOutput		:= FQ1_FB.DoorOpenCommand;
+GVL_Doors.FQ1.CommandCloseOutput	:= FQ1_FB.DoorCloseCommand;
+
+
+//FQ2 SD1 Roller Door
+IF GVL_Doors.FQ2.StatusOpenedInput THEN 
+	GVL_Doors.FQ2.AutoOpenRequest := 0;
+END_IF
+
+IF GVL_Doors.FQ2.StatusClosedInput THEN 
+	GVL_Doors.FQ2.AutoCloseRequest := 0;
+END_IF
+
+FQ2_FB(	AutoMode				:= GVL_HMI.AutoMode,
+		ManualMode 				:= GVL_HMI.ManualMode,
+		ManualDoorOpenRequest	:= GVL_Doors.FQ2.ManualOpenRequest,
+		ManualDoorCloseRequest 	:= GVL_Doors.FQ2.ManualCloseRequest,
+		AutoDoorOpenRequest 	:= GVL_Doors.FQ2.AutoOpenRequest,
+		AutoDoorCloseRequest 	:= GVL_Doors.FQ2.AutoCloseRequest,);
+		
+GVL_Doors.FQ2.CommandOpenOutput		:= FQ2_FB.DoorOpenCommand;
+GVL_Doors.FQ2.CommandCloseOutput	:= FQ2_FB.DoorCloseCommand;
+
+//FQ3 SD2 Roller Door
+IF GVL_Doors.FQ3.StatusOpenedInput THEN 
+	GVL_Doors.FQ3.AutoOpenRequest := 0;
+END_IF
+
+IF GVL_Doors.FQ3.StatusClosedInput THEN 
+	GVL_Doors.FQ3.AutoCloseRequest := 0;
+END_IF
+		
+FQ3_FB(	AutoMode				:= GVL_HMI.AutoMode,
+		ManualMode 				:= GVL_HMI.ManualMode,
+		ManualDoorOpenRequest	:= GVL_Doors.FQ3.ManualOpenRequest,
+		ManualDoorCloseRequest 	:= GVL_Doors.FQ3.ManualCloseRequest,
+		AutoDoorOpenRequest 	:= GVL_Doors.FQ3.AutoOpenRequest,
+		AutoDoorCloseRequest 	:= GVL_Doors.FQ3.AutoCloseRequest,);
+
+GVL_Doors.FQ3.CommandOpenOutput		:= FQ3_FB.DoorOpenCommand;
+GVL_Doors.FQ3.CommandCloseOutput	:= FQ3_FB.DoorCloseCommand;
+
+]]></ST>
+    </Implementation>
+    <LineIds Name="RollerDoors">
+      <LineId Id="5" Count="1" />
+      <LineId Id="77" Count="0" />
+      <LineId Id="80" Count="16" />
+      <LineId Id="78" Count="1" />
+      <LineId Id="69" Count="0" />
+      <LineId Id="55" Count="0" />
+      <LineId Id="57" Count="5" />
+      <LineId Id="56" Count="0" />
+      <LineId Id="9" Count="0" />
+      <LineId Id="15" Count="4" />
+      <LineId Id="8" Count="0" />
+      <LineId Id="33" Count="2" />
+      <LineId Id="70" Count="0" />
+      <LineId Id="48" Count="0" />
+      <LineId Id="63" Count="5" />
+      <LineId Id="51" Count="0" />
+      <LineId Id="21" Count="0" />
+      <LineId Id="23" Count="4" />
+      <LineId Id="22" Count="0" />
+      <LineId Id="37" Count="1" />
+      <LineId Id="36" Count="0" />
+      <LineId Id="46" Count="0" />
+      <LineId Id="45" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

@@ -1,0 +1,19 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.11">
+  <DUT Name="ST_HMI_Axis_Display" Id="{ce5123a0-801b-4771-a9ce-1096ce44075b}">
+    <Declaration><![CDATA[TYPE ST_HMI_Axis_Display :
+STRUCT
+ch			: INT;
+ax			: INT;
+Scaler		: INT;
+AxisName 	: STRING := gpCh[ch]^.bahn_state.coord_r[ax].axis_name_r.zeichen;
+PCS			: STRING := FLOAT_TO_STRING(Dint_to_float(gpCh[ch]^.bahn_state.coord_r[ax].current_position_r)/Scaler);
+ACS			: STRING := FLOAT_TO_STRING(Dint_to_float(gpCh[ch]^.bahn_state.coord_r[ax].acs_position_r)/Scaler);
+CMD			: STRING := FLOAT_TO_STRING(DINT_TO_FLOAT(gpCh[ch]^.bahn_state.coord_r[ax].cmd_position_r)/Scaler);
+Feed		: INT;	//feed rate of axis
+END_STRUCT
+
+END_TYPE
+]]></Declaration>
+  </DUT>
+</TcPlcObject>

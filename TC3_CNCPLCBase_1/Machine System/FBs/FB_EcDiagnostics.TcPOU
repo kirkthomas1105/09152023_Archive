@@ -1,0 +1,526 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.0">
+  <POU Name="FB_EcDiagnostics" Id="{e63e469e-a5a5-4230-bcc9-27641797a3a4}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION_BLOCK FB_EcDiagnostics
+VAR_INPUT
+	stAMSNETID : AMSNETID;
+	bReset: BOOL;
+END_VAR
+VAR_OUTPUT
+	bEcSlaveWarning: BOOL;
+	sEcDiagErrMsg: STRING(255);
+	bEcMasterError: BOOL;
+	bEcSlaveError: BOOL;
+	bFbErr: BOOL;
+END_VAR
+VAR
+	stMasterStateHistoryMsg : ARRAY[0..99] OF STRING(255);
+	stSlaveStateHistoryMsg : ARRAY[0..999] OF STRING(255);
+	stEcConfSlaveInfo : ARRAY [0..EC_MAX_SLAVES] OF ST_EcSlaveConfigData;
+	stEcSlaveCrcCounts : ARRAY[0..EC_MAX_SLAVES] OF DWORD;
+	stEcSlaveStates : ARRAY[0..EC_MAX_SLAVES] OF ST_EcSlaveState;
+	stLastSlaveState : ARRAY[0..EC_MAX_SLAVES] OF ST_EcSlaveState;
+	stSlaveErr : ARRAY[0..EC_MAX_SLAVES] OF BOOL;
+	sAMSNETID: STRING;
+	bGetMasterState: BOOL;
+	bGetConfiguredSlaveCount: BOOL;
+	bGetActualSlaveCount: BOOL;
+	bGetCrcCounts: BOOL;
+	bGetEcFrameStats: BOOL;
+	bGetSlaveStates: BOOL;
+	fbEcGetMasterDevState: FB_EcGetMasterDevState;
+	fbEcGetConfSlaves: FB_EcGetConfSlaves;
+	fbEcGetSlaveCount: FB_EcGetSlaveCount;
+	fbEcGetAllSlaveCrcErrors: FB_EcGetAllSlaveCrcErrors;
+	fbEcMasterFrameStatistic: FB_EcMasterFrameStatistic;
+	fbEcGetAllSlaveStates: FB_EcGetAllSlaveStates;
+	fbEcMasterFrameStatisticClearCRC: FB_EcMasterFrameStatisticClearCRC;
+	fbEcMasterFrameStatisticClearFrames: FB_EcMasterFrameStatisticClearFrames;
+	fbEcMasterFrameStatisticClearTxRxErr: FB_EcMasterFrameStatisticClearTxRxErr;
+	fbNT_GetTime: NT_GetTime;
+	tmrGetTime : TON;
+	tmrStarted: TON;
+	rtStarted: R_TRIG;
+	ftReset: F_TRIG;
+	nLastCase: INT;
+	nCase: INT;
+	i: INT;
+	iMasterStateHistoryMsgCount : INT;
+	iSlaveStateHistoryMsgCount : INT;
+	nLastMasterDevState: UINT;
+	byNum : BYTE;
+	stMasterDevState : ARRAY[0..3] OF BYTE;
+	arrTempSlaveDevState : ARRAY[0..3] OF BYTE;
+	sTempMasterStateMsg: STRING(255);
+	sTempSlaveStateMsg: STRING(255);
+	sTime : STRING;
+	sMasterStateString: ARRAY[0..3] OF STRING;
+	sSlaveStateString: ARRAY[0..3] OF STRING;
+	stLastSlaveDevStateMsg : ARRAY[0..EC_MAX_SLAVES] OF STRING(255);
+	bInitComplete : BOOL;
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[A_GetTime();
+
+tmrStarted(IN:= TRUE, PT:= T#5S);
+rtStarted(CLK:= tmrStarted.Q);
+ftReset(CLK:= bReset);
+IF rtStarted.Q OR ftReset.Q THEN
+	nCase := 1;
+END_IF
+
+CASE nCase OF 
+	1:
+		nLastCase := 0;
+		sEcDiagErrMsg := '';
+		bGetMasterState := FALSE;
+		iMasterStateHistoryMsgCount := 0;
+		iSlaveStateHistoryMsgCount := 0;
+		bGetConfiguredSlaveCount := FALSE;
+		bGetActualSlaveCount := FALSE;
+		bGetCrcCounts := FALSE;
+		bEcSlaveWarning := FALSE;
+		bGetEcFrameStats := FALSE;
+		bGetSlaveStates := FALSE;
+		bEcMasterError := FALSE;
+		bEcSlaveError := FALSE;
+		bFbErr := FALSE;
+		MEMSET(ADR(stEcSlaveCrcCounts),0, SIZEOF(stEcSlaveCrcCounts));
+		MEMSET(ADR(stSlaveErr),0, SIZEOF(stSlaveErr));
+		MEMSET(ADR(stMasterStateHistoryMsg),0, SIZEOF(stMasterStateHistoryMsg));
+		MEMSET(ADR(stSlaveStateHistoryMsg),0, SIZEOF(stSlaveStateHistoryMsg));
+		MEMSET(ADR(stLastSlaveDevStateMsg),0, SIZEOF(stLastSlaveDevStateMsg));
+		sAMSNETID := concat(BYTE_TO_STRING(stAMSNETID[0]),'.');
+		sAMSNETID := concat(sAMSNETID,BYTE_TO_STRING(stAMSNETID[1]));
+		sAMSNETID := concat(sAMSNETID,'.');
+		sAMSNETID := concat(sAMSNETID,BYTE_TO_STRING(stAMSNETID[2]));
+		sAMSNETID := concat(sAMSNETID,'.');
+		sAMSNETID := concat(sAMSNETID,BYTE_TO_STRING(stAMSNETID[3]));
+		sAMSNETID := concat(sAMSNETID,'.');
+		sAMSNETID := concat(sAMSNETID,BYTE_TO_STRING(stAMSNETID[4]));
+		sAMSNETID := concat(sAMSNETID,'.');
+		sAMSNETID := concat(sAMSNETID,BYTE_TO_STRING(stAMSNETID[5]));
+		bInitComplete := FALSE;
+		nCase := 10;
+		
+		
+	10:
+		bGetConfiguredSlaveCount := TRUE;
+		nCase := 20;
+		
+	20:
+		bGetConfiguredSlaveCount := FALSE;
+		IF NOT fbEcGetConfSlaves.bError THEN
+			IF NOT fbEcGetConfSlaves.bBusy THEN
+				nCase := 30;
+			END_IF
+		ELSE
+			bFbErr := TRUE;
+			nLastCase := nCase;
+			nCase := 30;
+			sEcDiagErrMsg := 'Getting Master Configured Slave Count Failed';
+		END_IF		
+		
+	30:
+		bGetMasterState := TRUE;
+		nCase := 40;
+		
+	40:
+		bGetMasterState := FALSE;
+		IF NOT fbEcGetMasterDevState.bError THEN
+			IF NOT fbEcGetMasterDevState.bBusy THEN
+				nCase := 50;
+			END_IF
+		ELSE
+			bFbErr := TRUE;
+			nLastCase := nCase;
+			nCase := 50;
+			sEcDiagErrMsg := 'Getting Master State failed';
+		END_IF
+		
+	50:
+		A_MasterStateMsg();
+		nCase := 60;
+
+	60:
+		bGetActualSlaveCount := TRUE;
+		nCase := 70;
+		
+	70:
+		bGetActualSlaveCount := FALSE;
+		IF NOT fbEcGetSlaveCount.bError THEN
+			IF NOT fbEcGetSlaveCount.bBusy THEN
+				nCase := 80;
+			END_IF
+		ELSE
+			bFbErr := TRUE;
+			nLastCase := nCase;	
+			nCase := 80;
+			sEcDiagErrMsg := 'Getting Master Actual Slave Count Failed';
+		END_IF
+		
+	80:
+		IF fbEcGetConfSlaves.nSlaves <> fbEcGetSlaveCount.nSlaves THEN
+			bEcSlaveError := TRUE;
+			nLastCase := nCase;
+			sEcDiagErrMsg := 'Actual Slave Count <> Configured Slave Count';
+		END_IF
+		nCase := 90;
+		
+	90:
+		bGetCrcCounts := TRUE;
+		nCase := 100;
+		
+	100:
+		bGetCrcCounts := FALSE;
+		IF NOT fbEcGetAllSlaveCrcErrors.bError THEN
+			IF NOT fbEcGetAllSlaveCrcErrors.bBusy THEN
+				nCase := 110;
+			END_IF
+		ELSE
+			bFbErr := TRUE;
+			nLastCase := nCase;
+			nCase := 110;
+			sEcDiagErrMsg := 'Getting Slave CRC counts failed';
+		END_IF
+	
+	110:
+		FOR i := 0 TO (fbEcGetConfSlaves.nSlaves - 1) BY 1 DO
+			IF stEcSlaveCrcCounts[i] > 0 THEN
+				bEcSlaveWarning := TRUE;
+				sEcDiagErrMsg := 'CRC counts on slaves';
+			END_IF
+		END_FOR
+		nCase := 120;
+		
+	120:
+		bGetEcFrameStats := TRUE;
+		nCase := 130;
+		
+	130:
+		bGetEcFrameStats := FALSE;
+		IF NOT fbEcMasterFrameStatistic.bError THEN
+			IF NOT fbEcMasterFrameStatistic.bBusy THEN
+				nCase := 140;
+			END_IF
+		ELSE
+			bFbErr := TRUE;
+			nLastCase := nCase;
+			nCase := 140;
+		END_IF
+		
+	140:
+		IF fbEcMasterFrameStatistic.nLostFrames > 2 OR fbEcMasterFrameStatistic.nLostQueuedFrames > 2 THEN
+				bEcSlaveWarning := TRUE;
+				sEcDiagErrMsg := 'Lost EtherCAT frames';
+		END_IF
+		nCase := 150;
+		
+	150:
+		bGetSlaveStates := TRUE;
+		nCase := 160;
+		
+	160:
+		bGetSlaveStates := FALSE;
+		IF NOT fbEcGetAllSlaveStates.bError THEN
+			IF NOT fbEcGetAllSlaveStates.bBusy THEN
+				nCase := 170;
+			END_IF
+		ELSE
+			bFbErr := TRUE;
+			nLastCase := nCase;
+			nCase := 170;
+			sEcDiagErrMsg := 'Getting Slave States failed';
+		END_IF
+		
+	170:
+		bInitComplete := TRUE;
+		A_SlaveStateMsg();
+		nCase := 30;
+		
+END_CASE
+
+fbEcGetMasterDevState(
+	sNetId:= sAMSNETID, 
+	bExecute:= bGetMasterState);
+	
+fbEcGetConfSlaves(
+	sNetId:= sAMSNETID, 
+	pArrEcConfSlaveInfo:= ADR(stEcConfSlaveInfo), 
+	cbBufLen:= SIZEOF(stEcConfSlaveInfo), 
+	bExecute:= bGetConfiguredSlaveCount);
+	
+fbEcGetSlaveCount(
+	sNetId:= sAMSNETID, 
+	bExecute:= bGetActualSlaveCount);
+	
+fbEcGetAllSlaveCrcErrors(
+	sNetId:= sAMSNETID, 
+	pCrcErrorBuf:= ADR(stEcSlaveCrcCounts), 
+	cbBufLen:= fbEcGetConfSlaves.nSlaves * 4, 
+	bExecute:= bGetCrcCounts);
+	
+fbEcMasterFrameStatistic(
+	sNetId:= sAMSNETID, 
+	bExecute:= bGetEcFrameStats);
+	
+fbEcGetAllSlaveStates(
+	sNetId:= sAMSNETID, 
+	pStateBuf:= ADR(stEcSlaveStates), 
+	cbBufLen:= SIZEOF(stEcSlaveStates), 
+	bExecute:= bGetSlaveStates);
+	
+fbEcMasterFrameStatisticClearCRC(
+	sNetId:= sAMSNETID, 
+	bExecute:= bReset);
+	
+fbEcMasterFrameStatisticClearFrames(
+	sNetId:= sAMSNETID, 
+	bExecute:= bReset);
+	
+fbEcMasterFrameStatisticClearTxRxErr(
+	sNetId:= , 
+	nEcMasterDevID:= stAMSNETID[4] - 1, 
+	bExecute:= bReset);
+	
+IF fbEcMasterFrameStatisticClearCRC.bError OR fbEcMasterFrameStatisticClearFrames.bError OR fbEcMasterFrameStatisticClearTxRxErr.bError THEN
+	bFbErr := TRUE;
+	sEcDiagErrMsg := 'Clearing CRC/TxRx Stats failed';
+END_IF
+
+
+	
+
+
+
+]]></ST>
+    </Implementation>
+    <Action Name="A_GetTime" Id="{47dcdc6a-5d1f-4771-a54b-99ae7bb19559}">
+      <Implementation>
+        <ST><![CDATA[tmrGetTime(IN := NOT tmrGetTime.Q, PT := T#20MS);
+fbNT_GetTime(
+	START:= tmrGetTime.Q,
+	TMOUT:= T#1S);
+	sTime:= WORD_TO_STRING(fbNT_GetTime.TIMESTR.wMonth);
+	sTime:= CONCAT(sTime,'-' );
+	sTime:= CONCAT(sTime, (WORD_TO_STRING(fbNT_GetTime.TIMESTR.wDay)));
+	sTime:= CONCAT(sTime,'-' );
+	sTime:= CONCAT(sTime, (WORD_TO_STRING(fbNT_GetTime.TIMESTR.wYear)));
+	sTime:= CONCAT(sTime,'@' );
+	sTime:= CONCAT(sTime, (WORD_TO_STRING(fbNT_GetTime.TIMESTR.wHour)));
+	sTime:= CONCAT(sTime,':' );
+	sTime:= CONCAT(sTime, (WORD_TO_STRING(fbNT_GetTime.TIMESTR.wMinute)));
+	sTime:= CONCAT(sTime,':' );
+	sTime:= CONCAT(sTime, (WORD_TO_STRING(fbNT_GetTime.TIMESTR.wSecond)));
+	sTime:= CONCAT(sTime,':' );
+	sTime:= CONCAT(sTime, (WORD_TO_STRING(fbNT_GetTime.TIMESTR.wMilliseconds)));
+	sTime:= CONCAT(sTime,'ms ' );]]></ST>
+      </Implementation>
+    </Action>
+    <Action Name="A_MasterStateMsg" Id="{01a50c7b-cf57-4fd7-b582-4aa9ef397867}">
+      <Implementation>
+        <ST><![CDATA[
+stMasterDevState[0] := WORD_TO_BYTE(ROL(fbEcGetMasterDevState.nDevState, 4))/16;
+stMasterDevState[1] := WORD_TO_BYTE(fbEcGetMasterDevState.nDevState)/16;
+stMasterDevState[2] := WORD_TO_BYTE(ROL(fbEcGetMasterDevState.nDevState, 12))/16;
+stMasterDevState[3] := WORD_TO_BYTE(ROL(fbEcGetMasterDevState.nDevState, 8))/16;
+
+(*0x1000 = DC not in sync *)
+IF        stMasterDevState[3] = 0 THEN
+		sMasterStateString[3] := '';
+ELSIF     stMasterDevState[3] = 1 THEN
+		sMasterStateString[3] := 'DC not in sync, ';
+ELSE
+		sMasterStateString[3] := 'Unknown error, ';
+END_IF
+
+(* 0x0100 = At least one device in 'INIT' state, 0x0200 = At least one device in 'PRE-OP' state, 0x0400 = At least one device in 'SAFE-OP' state, 0x0800 = At least one device indicates an error state *)
+IF        stMasterDevState[2] = 0 THEN
+		sMasterStateString[2] := '';
+ELSIF     stMasterDevState[2] = 1 THEN
+		sMasterStateString[2] := 'At least one device in INIT state, ';
+ELSIF     stMasterDevState[2] = 2 THEN
+		sMasterStateString[2] := 'At least one device in PREOP state, ';
+ELSIF     stMasterDevState[2] = 4 THEN
+		sMasterStateString[2] := 'At least one device in SAFE-OP state, ';
+ELSIF     stMasterDevState[2] = 8 THEN
+		sMasterStateString[2] := 'At least one device indicates an error state, ';
+ELSE
+		sMasterStateString[2] := 'Unknown error, ';
+END_IF
+
+(* 0x0010 = Out of send resources (I/O reset required), 0x0020 = Watchdog triggered, 0x0040 = Ethernet driver (miniport) not found, 0x0080 = I/O reset active *)
+IF        stMasterDevState[1] = 0 THEN
+		sMasterStateString[1] := '';
+ELSIF     stMasterDevState[1] = 1 THEN
+		sMasterStateString[1] := 'Out of send resources (I/O reset required), ';
+ELSIF     stMasterDevState[1] = 2 THEN
+		sMasterStateString[1] := 'Watchdog triggered, ';
+ELSIF     stMasterDevState[1] = 4 THEN
+		sMasterStateString[1] := 'Ethernet driver (miniport) not found, ';
+ELSIF     stMasterDevState[1] = 8 THEN
+		sMasterStateString[1] := 'I/O reset active, ';
+ELSE
+		sMasterStateString[1] := 'Unknown error, ';
+END_IF
+
+(* 0x0001 = Link error, 0x0002 = I/O locked after link error (I/O reset required), 0x0004 = Link error (redundancy adapter), 0x0008 = Missing one frame (redundancy mode) *)
+IF        stMasterDevState[0] = 0 THEN
+		sMasterStateString[0] := 'No Error.';
+ELSIF     stMasterDevState[0] = 1 THEN
+		sMasterStateString[0] := 'Link error.';
+ELSIF     stMasterDevState[0] = 2 THEN
+		sMasterStateString[0] := 'I/O locked after link error (I/O reset required).';
+ELSIF     stMasterDevState[0] = 4 THEN
+		sMasterStateString[0] := 'Link error (redundancy adapter).';
+ELSIF     stMasterDevState[0] = 8 THEN
+		sMasterStateString[0] := 'Missing one frame (redundancy mode).';
+ELSE
+		sMasterStateString[0] := 'Unknown error, ';
+END_IF
+
+IF fbEcGetMasterDevState.nDevState <> nLastMasterDevState THEN
+	nLastMasterDevState := fbEcGetMasterDevState.nDevState;
+	IF stMasterDevState[0] <> 0 THEN
+		bEcMasterError := TRUE;
+	END_IF
+	IF stMasterStateHistoryMsg[iMasterStateHistoryMsgCount] = '' THEN
+		sTempMasterStateMsg := sTime;
+		sTempMasterStateMsg := concat(sTempMasterStateMsg, ' Master is ');
+		sTempMasterStateMsg := concat(sTempMasterStateMsg, sMasterStateString[3]);
+		sTempMasterStateMsg := concat(sTempMasterStateMsg, sMasterStateString[2]);
+		sTempMasterStateMsg := concat(sTempMasterStateMsg, sMasterStateString[1]);
+		sTempMasterStateMsg := concat(sTempMasterStateMsg, sMasterStateString[0]);
+		stMasterStateHistoryMsg[iMasterStateHistoryMsgCount] := sTempMasterStateMsg;
+		iMasterStateHistoryMsgCount := iMasterStateHistoryMsgCount + 1;
+		IF iMasterStateHistoryMsgCount > 99 THEN
+			iMasterStateHistoryMsgCount := 0;
+		END_IF
+	END_IF
+END_IF]]></ST>
+      </Implementation>
+    </Action>
+    <Action Name="A_SlaveStateMsg" Id="{eb27c02e-5d70-4eab-b7f9-80345d3ad41d}">
+      <Implementation>
+        <ST><![CDATA[
+FOR i := 0 TO (fbEcGetConfSlaves.nSlaves - 1) BY 1 DO
+	arrTempSlaveDevState[0] := ROL(stEcSlaveStates[i].deviceState,4)/16; 
+	arrTempSlaveDevState[1] := stEcSlaveStates[i].deviceState/16;
+	arrTempSlaveDevState[2] := ROL(stEcSlaveStates[i].linkState,4)/16;
+	arrTempSlaveDevState[3] := stEcSlaveStates[i].linkState/16;
+	
+	(* 0x100_ = Communication port A, 0x200_ = Communication port B, 0x400_ = Communication port C, 0x800_ = Communication port D *)
+	IF    arrTempSlaveDevState[3] = 0 THEN
+			sSlaveStateString[3] := '';
+	ELSIF arrTempSlaveDevState[3] = 1 THEN
+			sSlaveStateString[3] := 'Comm Port A error, ';
+	ELSIF arrTempSlaveDevState[3] = 2 THEN
+			sSlaveStateString[3] := 'Comm Port B error, ';
+	ELSIF arrTempSlaveDevState[3] = 4 THEN
+			sSlaveStateString[3] := 'Comm Port C error, ';
+	ELSIF arrTempSlaveDevState[3] = 8 THEN
+			sSlaveStateString[3] := 'Comm Port D error, ';
+	ELSE
+			sSlaveStateString[3] := 'Unknown error, ';
+	END_IF
+	
+	(* 0x010_ = Slave not present, 0x020_ = Slave signals link error, 0x040_ = Slave signals missing link, 0x080_ = Slave signals unexpected link *)	
+	IF    arrTempSlaveDevState[2] = 0 THEN
+			sSlaveStateString[2] := '';
+	ELSIF arrTempSlaveDevState[2] = 1 THEN
+			sSlaveStateString[2] := 'Slave not present, ';
+	ELSIF arrTempSlaveDevState[2] = 2 THEN
+			sSlaveStateString[2] := 'Slave signals link error, ';
+	ELSIF arrTempSlaveDevState[2] = 4 THEN
+			sSlaveStateString[2] := 'Slave signals missing link, ';
+	ELSIF arrTempSlaveDevState[2] = 8 THEN
+			sSlaveStateString[2] := 'Slave signals unexpected link, ';
+	ELSE
+			sSlaveStateString[2] := 'Unknown error, ';
+	END_IF	
+		
+	(* 0x001_ = Slave signals error, 0x002_ = Invalid vendorId, productCode... read, 0x004_ = Initialization error occurred, 0x008_ = Slave disabled *)
+	IF    arrTempSlaveDevState[1] = 0 THEN
+			sSlaveStateString[1] := '';
+	ELSIF arrTempSlaveDevState[1] = 1 THEN
+			sSlaveStateString[1] := 'Slave signals error, ';
+	ELSIF arrTempSlaveDevState[1] = 2 THEN
+			sSlaveStateString[1] := 'Invalid vendorId - productCode... read, ';
+	ELSIF arrTempSlaveDevState[1] = 4 THEN
+			sSlaveStateString[1] := 'Initialization error occurred, ';
+	ELSIF arrTempSlaveDevState[1] = 8 THEN
+			sSlaveStateString[1] := 'Slave disabled, ';
+	ELSE
+			sSlaveStateString[1] := 'Unknown error, ';
+	END_IF	
+	
+	(* 0x___1 = Slave in 'INIT' state, 0x___2 = Slave in 'PREOP' state, 0x___3 = Slave in 'BOOT' state, 0x___4 = Slave in 'SAFEOP' state, 0x___8 = Slave in 'OP' state *)
+	IF    arrTempSlaveDevState[0] = 0 THEN
+			sSlaveStateString[0] := '';
+	ELSIF arrTempSlaveDevState[0] = 1 THEN
+			sSlaveStateString[0] := 'INIT state.';
+	ELSIF arrTempSlaveDevState[0] = 2 THEN
+			sSlaveStateString[0] := 'PREOP state.';
+	ELSIF arrTempSlaveDevState[0] = 3 THEN
+			sSlaveStateString[0] := 'BOOT state.';
+	ELSIF arrTempSlaveDevState[0] = 4 THEN
+			sSlaveStateString[0] := 'SAFEOP state.';
+	ELSIF arrTempSlaveDevState[0] = 8 THEN
+			sSlaveStateString[0] := 'OP state.';
+	ELSE
+			sSlaveStateString[0] := 'Unknown State.';
+	END_IF	
+	
+	sTempSlaveStateMsg := sTime;
+	sTempSlaveStateMsg := concat(sTempSlaveStateMsg, stEcConfSlaveInfo[i].sName);
+	sTempSlaveStateMsg := concat(sTempSlaveStateMsg, ' Slave is ');
+	sTempSlaveStateMsg := concat(sTempSlaveStateMsg, sSlaveStateString[3]);
+	sTempSlaveStateMsg := concat(sTempSlaveStateMsg, sSlaveStateString[2]);
+	sTempSlaveStateMsg := concat(sTempSlaveStateMsg, sSlaveStateString[1]);
+	sTempSlaveStateMsg := concat(sTempSlaveStateMsg, sSlaveStateString[0]);
+	IF (stLastSlaveState[i].deviceState <> stEcSlaveStates[i].deviceState) OR (stLastSlaveState[i].linkState <> stEcSlaveStates[i].linkState) THEN
+		stLastSlaveState[i].linkState := stEcSlaveStates[i].linkState;
+		stLastSlaveState[i].deviceState := stEcSlaveStates[i].deviceState;
+		stLastSlaveDevStateMsg[i] := sTempSlaveStateMsg;
+		stSlaveStateHistoryMsg[iSlaveStateHistoryMsgCount] := sTempSlaveStateMsg;
+		iSlaveStateHistoryMsgCount := iSlaveStateHistoryMsgCount + 1;
+		IF iSlaveStateHistoryMsgCount > 999 THEN
+			iSlaveStateHistoryMsgCount := 0;
+		END_IF
+	END_IF
+	IF (stEcSlaveStates[i].deviceState <> 8) OR (stEcSlaveStates[i].linkState <> 0) THEN
+		bEcSlaveError := TRUE;
+		stSlaveErr[i] := TRUE;
+		IF NOT bEcMasterError THEN
+			sEcDiagErrMsg := sTempSlaveStateMsg;
+		END_IF
+	ELSE
+		stSlaveErr[i] := FALSE;
+	END_IF
+END_FOR
+		]]></ST>
+      </Implementation>
+    </Action>
+    <LineIds Name="FB_EcDiagnostics">
+      <LineId Id="3" Count="39" />
+      <LineId Id="292" Count="0" />
+      <LineId Id="43" Count="132" />
+      <LineId Id="293" Count="0" />
+      <LineId Id="176" Count="57" />
+      <LineId Id="2" Count="0" />
+    </LineIds>
+    <LineIds Name="FB_EcDiagnostics.A_GetTime">
+      <LineId Id="2" Count="16" />
+      <LineId Id="1" Count="0" />
+    </LineIds>
+    <LineIds Name="FB_EcDiagnostics.A_MasterStateMsg">
+      <LineId Id="2" Count="77" />
+      <LineId Id="1" Count="0" />
+    </LineIds>
+    <LineIds Name="FB_EcDiagnostics.A_SlaveStateMsg">
+      <LineId Id="2" Count="95" />
+      <LineId Id="1" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

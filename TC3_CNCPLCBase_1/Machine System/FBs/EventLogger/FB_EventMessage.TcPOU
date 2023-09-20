@@ -1,0 +1,78 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.11">
+  <POU Name="FB_EventMessage" Id="{5fc64599-ad83-4f07-975f-6d21140eb252}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION_BLOCK FB_EventMessage 
+VAR_INPUT 
+	bEvent			: BOOL; 
+	nEventID		: UDINT; 
+	sSource			: STRING; 
+END_VAR 
+VAR_OUTPUT 
+END_VAR 
+VAR
+	bIsInitalized : BOOL;
+	
+	fbSourceInfo 	: FB_TcSourceInfo;
+	fbMessage 		: FB_TcMessage;
+	eventEntry 		: TcEventEntry;
+	fbRtEvent		: R_TRIG;
+	hr 				: HRESULT;
+	hrLastError		: HRESULT;
+	
+END_VAR
+
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[// initialization 
+	IF NOT bIsInitalized THEN
+		bIsInitalized:= TRUE;
+		
+		IF nEventID> 16#04FF THEN
+			eventEntry:= Tc_Events.myWarningEventClass.x0500; 
+		ELSE
+			eventEntry:= TC_Events.myInfoEventClass.x0000; 
+		END_IF
+		
+		eventEntry.nEventId:= nEventID;
+		fbSourceInfo.Clear(); 
+		fbSourceInfo.sName := sSource;
+		
+		hr:= fbMessage.CreateEx(eventEntry, ipSourceInfo:= fbSourceInfo); 
+		IF FAILED (hr) THEN
+			hrLastError:= hr; 
+		END_IF 
+	END_IF
+	
+// event trigger 
+	fbRtEvent (CLK:= bEvent);
+
+// message sent
+	IF fbRtEvent.Q THEN
+		hr:= fbMessage. Send(0); 
+		IF FAILED (hr) THEN
+			hrLastError:= hr;
+		END_IF 
+	END_IF]]></ST>
+    </Implementation>
+    <LineIds Name="FB_EventMessage">
+      <LineId Id="36" Count="0" />
+      <LineId Id="50" Count="0" />
+      <LineId Id="37" Count="0" />
+      <LineId Id="51" Count="0" />
+      <LineId Id="38" Count="0" />
+      <LineId Id="52" Count="0" />
+      <LineId Id="54" Count="1" />
+      <LineId Id="58" Count="0" />
+      <LineId Id="41" Count="0" />
+      <LineId Id="59" Count="6" />
+      <LineId Id="67" Count="2" />
+      <LineId Id="45" Count="0" />
+      <LineId Id="70" Count="1" />
+      <LineId Id="46" Count="0" />
+      <LineId Id="72" Count="0" />
+      <LineId Id="47" Count="0" />
+      <LineId Id="73" Count="1" />
+      <LineId Id="76" Count="1" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

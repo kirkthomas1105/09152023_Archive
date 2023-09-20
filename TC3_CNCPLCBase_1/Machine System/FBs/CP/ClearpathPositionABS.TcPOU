@@ -1,0 +1,1584 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+  <POU Name="ClearpathPositionABS" Id="{232ca8c1-2919-47b9-9af4-5b9130496d5d}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION_BLOCK ClearpathPositionABS //please check comments inside FB to determine clearpath settings before use
+VAR_INPUT
+	
+	//PI (Program Inputs)
+		bHomeStart_PI				: BOOL;		//begin Homing sequence
+		PowerOn_PI					: BOOL;		//enable motor command from program
+		Stop_PI						: BOOL;		//stop command from program
+		DistancePosReq_PI			: REAL;		//distanct position request from the program (input in absolute position and valid after homing)
+		ManualMove_PI				: BOOL;		//Call manual move method if true
+		Mode_PI						: INT;		//0:noMode, 1:Auto, 2:Manual
+		bMove_PI					: BOOL;		//begin absolute move 
+		VEReq						: LREAL;
+		bAltSpeedControl			: BOOL;		//JOSEPHBARTONCHANGE3-28-2023 This allows for outside control of using altspeed
+		bPresetMoveTrigger			: BOOL;		//JOSEPHBARTONCHANGE3-28-2023 This allows for tracking when it is a preset position move
+		bStopMove			: BOOL;     // Controls the StopMove()
+	//VI (visualization input/hmi input)
+		HomeReq_VI			: BOOL; 	// Homing sequence
+		Reset_VI			: BOOL;		//reset button		
+		DisReq_VI			: REAL;		//Disreq for absolute auto move
+		JogExecute_VI		: BOOL;		//Call manual move method if true
+		SuperJogExecute_VI	: BOOL;		//call super manual move method if true
+		SuperJogMode_VI		: bool;		//Super Mode on if true (changes Jog method) use for overtravel or not homed be Cautious
+		JogSlow_VI			: BOOL;		//slow manual move
+		CW_VI				: BOOL;		//Set Direction for requested move (does not apply to absolute move) True = Clockwise
+	//CI (configuration input)
+		IN							: CpABS_CI;
+		
+		EnableOut_FO 		AT %Q* 	: BOOL; 	//enables the clearpath motor
+END_VAR
+VAR_OUTPUT
+	// Outputs
+		Out						: CpABS_Out;
+		StopCase				: INT; 		//case tracket StopMove()
+END_VAR
+VAR
+	bSimHigh			: BOOL; 	// Simulated High switch for the Rotation axis
+	bSimLow				: BOOL; 	// Simulated High switch for the Rotation axis
+	AltSpeedCase		: INT;		//case tracker altspeed()
+	AltSpeedReq			: BOOL;		//turn altspeed method on
+	ResetCase			: int;		//makes a reset instead of an alt speed request (delays the turning off of reset)
+	HomeCase			: INT;		//case tracker home()
+	JogCase				: INT;		//case tracker Jog()
+	SuperJogCase		: INT;		//case tracker SuperJog()
+	DisToGoCase			: INT;		//case tracker MoveABSLin() for pulse train que
+	PositionCase		: INT;		//case tracker for tracking inposition
+	bMoveTrig			: r_trig;	//rtrig for abs move command [used in CNC MDI]
+	
+	JogReset			: bool;		//used for auto jog reset [stops alt speed from triggering while clearing pulses instead of a full reset]
+	SWLimitStatus		: BOOL;		//Used to check if currently within software limits
+	error				: INT;		//5: increment error
+	PulsesEnabled		: BOOL;		//enable absolute move method to command pulses
+	busy				: BOOL;		//move in progress
+	MoveComplete		: BOOL;		//all ppr accounted for after move command
+	PulseCount			: INT;		//current Pulse Count
+	QuePulseDistance	: REAL;		//Distance expected from current pulse train
+	expectedPulse		: INT;		//expected pulses from commanded movements at set PPR
+	HomeTrig			: R_trig;	//trigger position capture when homing ends
+	ATrig				: R_trig;	//counter/trigger to track how many increments of a output have been commanded
+	pulseCounter		: r_trig;
+	JogRTrig			: R_Trig;	//jog execute trigger
+	JogFTrig			: F_Trig;	//Jog Cancel Trigger
+	RotRiseLimSwitch		: R_TRIG;	// Rising trigger for rotation limit switch Normally Closed
+	RotFallLimSwitch		: F_TRIG;	// Falling trigger for rotation limit switch Normally Open
+	ASG					: BOOL;		//all systems go clearpath (if using asg)
+	Cancelled			: BOOL;		//move was cancelled requires reset
+	CW					: BOOL; 	//direction of motor rotation: CW is true;  CCW is false;
+	DistanceToGo		: REAL;		//difference in distance from current position and requested position.  used to determine linear direction
+	LastABSEncoder		: DINT;		//last know encoder track to be used for moving status
+	isConfigured		: BOOL;		//turns on or off the configuration settings method so it only runs on first scan
+	DistPerMRev 		: INT;
+	DisPerPulse			: INT;		//distance per pulse based on configuration inputs
+	PulsesToSend		: INT;		//Pulses to send for Absolute move
+	CWABS				: Bool;		//Direction for abs Move [Check against pulse wrong dir]
+	PulseQueSet			: BOOL;		//start pulses for move
+	LastDistanceposReq	: REAL;		//last abs move request (keeps track of InTargetPosition)
+	ABSHiLimit	: DINT;
+	ABSLoLimit 	: Dint;
+	//FI (Field Inputs)
+
+	HLFB_FI	 		AT %I*	: BOOL;		// high level feedback sensors
+	bInputBCom_FI	AT %I*	: BOOL;		// check sum for inputb signal	(double check that direction is actually signaled to motor)
+	ABSEncoder_FI	AT %I*	: DINT;		//absoulte multiturn encoder
+	
+	//Linear Homing Variables
+	bHigh_FI		AT %I*	: BOOL;
+	bLow_FI			AT %I*	: BOOL;
+	bHome_FI		AT %I*	: BOOL;
+	
+	bTest : BOOL;
+	
+	//FO (Field Outputs)
+	HLFB24V_FO 			AT %Q*	: BOOL :=1;	//high level feedback 24v power if needed to used el2008 //default set to true so that hlfb is fucntional
+	InputAOut_FO 		AT %Q* 	: BOOL; 	//input A of clearpath motor, output from plc
+	InputBOut_FO 		AT %Q* 	: BOOL; 	//input B of clearpath motor, output from plc
+END_VAR
+VAR RETAIN 
+	
+	
+END_VAR
+
+VAR_IN_OUT
+
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[(* Check clearpath settings before use*)
+	(* Check the input filter setting for inputA and inputB.   Also check PPR setting, CntsPerPulse, HLFBsetting, and The type of axis,  
+		Place clearpath in correct mode of operation Mode for this FB is position 
+		Check what Homing setting is used on the clearpath motor	
+		check to make sure that the resolution of movement commands matches gearbox compatibiltiy, and plc scan compatability
+		
+		How the FB works Details:
+			1st scan sets configuration using MechDrive_CI()
+			Each scan CP motor direction is set based off CW variable
+			LocatePosition() drives limit switches and rotary cam limit quadrants
+			Pulses are counted using ppr() to move with hlfb rising trig counter.  Expected pulses are tracked with inputA_FO rising trig
+			Enable checks for enable signal, cancelled state, and stop_PI state before turning on motor or disenable
+			reset: cp motors require an enable off to reset after ac loss...ie estop w/contactor.  it also resets cancelled bit and busy bit (requires reset_vi to run)
+			
+			Moves are called using homing sequence, Absolute movement, or with manual movement and all require homing.
+			after homing absolute movement within software limit_CI is available or manual jog.  Manual jog is set to single pulse method by default
+			After Homing Position is tracked using 'DistancePos_PO'
+			ABsolute move chains clearpath pulses together to create a smooth motion profile. 
+				Pulses sent are tracked against 'DistancePosReq_PI' and 'DistancePos_PO'  When expected pulses are within range of requested position then 'pulsecount' is reset
+	*)
+(*configruation input setting*)
+IF isConfigured = 0 THEN MechDrive_CI(); bHigh_FI := TRUE; END_IF	//run once to set configuration on init
+
+//Handle alternate speed
+AltSpeedReq := bAltSpeedControl OR AltSpeedReq;
+//Pin outs Clockwise (CW) or Counter Clockwise (CCW)
+IF CW THEN	InputBOut_FO := 1;	ELSE InputBOut_FO := 0; 	END_IF //sets direction of movement at motor - check this (add bcom direction pin check)
+LocatePosition();				//rotary position of the cam wheel  //also includes a double sensor check for SensorCheck_PO  //Also locates position for linear system for limit sensors //Limits
+//Triggers
+	//pulseCounter(clk:=HLFB_FI);		//high Level feedback counter based off direction (replaced by abs encoder)
+	HomeTrig(clk:=Out.Homed_PO);		//used in ppr() to set pulses to zero after homing
+	ATrig (clk:=InputAOut_FO);		//counts pulses sent to motor (clearpath should move based on InputA Rising Trig (check settings in CP to be sure - options are for rising or falling trig)
+	JogRTrig(CLK:=JogExecute_VI,);	//Starts Jog()
+	JogFTrig(CLK:=JogExecute_VI,);	//Cancels Jog() movement
+	bMoveTrig(Clk:=bmove_PI,); 		//confirms that move has triggered and then can check MDI MCode Req Pos	
+IF Mode_PI = 2 THEN	
+	IF SuperJogMode_VI = 0 THEN
+		Jog();
+	ELSE
+		SuperJog();
+	END_IF
+	out.ModeMsg_VO := 'Manual Mode engaged';
+END_IF
+IF Mode_PI = 1 THEN
+	out.ModeMsg_VO := 'Auto Mode Engaged';
+	DistancePosReq_PI:=DisReq_VI;
+	MoveAbsLin();
+END_IF
+	ABSEncoder();			//tracking of the abs encoder against inputB pulses (default for most use cases) use ppr if using the pulse signals from clearpath
+	Home();
+
+//moved movedone into movement manual call and abs move call
+MoveDone();						//check if movement is complete (will either check pulses against expected pulses or will check for asg
+Enable();						//check for motor enable status and try to enable the motor if PowerOn_PI is true
+Reset();						//if reset button turn power off, reset cancelled, and reset busy
+IF stop_PI THEN CancelMove(); END_IF	//This requires a reset afterwards to move again
+IF GVL_HMI.AutoMode THEN StopMove(); END_IF // Must call axis auto stopping every cycle.]]></ST>
+    </Implementation>
+    <Method Name="ABSEncoder" Id="{a3f469d8-f841-44d5-a141-91f67ed56240}">
+      <Declaration><![CDATA[METHOD ABSEncoder : BOOL
+VAR_INPUT
+END_VAR
+VAR
+	bTest : BOOL;
+END_VAR
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[//pulsecount is now turned into absolute encoder
+//will need to check pulsecount math against encoder and confirm rounding does not cause fb and motor to hunt between pulses
+Out.DistancePos_PO :=  (ABSEncoder_FI-in.ABSEncoderZero_CI)/in.ABSEncoderScaler_CI;
+
+ABSHiLimit:= (IN.ABSEncoderZero_CI + (In.ABSEncoderScaler_CI*(In.SWLimit_Hi_CI+5))); //JosephBartonChange1-11-2023 THISISIT ABSEncoderZero_CI
+ABSLoLimit:= (In.ABSEncoderZero_CI + (IN.ABSEncoderScaler_CI*(In.SWLimit_Lo_CI-5))); //JosephBartonChange1-11-2023
+IF ATrig.Q AND Cancelled = 0 THEN //pulse sent counter rtrg
+	IF InputBOut_FO = 1 THEN 
+		//QuePulseDistance := QuePulseDistance + In.DisPerPulse_CI; //does not account for cnt per rev yet
+		PulsesToSend := PulsesToSend-1; //Track ABS Pulses sent  [went pos dir so remove one from que]
+		ELSE 
+			//QuePulseDistance := QuePulseDistance - In.DisPerPulse_CI;
+			PulsesToSend := PulsesToSend+1; //Track ABS Pulses sent  [went neg dir so add one from que]
+	END_IF
+	//disperpulse_CI must be calibrated on axis and set in settings
+END_IF
+
+IF Cancelled = 1 THEN
+	//expectedPulse := pulsecount; 			//removed expectedpulse in favor of QuePulseDistance with the abs encoder Ref the linppr if editing
+	//QuePulseDistance := 0;
+	Out.ExpDistancePos_PO := Out.DistancePos_PO;
+END_IF
+IF  movecomplete = 1 THEN //ppr mode
+	 //Out.ExpDistancePos_PO := PulseCount/2;
+	 Out.ExpDistancePos_PO := Out.DistancePos_PO;
+	 //QuePulseDistance:=0;
+END_IF
+IF  PowerOn_PI =0 THEN
+	 Out.ExpDistancePos_PO := Out.DistancePos_PO;
+	 //QuePulseDistance:=0;
+END_IF
+Out.DistancePos_PO := Out.DistancePos_PO; //change distancePOs_PO to float if needed 
+]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="AltSpeed" Id="{3d9969c5-c36b-410a-8f0b-1add169e5317}">
+      <Declaration><![CDATA[METHOD PUBLIC AltSpeed : BOOL
+VAR_INPUT
+END_VAR
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[(*clearpath requires at least a 20ms delay where the enable signal is pulsed off to realize alternate speed *)
+
+//start
+CASE AltSpeedCase OF
+	0:
+		IF FIND(STR1:='VERT', STR2:=IN.MotorName) = 0 THEN
+			altspeedcase := 10;
+		ELSE
+			altspeedcase := 100;
+		END_IF
+	10:
+		EnableOut_FO := 1;
+		AltSpeedCase := 20;
+	20:
+		EnableOut_FO := 1;
+		AltSpeedCase := 30;
+	30:
+		EnableOut_FO := 0;
+		AltSpeedCase := 40;
+	40:
+		EnableOut_FO := 0;
+		AltSpeedCase := 50;
+	50:
+		EnableOut_FO := 0;
+		AltSpeedCase := 60;
+	60:	
+		EnableOut_FO := 1;
+		//Look for 'AltSpeedCase' to be set to '0' in the call function
+	
+	90: //error or message
+	
+	100: 
+		EnableOut_FO := 1;
+		AltSpeedCase := 110;
+	110:
+		EnableOut_FO := 1;
+		AltSpeedCase := 120;
+	120:
+		EnableOut_FO := 1;
+		AltSpeedCase := 130;
+	130:
+		EnableOut_FO := 0;
+		AltSpeedCase := 140;
+	140:
+		EnableOut_FO := 0;
+		AltSpeedCase := 150;
+	150:
+		EnableOut_FO := 0;
+		AltSpeedCase := 200;
+	200: 
+		EnableOut_FO := 1;
+		AltSpeedCase := 110;
+	210:
+		EnableOut_FO := 1;
+		AltSpeedCase := 220;
+	220:
+		EnableOut_FO := 1;
+		AltSpeedCase := 230;
+	230:
+		EnableOut_FO := 0;
+		AltSpeedCase := 240;
+	240:
+		EnableOut_FO := 0;
+		AltSpeedCase := 250;
+	250:
+		EnableOut_FO := 0;
+		AltSpeedCase := 60;
+END_CASE]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="CancelMove" Id="{dc0a9c3f-3f27-4ca4-a377-d4beecac6355}">
+      <Declaration><![CDATA[METHOD PUBLIC CancelMove : BOOL
+VAR_INPUT
+END_VAR
+
+VAR
+	rCanceledEncoderValue : REAL;
+END_VAR]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[EnableOut_FO 	:= 0;		//only way to clear out overstacked increment calls is to turn enable off and then on
+//PowerOn_PI		:=0;	//turn off power on [this is a program input and can't be turned off here] check this to see if still needed[was affecting homecase]
+Cancelled	:=1;	//cancelled move needs to be reset
+Out.ExpDistancePos_PO := Out.DistancePos_PO; //change distancePOs_PO to float if needed
+DistancePosReq_PI:=Out.DistancePos_PO;	// get rid of any requestd move during cancel (must recall it after cancel)
+DisToGoCase :=0;
+PulsesToSend :=0;
+//MCODE Flag
+AltSpeedReq :=0;	//clear alt speed mode	
+AltSpeedCase :=0;	
+InputAOut_FO :=0;
+// message (move was canceled)
+Out.Error4Msg_VO := 'Cancelled, reset to move motor';
+
+]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="Enable" Id="{e6fb9eb4-b614-4758-a417-40a78f7c5e58}">
+      <Declaration><![CDATA[METHOD PUBLIC Enable : BOOL 	//attempts to enable the motor based on stop_PI, Cancelled, and PowerOn_PI
+VAR_INPUT
+END_VAR
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[IF Stop_PI =0 AND cancelled =0 AND PowerOn_PI =1 and ResetCase=0 THEN
+	EnableOut_FO :=1;
+	IF altSpeedReq THEN
+		AltSpeed();				//calls altspeed to cycle thru if homing or manual mode requests a slower mode
+	END_IF
+ELSE 
+	EnableOut_FO :=0;	//message to say stop is on (check this)
+END_IF
+
+
+//power on
+
+//check if asg
+IF EnableOut_FO =1 AND HLFB_FI =0 THEN
+	Out.ErrorMsg_VO := 'Servo enabled but HLFB not on';
+END_IF
+
+//if no asg power off and repeat
+]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="Error" Id="{940a6d07-85a1-498b-9a59-ce3664516738}">
+      <Declaration><![CDATA[METHOD PUBLIC Error : BOOL
+VAR_INPUT
+END_VAR
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[// if hlfb pulses do not move in set timeframe after movement call then call error for motor
+]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="Home" Id="{789697c8-15c6-4472-88d3-4b4a8b66f227}">
+      <Declaration><![CDATA[METHOD PUBLIC Home : BOOL
+VAR_INPUT
+END_VAR
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[//If encoder field is within the CI limits then machine counts as homed.  If homing seq is needed to check slippage periodically it can be added in this method
+IF ABSEncoder_FI >= ABSLoLimit AND ABSEncoder_FI <= ABSHiLimit THEN
+	out.Homed_PO := 1;
+	Out.HomeMsg_VO := 'Axis is within home limits';
+	ELSE
+		Out.Homed_PO :=0;
+		Out.HomeMsg_VO := 'Axis not within home limits check overtravel';
+END_IF
+
+//MAIN HOMING SEQUENCE
+
+CASE HomeCase OF 
+	0:	//Main home Sequence [Also stops movement]
+		
+		
+		IF HomeReq_VI  THEN	
+			IF IN.Limit_NC_NO_CI = 0 THEN	//NC limit switch configuration
+				IF bLow_FI THEN //set direction via hmi unless on a limit switch then default to locateposition()
+					CW := 0;
+					SendPulse();
+				ELSE
+					CancelMove();
+					//in.ABSEncoderZero_CI := ABSEncoder_FI;
+					HomeCase :=10;
+				END_IF
+			ELSE	//NO limit switch configuration
+				IF NOT(bLow_FI) THEN //set direction via hmi unless on a limit switch then default to locateposition()
+					CW := 0;
+					SendPulse();
+				ELSE
+					CancelMove();
+					HomeCase :=10;
+				END_IF
+			END_IF
+			
+		ELSE
+			IF	Reset_VI  OR Stop_PI THEN		
+				CancelMove();
+				HomeCase :=10;
+			END_IF
+		END_IF
+	10:	//go for auto jog reset
+		IF cancelled THEN HomeCase :=20; END_IF
+		
+	20: //auto Reset cycle
+		IF InLimits(Out.DistancePos_PO) THEN HomeCase :=30; ELSE HomeCase:=95;  END_IF
+	30: HomeCase :=31; //10 scan delay
+	31: HomeCase :=32;
+	32:	HomeCase :=33;
+	33: HomeCase :=34;
+	34: HomeCase :=35;
+	35: HomeCase :=36;
+	36: HomeCase :=37;
+	37: HomeCase := 38;
+	38: HomeCase := 39;
+	39: HomeCase :=40;
+	40: //send reset
+		JogReset := 1;
+		HomeCase :=50;
+	50: //wait for reset
+		IF JogReset=0 THEN HomeCase :=90; END_IF 
+	60:
+	70:
+	80:
+	90: IF HomeReq_VI =TRUE THEN HomeCase :=0; END_IF
+	95: //outside of limits
+		IF Reset_VI THEN HomeCase:=90; END_IF //no autoreset if outside limits
+END_CASE
+//slippage Test Periodically if desired
+
+//limit switch and home switch configuration
+	(*IF IN.HomingSet_CI = 2 THEN //homing sensor not used - home to low sensor
+	bHome_FI := bLow_FI; 
+	//message homing sensor not used
+	END_IF
+	
+	IF IN.HomingSet_CI = 3 THEN //homing sensor not used - home to Hi sensor
+		bHome_FI := bHigh_FI; 
+		//message homing sensor not used
+	END_IF
+	//error catch for if InputBout wire fails and ends up homing unknown direction repeatedly
+	IF PowerOn_PI = 0 THEN HomeCase :=0; END_IF
+	IF Stop_PI = 1 THEN HomeCase := 0; END_IF
+	//check the InputBOut com using EL1008 input channel to determine that the pulse did work
+	//message
+	IF bhomestart_PI = 1 THEN HomeCase :=0; AltSpeedReq := 1; AltSpeedCase:=0; END_IF
+	CASE HomeCase OF
+		0://set pulses equal so that movement can begin and check direction
+			IF bHomeStart_PI =1 AND Stop_PI = 0  THEN
+				HomeCase := 10;
+				bhomeStart_PI :=0;
+				AltSpeedReq := 1;				//set slow mode and alternate speed in clearpath
+				//AltSpeedCase := 0;			//may need this to start slow speed
+				//ExpectedPulse := PulseCount;	//Make movement available no matter the pulse count discrepancy
+				Out.ExpDistancePos_PO := Out.DistancePos_PO;
+				InputAOut_FO :=0;
+				Out.Homed_PO :=0;
+			END_IF
+		(*5:	
+			IF Stop_PI = 0  THEN
+				HomeCase := 10;
+				bhomeStart_PI :=0;
+				AltSpeedReq := 1;				//set slow mode and alternate speed in clearpath
+				AltSpeedCase := 0;
+				ExpectedPulse := PulseCount;	//Make movement available no matter the pulse count discrepancy
+				Homed_PO :=0;
+			END_IF*)
+			
+		10:// homing sequence
+			IF  Stop_PI = 0  THEN
+				Out.Homed_PO :=0;
+				//check this: reseting expected to match pulse count so that homeing will start if there is a mismatch
+				//decide homing direction and homing method //make flag large enough to hit home switch and the limit switch
+				IF IN.Limit_NC_NO_CI =0 THEN	//NC switch configuration
+					IF bHigh_FI =1 AND bLow_FI =1 THEN	//using normally closed sensor (flag is not on either limit switch)
+						IF IN.HomingSet_CI =2 THEN cw := 0; ELSIF IN.HomingSet_CI =3 THEN cw :=1; END_IF //go to high or low first if no limit switch tripped
+					END_IF
+				ELSE	//NO switch Configuration
+					IF bHigh_FI =0 AND bLow_FI =0 THEN	//using normally closed sensor (flag is not on either limit switch)
+						IF IN.HomingSet_CI =2 THEN cw := 0; ELSIF IN.HomingSet_CI =3 THEN cw :=1; END_IF //go to high or low first if no limit switch tripped
+					END_IF
+				END_IF
+				//if inputA is hi then turn off (takes 2 cycles to output an increment at cp motor)
+					(*if pulses expected = pulse count then do the next move *)
+				IF AltSpeedCase = 60 THEN SendPulse(); END_IF
+				IF IN.Limit_NC_NO_CI =0 THEN	//NC switch configuration
+					IF bHome_FI =0 THEN //use nc switch for sensor [at home position]
+						bHomeStart_PI :=0;
+						Cancelmove();
+						HomeCase := 20;
+					END_IF
+					ELSE				//NO switch configuration
+					IF bHome_FI =1 THEN //use no switch for sensor [at home position]
+					bHomeStart_PI :=0;
+					Cancelmove();
+					HomeCase := 20;
+				END_IF	
+				END_IF
+				(*check this - add in an extra cycle before setting home that moves away from the 
+					homed spot in same direction to confirm trigger positino comes on same side of sensor each time*)
+			END_IF
+		20:	//extra scan before homed
+			HomeCase :=50;	//this scan is required to allow for a cancelled move reset after homing
+		
+		50://after homing reset motor and cancelled bit
+			
+				Out.Homed_PO := 1;
+				//cancelled :=0;	//resets motor after initial homing
+				
+				//pulsecount :=0; 
+				//expectedPulse :=0;
+				Out.DistancePos_PO :=0; //set this to calibrated abs value
+				Out.ExpDistancePos_PO :=0; //check this prob need to set to Out.distancepos_po after it calibrates
+				testbool := TRUE;
+				HomeCase := 0;	//back to the start
+		90://reset to default or?
+		
+	END_CASE *)]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="InLimits" Id="{a0d78979-9ebe-4e24-ad92-d3fa7258d633}">
+      <Declaration><![CDATA[METHOD PUBLIC InLimits : BOOL
+VAR_INPUT
+	Req	: REAL;	//reqested degree or position from abs move to be evaluated for limits
+END_VAR
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[//only valid after homing
+InLimits := TRUE;
+IF IN.SWLimit_Hi_CI <=0 OR IN.SWLimit_Lo_CI >0 THEN		//check this (may need to have a neg hi at some point)
+	//message to say no limits are set
+	Out.Error2Msg_VO := 'No limits are set in CI settings';
+	InLimits :=FALSE;	
+END_IF
+IF Req <= IN.SWLimit_Hi_CI AND Req >= IN.SWLimit_Lo_CI THEN
+	InLimits := TRUE;
+	ELSE
+		InLimits :=FALSE;
+		Out.Error2Msg_VO := 'Requested move is outside of software limits';
+END_IF
+
+]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="Jog" Id="{e7c293cb-c56e-410f-b87f-ac0921aae912}">
+      <Declaration><![CDATA[METHOD PUBLIC Jog : BOOL
+VAR_INPUT
+END_VAR
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[
+//add software limits check this
+CASE JogCase OF 
+	0:	//Main Jog Sequence [Also stops movement]
+		IF JogSlow_VI THEN AltspeedReq :=1; ELSE AltSpeedReq :=0;   END_IF
+		
+		IF JogExecute_VI AND Out.Homed_PO =1 AND SWLimitStatus=TRUE THEN	//if last move is done then allow for manual increment also required to be at home //check sensor check
+			IF IN.Limit_NC_NO_CI = 0 THEN	//NC limit switch configuration
+				IF bHigh_FI AND bLow_FI THEN //set direction via hmi unless on a limit switch then default to locateposition()
+					IF CW_VI = 1 	THEN	CW := 1; 	ELSE CW:=0; 	END_IF
+					IF bhigh_fI = 0	THEN 	CW:=0; 		END_IF
+					IF bLow_FI = 0 	THEN 	CW:=1; 		END_IF
+				END_IF
+			ELSE	//NO limit switch configuration
+				IF bHigh_FI =0 AND bLow_FI  = 0 THEN //set direction via hmi unless on a limit switch then default to locateposition()
+					IF CW_VI = 1 	THEN	CW := 1; 	ELSE CW:=0; 	END_IF
+					IF bhigh_fI = 1	THEN 	CW:=0; 		END_IF
+					IF bLow_FI = 1 	THEN 	CW:=1; 		END_IF
+				END_IF
+			END_IF
+			IF AltspeedReq THEN			// slowjog if altspeed is requested and wait for case 60
+				IF AltspeedCase = 60 THEN
+					SendPulse();
+				END_IF
+			ELSE
+					SendPulse();		//send pulse for reg speed jog
+			END_IF
+		ELSIF JogExecute_VI THEN
+				IF ABSEncoder_FI >= ABSHiLimit OR (IN.Limit_NC_NO_CI = 0 AND bHigh_FI =0) OR (IN.Limit_NC_NO_CI = 1 AND bHigh_FI =1)THEN
+					CW := 0;
+					SendPulse();		//send pulse for reg speed jog
+				ELSIF ABSEncoder_FI <= ABSLoLimit OR (IN.Limit_NC_NO_CI = 0 AND bLow_FI =0) OR (IN.Limit_NC_NO_CI = 1 AND bLow_FI =1) THEN
+					CW := 1;					
+					SendPulse();		//send pulse for reg speed jog
+				END_IF
+		ELSE
+			IF	JogExecute_VI  = FALSE THEN		
+				CancelMove();
+				JogCase :=10;
+			END_IF
+		END_IF
+	10:	//go for auto jog reset
+		IF cancelled THEN jogCase :=30; END_IF
+		
+	20: //auto Reset cycle
+		IF InLimits(Out.DistancePos_PO) THEN JogCase :=30; ELSE JogCase:=95;  END_IF
+	30: JogCase :=31; //10 scan delay
+	31: JogCase :=32;
+	32:	JogCase :=33;
+	33: JogCase :=34;
+	34: JogCase :=35;
+	35: JogCase :=36;
+	36: JogCase :=37;
+	37: JogCase := 38;
+	38: JogCase := 39;
+	39: JogCase :=40;
+	40: //send auto jog reset
+		JogReset := 1;
+		JogCase :=50;
+	50: //wait for jog to reset
+		IF JogReset=0 THEN JogCase :=90; END_IF 
+	60:
+	70:
+	80:
+	90: IF JogExecute_VI =TRUE THEN JogCase :=0; END_IF
+	95: //outside of limits
+		if Reset_VI then JogCase:=90; End_if //no autoreset if outside limits
+	
+END_CASE]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="LocatePosition" Id="{797a1674-71a2-4ae8-a498-c111e0d750f7}">
+      <Declaration><![CDATA[METHOD PUBLIC LocatePosition : Bool //determines if sensorcheck is on and working.  Enables movement
+VAR_INPUT
+END_VAR
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[	// Setup the switches for rotational axis.
+IF IN.bIsRotationAxis THEN
+	RotRiseLimSwitch(CLK := bHigh_FI);
+	RotFallLimSwitch(CLK := bHigh_FI);
+	IF IN.Limit_NC_NO_CI = 0 THEN
+		IF RotRiseLimSwitch.Q THEN
+			bSimHigh := TRUE;
+			bSimLow  := TRUE;
+		END_IF
+		IF RotFallLimSwitch.Q THEN
+			IF CW_VI THEN
+				bSimHigh := FALSE;
+				bSimLow  := TRUE;
+			ELSE
+				bSimHigh := TRUE;
+				bSimLow  := FALSE;
+			END_IF
+		END_IF
+	ELSE
+		IF RotRiseLimSwitch.Q THEN
+			bSimHigh := FALSE;
+			bSimLow  := FALSE;
+		END_IF
+		IF RotFallLimSwitch.Q THEN
+			IF CW_VI THEN
+				bSimHigh := TRUE;
+				bSimLow  := FALSE;
+			ELSE
+				bSimHigh := FALSE;
+				bSimLow  := TRUE;
+			END_IF
+		END_IF
+	END_IF
+	
+	bHigh_FI := bSimHigh;
+	bLow_FI  := bSimLow;
+END_IF
+
+
+// Linear axis limit sensors
+(*		bHigh_FI		AT %I*	: 	BOOL;
+		bLow_FI			AT %I*	: 	BOOL;
+		bHome_FI		AT %I*	: 	BOOL;*)
+//NC limit sensor configuration
+IF IN.Limit_NC_NO_CI = 0 THEN	
+	IF bHigh_FI =0 AND bInputBCom_FI =1 AND CW = 1 THEN	//use normally closed sensor and check inputb(-) [applies when trying to move past limit]
+		cancelmove();
+		CW := 0;	//require next move to be in Neg direction or CCW  //manual move will need to be used to get off limit switch check this
+		//message saying that high limit as been exceeded or inputbcom is not connected
+		Out.ErrorMsg_VO := 'High Limit reached, reset and move away from limit';
+	END_IF
+	IF bLow_FI =0 AND bInputBCom_FI = 0 AND CW =0 THEN	//use normally closed sensor and check inputb(-) [applies when trying to move past limit]
+		cancelmove();
+		CW :=1;	//require next move to be in Neg direction or CCW //manual move will need to be used to get off limit switch check this
+		//message saying that Low limit as been exceeded or inputbcom is not connected
+		Out.ErrorMsg_VO := 'Low Limit reached, reset and move away from limit';
+	END_IF
+	//check for abs encoder slip
+	IF bHigh_Fi = 0 THEN
+		IF ABS(ABSEncoder_FI - ABSHiLimit)> 100 THEN
+			Out.Error3Msg_VO := 'Encoder descrepancy at high limit, please confirm no slippage has occured.  Reset encoder calibration in CI settings if needed.';
+		END_IF
+	END_IF
+	IF bLow_FI = 0 THEN
+		IF ABS(ABSEncoder_FI - ABSLoLimit)> 100 THEN
+			Out.Error3Msg_VO := 'Encoder descrepancy at low limit, please confirm no slippage has occured.  Reset encoder calibration in CI settings if needed.';
+		END_IF
+	END_IF
+ELSE
+	//NO limit sensor configuration
+	//additional option to use a N/O sensor if desired....not suggested
+	IF bHigh_FI =1 AND bInputBCom_FI =1 AND CW = 1 THEN	//use normally closed sensor and check inputb(-) [applies when trying to move past limit]
+		cancelmove();
+		CW := 0;	//require next move to be in Neg direction or CCW  //manual move will need to be used to get off limit switch check this
+		//message saying that high limit as been exceeded or inputbcom is not connected
+		Out.ErrorMsg_VO := 'High Limit reached, reset and move away from limit';
+	END_IF
+	IF bLow_FI =1 AND bInputBCom_FI = 0 AND CW =0 THEN	//use normally closed sensor and check inputb(-) [applies when trying to move past limit]
+		cancelmove();
+		CW :=1;	//require next move to be in Neg direction or CCW //manual move will need to be used to get off limit switch check this
+		//message saying that Low limit as been exceeded or inputbcom is not connected
+		Out.ErrorMsg_VO := 'Low Limit reached, reset and move away from limit';
+	END_IF
+	//check for abs encoder slip
+	IF bHigh_Fi = 1 THEN
+		IF ABS(ABSEncoder_FI - ABSHiLimit)> 100 THEN
+			Out.Error3Msg_VO := 'Encoder descrepancy at high limit, please confirm no slippage has occured.  Reset encoder calibration in CI settings if needed.';
+		END_IF
+	END_IF
+	IF bLow_FI = 1 THEN
+		IF ABS(ABSEncoder_FI - ABSLoLimit)> 100 THEN
+			Out.Error3Msg_VO := 'Encoder descrepancy at low limit, please confirm no slippage has occured.  Reset encoder calibration in CI settings if needed.';
+		END_IF
+	END_IF
+END_IF
+IF Out.DistancePos_PO <=In.SWLimit_Hi_CI AND Out.DistancePos_PO >= In.SWLimit_Lo_CI THEN
+	SWLimitStatus := TRUE;
+	OUt.LimitsMsg_VO := '';
+	ELSE
+		SWLimitStatus :=FALSE;
+		OUt.LimitsMsg_VO := 'Not inside Software limits, use super mode to move past overtravel';
+		//add in ability to jog off of limit
+		IF Out.DistancePos_PO >= In.SWLimit_Hi_CI AND CW=1 THEN
+			CancelMove();
+			CW :=0;
+			OUt.LimitsMsg_VO := 'Low SW limit, reset and use super mode to move past overtravel';
+		END_IF
+		IF Out.DistancePos_PO <= In.SWLimit_Lo_CI AND CW=0 THEN
+			CancelMove();
+			CW :=1;
+			OUt.LimitsMsg_VO := 'High SW limit, reset and use super mode to move past overtravel';
+		END_IF
+END_IF]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="MechDrive_CI" Id="{0d7db19c-408a-4503-af65-5431adad457a}">
+      <Declaration><![CDATA[METHOD PUBLIC MechDrive_CI : BOOL
+VAR_INPUT
+END_VAR
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[// 0: motor only(rot), 1: Motor and gear(rot), 2: Motor w/gear and screw(lin), 3: Motor w/screw only(lin), 4: Motor w/gear and pulley(lin),  5: Motor w/pulley(lin), 8: bypass mode
+(*		DistPerMRev_CI		:	INT;	//distance traveled per rev		(Calculate your own pitch and lead w/gearbox combo must set MechDriveType_CI to 8 to bypass internal calc)
+		DegPerMRev_CI		:	INT;	//distance traveled per rev		(Calculate your own pitch and lead w/gearbox combo must set MechDriveType_CI to 8 to bypass internal calc)
+		DisPerFPulley_CI	:	INT;	//distance traveled per rev of final pulley (mm)
+		GearRatio_CI		:	INT;	// GearRatio motor to moving part (XX:1) (gearbox and lead included in calc for vert axis) (use this for gearbox and pulleys as well)
+		Lead_CI				:	INT;	// Lead of Screw if used (mm)			 (gearbox and lead included in calc for vert axis)	
+*)
+
+IF IN.MechDriveType_CI = 2 THEN	//2: Motor w/gear and screw(lin)
+	DistPerMRev := IN.Lead_CI/IN.GearRatio_CI;	//driven mech ex 4mm/40 = .1mm per rev
+	Out.MechTypeMsg_VO := 'Motor w/gear ratio and screw - no Degrees available [no rotary by default]';
+	IF IN.GearRatio_CI <=0 OR IN.Lead_CI <=0 THEN
+		isconfigured :=0;
+		Out.MechTypeMsg_VO := 'GearRatio_CI or Lead_CI not configured please configure to continue';
+	END_IF
+END_IF
+
+IF IN.MechDriveType_CI = 3 THEN	//3: Motor w/screw only(lin)
+	DistPerMRev := IN.Lead_CI;		//driven mech ex 4mm = 4mm per rev
+	Out.MechTypeMsg_VO := 'Motor w/screw - no Degrees available [no rotary by default]';
+	IF IN.Lead_CI <=0 THEN
+		isconfigured :=0;
+		Out.MechTypeMsg_VO := 'Lead_CI not configured please configure to continue';
+	END_IF
+END_IF
+
+IF IN.MechDriveType_CI = 4 THEN	//4: Motor w/gear and pulley(lin),
+	DistPerMRev := IN.DisPerFPulley_CI/IN.GearRatio_CI;	//pulley circumference (20t at10 ~ 200mm per fin rev/gear ratio (40) = 5mm/motor rev
+	Out.MechTypeMsg_VO := 'Motor w/gear ratio and pulley [no Degree used by default (linear pulley drive) if a rotary either use bypass or use type 1 and include pulley in gear ratio]';
+	IF IN.GearRatio_CI <=0 OR IN.DisPerFPulley_CI <=0 THEN
+		isconfigured :=0;
+		Out.MechTypeMsg_VO := 'GearRatio_CI or DisPerFPulley_CI not configured please configure to continue';
+	END_IF
+END_IF
+
+IF IN.MechDriveType_CI = 5 THEN	//5: Motor w/pulley(lin);
+	DistPerMRev := IN.DisPerFPulley_CI;	//pulley circumference (20t at10 ~ 200mm per fin rev/gear ratio (40) = 5mm/motor rev
+	Out.MechTypeMsg_VO := 'Motor w/pulley [no Degree used by default (linear pulley drive) if a rotary either use bypass or use type 1 and include pulley in gear ratio]';
+	IF IN.DisPerFPulley_CI <=0 THEN
+		isconfigured :=0;
+		Out.MechTypeMsg_VO := 'DisPerFPulley_CI not configured please configure to continue';
+	END_IF
+END_IF
+
+IF IN.MechDriveType_CI = 8 THEN	//8 mechdrivetype is bypassed and is set via DistPerMRev_CI or DegPerMRev_CI;
+	DistPerMRev := IN.DistPerMRev_CI;
+	Out.MechTypeMsg_VO := 'MechDriveType is bypassed - use DegPerMRev_CI or DistPerMRev_CI';
+	IF IN.DistPerMRev_CI <=0  THEN
+		isconfigured :=0;
+		Out.MechTypeMsg_VO := 'DistPerMRev_CI not configured please configure to continue';
+	END_IF
+END_IF
+
+IF IN.InputFilter_CI <=0 THEN
+	isconfigured :=0;
+	Out.ConfigMSG_VO := 'Input filter not configured, please check InputFilter_CI and clearpath motor settings';
+END_IF
+
+//linear axis
+DisPerPulse := (DistPerMRev*IN.cntpulseSet_CI/32000);	//check this (Likely not a correct calc)
+isConfigured :=1;	//sets configuration to true so that this block only runs once]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="MoveAbsLin" Id="{2a8a8909-0eb5-487c-9340-48cb0212911b}">
+      <Declaration><![CDATA[METHOD PUBLIC MoveAbsLin : BOOL
+VAR_INPUT
+END_VAR
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[IF Out.Homed_PO THEN
+	CASE PositionCase OF
+		0:
+			IF ABS(out.DistancePos_PO-LastDistanceposReq) < In.MoveABSTol_CI THEN 
+				Out.InTargetPosition:=1; ELSE Out.InTargetPosition:=0; 
+			END_IF
+			PositionCase :=10;
+		10: PositionCase :=20;
+		20: PositionCase :=30;
+		30: PositionCase :=40;
+		40: PositionCase :=50;
+		50: PositionCase :=90;
+		90: PositionCase :=0;
+	END_CASE
+	IF ABS(VEReq - Out.DistancePos_PO) < In.MoveABSTol_CI THEN
+		Out.InMPos :=1; ELSE Out.InMPos:=0;
+	END_IF
+	IF bMoveTrig.Q THEN Out.InMPos :=0; END_IF //Set the MPos to false after move command
+	CASE DisToGoCase OF
+		0:	//Readyto Take Command
+			IF ABS(out.DistancePos_PO-Out.ExpDistancePos_PO) < In.MoveABSTol_CI THEN Out.InPosition:=1; END_IF	//check if current pos is within tolerance
+			IF Out.InPosition THEN Out.ReadyForMove_PO :=1; END_IF		//Only ready if in position
+			IF Out.ReadyForMove_PO THEN
+				IF bMove_PI AND InLimits(DistancePosReq_PI)THEN  //If move is within set limits and called in Prog then execute move
+					
+					DisToGoCase :=10;
+					//set MCode Received Bit [Confirm acted in end case] (this is important for aux axis in cnc VE Variable calls)
+				END_IF
+			END_IF
+		10: //check what quePulseDistance should be and set it
+			IF bPresetMoveTrigger THEN
+				PulsesToSend := REAL_TO_INT((DistancePosReq_PI - Out.DistancePos_PO) * 1.5); //Gets number of pulses to send When moving to set position.
+			ELSE
+				PulsesToSend := REAL_TO_INT((DistancePosReq_PI - Out.DistancePos_PO)/In.DisPerPulse_CI); //Gets number of pulses to send
+			END_IF
+			IF PulsesToSend >0 THEN CWABS:=1; ELSE CWABS:=0; END_IF 	//Sets direction for pulses (pos CW[true] neg CW[False]
+			bMove_PI :=0;	//Set Req back to false
+			LastDistancePosReq := DistancePosReq_PI; //set for target
+			Out.ReadyForMove_PO:=0;	//set busy with abs move
+			DisToGoCase :=20;
+		20: //set the if homed statement for direction control set that here and move to next case
+			IF CWABS THEN CW:=1; ELSE CW:=0; END_IF	//Check abs direction each round of pulse send
+			IF ABS(PulsesToSend) >0 THEN 
+				PulsesEnabled:=1; 
+			ELSE 	
+				PulsesEnabled :=0;
+				DisToGoCase :=30; //if no more pulses move on to case 30 to check the location toleranceS
+					// JOSEPHBARTONCHANGE3-28-2023 Reset bPresetMoveTrigger to FALSE, because the move has ended, so no more preset move.
+				IF bPresetMoveTrigger THEN
+					bPresetMoveTrigger := FALSE;
+				END_IF
+				
+			END_IF	//if any pos or neg pulses then enable pulses
+			Out.InPosition :=0;
+			IF PulsesEnabled =1 AND Stop_PI = 0 AND EnableOut_FO =1 AND CW = bInputBCom_FI THEN	//check for the motor being on before incrementing the distancepos from disreq	
+				//if inputA is hi then turn off (takes 2 cycles to output an increment at cp motor)
+				IF CW = CWABS THEN
+					SendPulse();	
+				ELSE //Message CW Not equal CWABS
+						CancelMove();
+						Reset_VI := TRUE;
+				END_IF	
+			ELSE
+				error := 5; //check the inputbcom_FI feedback
+			END_IF	
+			//if input filter of clearpath is too high sometimes these pulses will not register (needed to maintain ability to chain moves)  Otherwise can use asg and movedone
+		30: //count pulses and and when enough pulses set pulses(rounded) not enabled set moving tag
+			IF ABS(out.DistancePos_PO-DistancePosReq_PI) < In.MoveABSTol_CI THEN
+				Out.InPosition:=1; Out.ABSMoveMsg_VO:='In Position';//Position Reached flag and msg
+				DisToGoCase := 40;
+				ELSE DisToGoCase :=99; //error
+			END_IF
+			DisToGoCase :=40;
+		40: //add a few scan frames to allow inposition and intarget to be bypassed
+			DisToGoCase:=41;
+		41:	DisToGoCase:=42;
+		42:	DisToGoCase:=43;
+		43:	DisToGoCase:=44;
+		44:	// ready to receive next quedistance
+			Out.ReadyForMove_PO :=1;
+			//Send MCode confirmation to true
+			DisToGoCase:=0;
+	END_CASE
+
+END_IF
+]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="MoveDone" Id="{66c3ad4d-89fb-49db-ba17-0568b2f95b61}">
+      <Declaration><![CDATA[METHOD PUBLIC MoveDone : BOOL
+VAR_INPUT
+END_VAR
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[//ppr setting of hlfb is required
+(*movecomplete is set either when pulsecount lines up exactly or if pulseque is empty and pulsecount is within tolerance*)
+	IF Out.DistancePos_PO = Out.ExpDistancePos_PO  THEN	// (check this - add a tolerance here)
+		MoveComplete :=1; 
+		MoveDone := TRUE;
+		busy :=0;			//set busy to zero (these are possibly interchangable until further code added) check this
+		ELSE
+			MoveDone :=FALSE;
+		//is movedone() not completed check this
+		//Add in MOVEDONE:=True; check this
+	END_IF
+	//movecomplete set for absolute move ppr tolerance
+	]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="Reset" Id="{031403e7-9502-4b5f-9108-764e1335e978}">
+      <Declaration><![CDATA[METHOD PUBLIC Reset : BOOL
+VAR_INPUT
+END_VAR
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[//delays the turning off of reset so that it sends a full reset instead of an altspeed request
+CASE ResetCase OF
+	0: 
+		(*Original section below for manual reset *)
+		IF reset_VI =1 OR JogReset=1 THEN //reset button or auto jog reset [see jog method]
+		EnableOut_FO :=0;	//Turn off to reset (power on will finish reset)
+		Cancelled :=0;	//reset the cancelled move bit
+		busy :=0;	// check this (is reseting busy needed?)
+		DisToGoCase:=0;
+		bMove_PI:=0;
+		ResetCase :=10;
+		OUt.MechTypeMsg_VO 		:= '';		
+		Out.ConfigMSG_VO		:= '';		
+		Out.ErrorMsg_VO			:= '';	
+		Out.Error2Msg_VO		:= '';	
+		Out.Error3Msg_VO		:='';		
+		Out.Error4Msg_VO 		:='';
+		Out.HomeMsg_VO 			:='';				
+		OUt.LimitsMsg_VO		:='';	
+		Out.ABSMoveMsg_VO		:='';
+		OUt.SuperJogMsg_VO		:='';
+		Out.DisToGoMsg_VO		:='';
+		Out.CanceledMsg_VO		:='';
+		Out.ModeMsg_VO			:='';
+		LastDistanceposReq := Out.DistancePos_PO; //get rid of req diff from curr pos
+		END_IF
+		(*original section above for manual reset *)
+	10: ResetCase:=20;
+	20: ResetCase:=30;
+	30: ResetCase:=40;
+	40: ResetCase:=50;
+	50: ResetCase:=60;
+	60: ResetCase:=70;
+	70: ResetCase:=80;
+	80: ResetCase:=90;
+	90: 
+		ResetCase:=0;
+		Reset_Vi:=0;
+		JogReset:=0;
+	
+END_CASE
+//reset by turning power off and then on]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="SendPulse" Id="{b9cc931d-847f-4545-b698-3a7d9b6c1611}">
+      <Declaration><![CDATA[METHOD PUBLIC SendPulse : BOOL
+VAR_INPUT
+END_VAR
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[//got rid of 'and busy =0'
+IF Stop_PI = 0  AND EnableOut_FO =1 AND CW = bInputBCom_FI THEN	//check for the motor being on before incrementing the distancepos from disreq	
+	IF InputAOut_FO =1  THEN 
+		InputAOut_FO := 0;
+	ELSE 
+		IF AltSpeedReq THEN
+			IF AltspeedCase =60 THEN
+				InputAOut_FO :=1;		//else turn true and subtract increment counter
+				AltspeedCase :=0;	//reset altspeed
+				IF CW =1 THEN Out.ExpDistancePos_PO := Out.ExpDistancePos_PO +1; ELSE Out.ExpDistancePos_PO := Out.ExpDistancePos_PO - 1; END_IF
+				//commenting out while testing absencoder
+			END_IF
+		ELSE
+			InputAOut_FO :=1;		//else turn true and subtract increment counter
+			IF CW =1 THEN Out.ExpDistancePos_PO := Out.ExpDistancePos_PO +1; ELSE Out.ExpDistancePos_PO := Out.ExpDistancePos_PO - 1; END_IF
+			//commenting out while testing absencoder
+		END_IF
+		MoveComplete :=0;		//set movedone to zero and await move complete
+		busy		 :=1;		//set status to busy until move complete
+	END_IF	
+ELSE
+	//InputAOut_FO := 0;		//no trigger if stopped or direction feedback failed or if motor enable is off
+	//Message Saying Move is in progress
+		
+END_IF]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="StopMove" Id="{27383576-f67e-4a1b-99bd-85f8833e110a}">
+      <Declaration><![CDATA[METHOD StopMove : BOOL
+VAR_INPUT
+END_VAR
+(*
+	JOSEPHBARTONCHANGE3-23-2023
+	This method is to stop motor movement without canceling the entire process.
+*)]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[
+CASE stopCase OF
+	0:
+		IF bStopMove THEN
+			EnableOut_FO 			:= 0;						//only way to clear out overstacked increment calls is to turn enable off and then on
+			Out.ExpDistancePos_PO 	:= Out.DistancePos_PO; 		//change distancePOs_PO to float if needed
+			DistancePosReq_PI  		:= Out.DistancePos_PO;		// get rid of any requestd move during cancel (must recall it after cancel)
+			DisToGoCase 			:= 0;						// Remove the excess distances
+			PulsesToSend 			:= 0;						// Romeve pulses from the pulse buffer
+			bMove_PI 				:= 0;						// no move
+			AltSpeedReq 			:= FALSE;					// no altspeed
+			Out.Error4Msg_VO 		:= 'Motor Move Stopped';	// debugging line to show movement stopped using this function.
+			InputAOut_FO := 0;
+			MoveComplete := TRUE;
+			
+			stopCase := stopCase + 10;
+		END_IF
+		
+		
+	// Cycle Buffering like jake did.
+	// Not sure if you have to do MoveComplete := TRUE every cycle, but Just In Case.
+	10: stopCase := stopCase + 10; EnableOut_FO 	:= 0; InputAOut_FO := 0;
+	20: stopCase := stopCase + 10; EnableOut_FO 	:= 0; InputAOut_FO := 0;
+	30: stopCase := stopCase + 10; EnableOut_FO 	:= 0; InputAOut_FO := 0;
+	40: stopCase := stopCase + 10; EnableOut_FO 	:= 0; InputAOut_FO := 0;
+	50: stopCase := stopCase + 10; EnableOut_FO 	:= 0; InputAOut_FO := 0;
+	60: stopCase := stopCase + 10; EnableOut_FO 	:= 0; InputAOut_FO := 0; 
+	70: stopCase := stopCase + 10; EnableOut_FO 	:= 0; InputAOut_FO := 0;
+	80: stopCase := stopCase + 10; EnableOut_FO 	:= 0; InputAOut_FO := 0;
+	90: stopCase := stopCase + 10; EnableOut_FO 	:= 0; InputAOut_FO := 0;
+	
+	100: // Reset Case
+		MoveComplete := TRUE;
+		IF GVL_SAF.DeadmanEnable THEN EnableOut_FO := 1; END_IF		// Re-enable motor to hold motors that are not on a gearbox.
+		InputAOut_FO := 0;
+		
+		IF NOT bStopMove THEN // Reset when ready to not stop.
+			stopCase := 0;
+		END_IF
+		
+END_CASE
+
+]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="SuperJog" Id="{6aa0fb9d-f3c2-49e1-ba96-6fac3af734de}">
+      <Declaration><![CDATA[METHOD PUBLIC SuperJog : BOOL
+VAR_INPUT
+END_VAR
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[//using this mode will disable the two sensor safety check for manual manual mode
+//homing is not required to use this and as such should be used with caution
+//if not 2 sensors on and not in super mode then no movement allowed
+	
+	//message : at least one sensor is down please check sensors.  if movement is needed enter supermanual mode
+	
+//else  allow manual mode  even if not all sensors are working
+	//message: you are in supermanual mode and will bypass anti collision devices.  please take caution
+//add software limits check this
+
+//add software limits check this
+CASE SuperJogCase OF 
+	0:	//Main Jog Sequence [Also stops movement]
+		IF JogSlow_VI THEN AltspeedReq :=1; ELSE AltSpeedReq :=0;   END_IF
+			
+		IF SuperJogExecute_VI  THEN	//if last move is done then allow for manual increment also required to be at home //check sensor check
+			(*IF IN.Limit_NC_NO_CI = 0 THEN	//NC limit switch configuration
+				IF bHigh_FI AND bLow_FI THEN //set direction via hmi unless on a limit switch then default to locateposition()
+					IF CW_VI = 1 	THEN	CW := 1; 	ELSE CW:=0; 	END_IF
+					IF bhigh_fI = 0	THEN 	CW:=0; 		END_IF
+					IF bLow_FI = 0 	THEN 	CW:=1; 		END_IF
+				END_IF
+				ELSE	//NO limit switch configuration
+					IF bHigh_FI =0 AND bLow_FI  = 0 THEN //set direction via hmi unless on a limit switch then default to locateposition()
+					IF CW_VI = 1 	THEN	CW := 1; 	ELSE CW:=0; 	END_IF
+					IF bhigh_fI = 1	THEN 	CW:=0; 		END_IF
+					IF bLow_FI = 1 	THEN 	CW:=1; 		END_IF
+				END_IF
+			END_IF*)
+			IF CW_VI = 1 	THEN	CW := 1; 	ELSE CW:=0; 	END_IF
+			IF AltspeedReq THEN			// slowjog if altspeed is requested and wait for case 60
+				IF AltspeedCase = 60 THEN
+					SendPulse();
+					
+				END_IF
+				ELSE
+					SendPulse();		//send pulse for reg speed jog
+			END_IF
+			ELSE
+				IF	SuperJogExecute_VI  = FALSE THEN		
+					CancelMove();
+					SuperJogCase :=10;
+				END_IF
+		END_IF
+	10:	//
+		IF SuperJogExecute_VI =TRUE THEN SuperJogCase :=0; END_IF
+		
+	
+END_CASE]]></ST>
+      </Implementation>
+    </Method>
+    <LineIds Name="ClearpathPositionABS">
+      <LineId Id="2508" Count="4" />
+      <LineId Id="2747" Count="0" />
+      <LineId Id="2782" Count="0" />
+      <LineId Id="2748" Count="0" />
+      <LineId Id="2783" Count="2" />
+      <LineId Id="2787" Count="0" />
+      <LineId Id="2789" Count="3" />
+      <LineId Id="2795" Count="0" />
+      <LineId Id="2793" Count="0" />
+      <LineId Id="2796" Count="0" />
+      <LineId Id="2746" Count="0" />
+      <LineId Id="2513" Count="1" />
+      <LineId Id="3626" Count="1" />
+      <LineId Id="2781" Count="0" />
+      <LineId Id="2520" Count="2" />
+      <LineId Id="2529" Count="1" />
+      <LineId Id="3095" Count="0" />
+      <LineId Id="2531" Count="1" />
+      <LineId Id="3100" Count="0" />
+      <LineId Id="3534" Count="0" />
+      <LineId Id="3423" Count="0" />
+      <LineId Id="3435" Count="0" />
+      <LineId Id="3101" Count="0" />
+      <LineId Id="3436" Count="0" />
+      <LineId Id="3319" Count="0" />
+      <LineId Id="3437" Count="0" />
+      <LineId Id="3426" Count="0" />
+      <LineId Id="3425" Count="0" />
+      <LineId Id="3427" Count="1" />
+      <LineId Id="3432" Count="0" />
+      <LineId Id="3430" Count="0" />
+      <LineId Id="3429" Count="0" />
+      <LineId Id="3098" Count="0" />
+      <LineId Id="3196" Count="0" />
+      <LineId Id="3424" Count="0" />
+      <LineId Id="2533" Count="0" />
+      <LineId Id="2788" Count="0" />
+      <LineId Id="2536" Count="1" />
+      <LineId Id="2541" Count="0" />
+      <LineId Id="3823" Count="0" />
+    </LineIds>
+    <LineIds Name="ClearpathPositionABS.ABSEncoder">
+      <LineId Id="6" Count="0" />
+      <LineId Id="13" Count="0" />
+      <LineId Id="76" Count="0" />
+      <LineId Id="39" Count="0" />
+      <LineId Id="14" Count="0" />
+      <LineId Id="63" Count="0" />
+      <LineId Id="15" Count="1" />
+      <LineId Id="50" Count="1" />
+      <LineId Id="17" Count="0" />
+      <LineId Id="52" Count="1" />
+      <LineId Id="18" Count="1" />
+      <LineId Id="21" Count="0" />
+      <LineId Id="25" Count="2" />
+      <LineId Id="47" Count="0" />
+      <LineId Id="42" Count="0" />
+      <LineId Id="28" Count="1" />
+      <LineId Id="31" Count="0" />
+      <LineId Id="43" Count="0" />
+      <LineId Id="48" Count="0" />
+      <LineId Id="32" Count="1" />
+      <LineId Id="35" Count="0" />
+      <LineId Id="49" Count="0" />
+      <LineId Id="36" Count="1" />
+      <LineId Id="59" Count="0" />
+    </LineIds>
+    <LineIds Name="ClearpathPositionABS.AltSpeed">
+      <LineId Id="6" Count="1" />
+      <LineId Id="5" Count="0" />
+      <LineId Id="9" Count="0" />
+      <LineId Id="8" Count="0" />
+      <LineId Id="78" Count="0" />
+      <LineId Id="50" Count="0" />
+      <LineId Id="79" Count="0" />
+      <LineId Id="81" Count="0" />
+      <LineId Id="80" Count="0" />
+      <LineId Id="10" Count="0" />
+      <LineId Id="29" Count="0" />
+      <LineId Id="43" Count="0" />
+      <LineId Id="12" Count="0" />
+      <LineId Id="75" Count="0" />
+      <LineId Id="66" Count="0" />
+      <LineId Id="15" Count="0" />
+      <LineId Id="34" Count="0" />
+      <LineId Id="45" Count="0" />
+      <LineId Id="17" Count="0" />
+      <LineId Id="36" Count="0" />
+      <LineId Id="46" Count="0" />
+      <LineId Id="19" Count="0" />
+      <LineId Id="38" Count="0" />
+      <LineId Id="47" Count="0" />
+      <LineId Id="21" Count="0" />
+      <LineId Id="40" Count="0" />
+      <LineId Id="48" Count="0" />
+      <LineId Id="53" Count="0" />
+      <LineId Id="52" Count="0" />
+      <LineId Id="76" Count="1" />
+      <LineId Id="82" Count="0" />
+      <LineId Id="101" Count="0" />
+      <LineId Id="85" Count="14" />
+      <LineId Id="103" Count="15" />
+      <LineId Id="102" Count="0" />
+      <LineId Id="84" Count="0" />
+      <LineId Id="28" Count="0" />
+    </LineIds>
+    <LineIds Name="ClearpathPositionABS.CancelMove">
+      <LineId Id="18" Count="2" />
+      <LineId Id="29" Count="0" />
+      <LineId Id="41" Count="0" />
+      <LineId Id="45" Count="2" />
+      <LineId Id="31" Count="0" />
+      <LineId Id="30" Count="0" />
+      <LineId Id="32" Count="0" />
+      <LineId Id="21" Count="0" />
+      <LineId Id="36" Count="0" />
+      <LineId Id="23" Count="0" />
+      <LineId Id="5" Count="0" />
+    </LineIds>
+    <LineIds Name="ClearpathPositionABS.Enable">
+      <LineId Id="22" Count="1" />
+      <LineId Id="48" Count="2" />
+      <LineId Id="24" Count="0" />
+      <LineId Id="60" Count="0" />
+      <LineId Id="25" Count="0" />
+      <LineId Id="40" Count="0" />
+      <LineId Id="42" Count="0" />
+      <LineId Id="27" Count="2" />
+      <LineId Id="54" Count="2" />
+      <LineId Id="30" Count="1" />
+      <LineId Id="18" Count="0" />
+    </LineIds>
+    <LineIds Name="ClearpathPositionABS.Error">
+      <LineId Id="6" Count="0" />
+      <LineId Id="5" Count="0" />
+    </LineIds>
+    <LineIds Name="ClearpathPositionABS.Home">
+      <LineId Id="289" Count="0" />
+      <LineId Id="284" Count="1" />
+      <LineId Id="296" Count="0" />
+      <LineId Id="287" Count="1" />
+      <LineId Id="295" Count="0" />
+      <LineId Id="286" Count="0" />
+      <LineId Id="391" Count="1" />
+      <LineId Id="403" Count="6" />
+      <LineId Id="472" Count="0" />
+      <LineId Id="475" Count="3" />
+      <LineId Id="486" Count="0" />
+      <LineId Id="479" Count="0" />
+      <LineId Id="414" Count="1" />
+      <LineId Id="480" Count="5" />
+      <LineId Id="420" Count="1" />
+      <LineId Id="428" Count="0" />
+      <LineId Id="437" Count="30" />
+      <LineId Id="402" Count="0" />
+      <LineId Id="291" Count="0" />
+      <LineId Id="302" Count="88" />
+      <LineId Id="301" Count="0" />
+    </LineIds>
+    <LineIds Name="ClearpathPositionABS.InLimits">
+      <LineId Id="24" Count="3" />
+      <LineId Id="52" Count="0" />
+      <LineId Id="28" Count="1" />
+      <LineId Id="43" Count="3" />
+      <LineId Id="53" Count="0" />
+      <LineId Id="47" Count="0" />
+      <LineId Id="60" Count="0" />
+      <LineId Id="41" Count="0" />
+    </LineIds>
+    <LineIds Name="ClearpathPositionABS.Jog">
+      <LineId Id="143" Count="0" />
+      <LineId Id="40" Count="0" />
+      <LineId Id="7" Count="0" />
+      <LineId Id="203" Count="0" />
+      <LineId Id="227" Count="0" />
+      <LineId Id="235" Count="0" />
+      <LineId Id="210" Count="0" />
+      <LineId Id="241" Count="0" />
+      <LineId Id="211" Count="4" />
+      <LineId Id="242" Count="0" />
+      <LineId Id="244" Count="3" />
+      <LineId Id="243" Count="0" />
+      <LineId Id="240" Count="0" />
+      <LineId Id="228" Count="1" />
+      <LineId Id="231" Count="3" />
+      <LineId Id="230" Count="0" />
+      <LineId Id="217" Count="0" />
+      <LineId Id="284" Count="0" />
+      <LineId Id="283" Count="0" />
+      <LineId Id="293" Count="0" />
+      <LineId Id="285" Count="0" />
+      <LineId Id="282" Count="0" />
+      <LineId Id="301" Count="0" />
+      <LineId Id="286" Count="0" />
+      <LineId Id="281" Count="0" />
+      <LineId Id="219" Count="1" />
+      <LineId Id="222" Count="0" />
+      <LineId Id="221" Count="0" />
+      <LineId Id="209" Count="0" />
+      <LineId Id="205" Count="0" />
+      <LineId Id="226" Count="0" />
+      <LineId Id="223" Count="0" />
+      <LineId Id="251" Count="0" />
+      <LineId Id="256" Count="0" />
+      <LineId Id="252" Count="0" />
+      <LineId Id="261" Count="8" />
+      <LineId Id="253" Count="0" />
+      <LineId Id="271" Count="0" />
+      <LineId Id="270" Count="0" />
+      <LineId Id="254" Count="0" />
+      <LineId Id="272" Count="0" />
+      <LineId Id="255" Count="0" />
+      <LineId Id="257" Count="3" />
+      <LineId Id="276" Count="0" />
+      <LineId Id="208" Count="0" />
+      <LineId Id="204" Count="0" />
+    </LineIds>
+    <LineIds Name="ClearpathPositionABS.LocatePosition">
+      <LineId Id="222" Count="0" />
+      <LineId Id="218" Count="0" />
+      <LineId Id="225" Count="1" />
+      <LineId Id="220" Count="0" />
+      <LineId Id="223" Count="0" />
+      <LineId Id="227" Count="0" />
+      <LineId Id="229" Count="0" />
+      <LineId Id="228" Count="0" />
+      <LineId Id="233" Count="1" />
+      <LineId Id="236" Count="0" />
+      <LineId Id="238" Count="0" />
+      <LineId Id="237" Count="0" />
+      <LineId Id="239" Count="0" />
+      <LineId Id="241" Count="0" />
+      <LineId Id="240" Count="0" />
+      <LineId Id="235" Count="0" />
+      <LineId Id="224" Count="0" />
+      <LineId Id="244" Count="11" />
+      <LineId Id="242" Count="1" />
+      <LineId Id="230" Count="2" />
+      <LineId Id="221" Count="0" />
+      <LineId Id="219" Count="0" />
+      <LineId Id="56" Count="0" />
+      <LineId Id="59" Count="0" />
+      <LineId Id="63" Count="1" />
+      <LineId Id="62" Count="0" />
+      <LineId Id="53" Count="0" />
+      <LineId Id="96" Count="0" />
+      <LineId Id="60" Count="0" />
+      <LineId Id="65" Count="0" />
+      <LineId Id="67" Count="0" />
+      <LineId Id="72" Count="0" />
+      <LineId Id="77" Count="0" />
+      <LineId Id="66" Count="0" />
+      <LineId Id="69" Count="2" />
+      <LineId Id="73" Count="0" />
+      <LineId Id="78" Count="0" />
+      <LineId Id="68" Count="0" />
+      <LineId Id="116" Count="9" />
+      <LineId Id="115" Count="0" />
+      <LineId Id="97" Count="0" />
+      <LineId Id="82" Count="1" />
+      <LineId Id="85" Count="10" />
+      <LineId Id="84" Count="0" />
+      <LineId Id="104" Count="2" />
+      <LineId Id="108" Count="1" />
+      <LineId Id="107" Count="0" />
+      <LineId Id="111" Count="3" />
+      <LineId Id="110" Count="0" />
+      <LineId Id="184" Count="0" />
+      <LineId Id="129" Count="1" />
+      <LineId Id="138" Count="0" />
+      <LineId Id="131" Count="1" />
+      <LineId Id="137" Count="0" />
+      <LineId Id="135" Count="1" />
+      <LineId Id="134" Count="0" />
+      <LineId Id="139" Count="2" />
+      <LineId Id="133" Count="0" />
+      <LineId Id="142" Count="0" />
+      <LineId Id="144" Count="1" />
+      <LineId Id="143" Count="0" />
+      <LineId Id="100" Count="0" />
+    </LineIds>
+    <LineIds Name="ClearpathPositionABS.MechDrive_CI">
+      <LineId Id="62" Count="6" />
+      <LineId Id="80" Count="1" />
+      <LineId Id="83" Count="1" />
+      <LineId Id="114" Count="2" />
+      <LineId Id="113" Count="0" />
+      <LineId Id="85" Count="2" />
+      <LineId Id="89" Count="1" />
+      <LineId Id="118" Count="2" />
+      <LineId Id="117" Count="0" />
+      <LineId Id="91" Count="2" />
+      <LineId Id="95" Count="1" />
+      <LineId Id="122" Count="2" />
+      <LineId Id="121" Count="0" />
+      <LineId Id="97" Count="2" />
+      <LineId Id="101" Count="1" />
+      <LineId Id="126" Count="2" />
+      <LineId Id="125" Count="0" />
+      <LineId Id="103" Count="2" />
+      <LineId Id="107" Count="1" />
+      <LineId Id="134" Count="2" />
+      <LineId Id="133" Count="0" />
+      <LineId Id="38" Count="0" />
+      <LineId Id="141" Count="0" />
+      <LineId Id="140" Count="0" />
+      <LineId Id="144" Count="0" />
+      <LineId Id="142" Count="1" />
+      <LineId Id="151" Count="1" />
+      <LineId Id="156" Count="0" />
+      <LineId Id="160" Count="0" />
+    </LineIds>
+    <LineIds Name="ClearpathPositionABS.MoveAbsLin">
+      <LineId Id="113" Count="0" />
+      <LineId Id="158" Count="1" />
+      <LineId Id="168" Count="1" />
+      <LineId Id="167" Count="0" />
+      <LineId Id="170" Count="0" />
+      <LineId Id="161" Count="5" />
+      <LineId Id="160" Count="0" />
+      <LineId Id="149" Count="0" />
+      <LineId Id="174" Count="1" />
+      <LineId Id="177" Count="0" />
+      <LineId Id="63" Count="0" />
+      <LineId Id="111" Count="0" />
+      <LineId Id="143" Count="0" />
+      <LineId Id="142" Count="0" />
+      <LineId Id="137" Count="0" />
+      <LineId Id="98" Count="1" />
+      <LineId Id="150" Count="0" />
+      <LineId Id="101" Count="0" />
+      <LineId Id="100" Count="0" />
+      <LineId Id="141" Count="0" />
+      <LineId Id="65" Count="0" />
+      <LineId Id="186" Count="2" />
+      <LineId Id="102" Count="0" />
+      <LineId Id="189" Count="0" />
+      <LineId Id="103" Count="0" />
+      <LineId Id="105" Count="0" />
+      <LineId Id="151" Count="0" />
+      <LineId Id="140" Count="0" />
+      <LineId Id="66" Count="1" />
+      <LineId Id="107" Count="0" />
+      <LineId Id="124" Count="0" />
+      <LineId Id="129" Count="1" />
+      <LineId Id="193" Count="0" />
+      <LineId Id="210" Count="0" />
+      <LineId Id="200" Count="0" />
+      <LineId Id="196" Count="0" />
+      <LineId Id="198" Count="1" />
+      <LineId Id="197" Count="0" />
+      <LineId Id="131" Count="0" />
+      <LineId Id="138" Count="0" />
+      <LineId Id="114" Count="1" />
+      <LineId Id="125" Count="0" />
+      <LineId Id="116" Count="0" />
+      <LineId Id="128" Count="0" />
+      <LineId Id="182" Count="0" />
+      <LineId Id="181" Count="0" />
+      <LineId Id="127" Count="0" />
+      <LineId Id="117" Count="3" />
+      <LineId Id="69" Count="0" />
+      <LineId Id="108" Count="0" />
+      <LineId Id="132" Count="0" />
+      <LineId Id="134" Count="1" />
+      <LineId Id="133" Count="0" />
+      <LineId Id="109" Count="0" />
+      <LineId Id="71" Count="0" />
+      <LineId Id="139" Count="0" />
+      <LineId Id="154" Count="3" />
+      <LineId Id="153" Count="0" />
+      <LineId Id="136" Count="0" />
+      <LineId Id="110" Count="0" />
+      <LineId Id="72" Count="0" />
+      <LineId Id="91" Count="0" />
+      <LineId Id="97" Count="0" />
+      <LineId Id="5" Count="0" />
+    </LineIds>
+    <LineIds Name="ClearpathPositionABS.MoveDone">
+      <LineId Id="19" Count="0" />
+      <LineId Id="49" Count="0" />
+      <LineId Id="6" Count="1" />
+      <LineId Id="42" Count="3" />
+      <LineId Id="36" Count="1" />
+      <LineId Id="5" Count="0" />
+      <LineId Id="52" Count="0" />
+      <LineId Id="28" Count="0" />
+    </LineIds>
+    <LineIds Name="ClearpathPositionABS.Reset">
+      <LineId Id="45" Count="0" />
+      <LineId Id="34" Count="0" />
+      <LineId Id="46" Count="0" />
+      <LineId Id="61" Count="0" />
+      <LineId Id="48" Count="2" />
+      <LineId Id="79" Count="0" />
+      <LineId Id="51" Count="0" />
+      <LineId Id="91" Count="0" />
+      <LineId Id="56" Count="0" />
+      <LineId Id="67" Count="11" />
+      <LineId Id="66" Count="0" />
+      <LineId Id="83" Count="0" />
+      <LineId Id="47" Count="0" />
+      <LineId Id="60" Count="0" />
+      <LineId Id="35" Count="0" />
+      <LineId Id="37" Count="6" />
+      <LineId Id="57" Count="2" />
+      <LineId Id="87" Count="0" />
+      <LineId Id="44" Count="0" />
+      <LineId Id="36" Count="0" />
+      <LineId Id="16" Count="0" />
+    </LineIds>
+    <LineIds Name="ClearpathPositionABS.SendPulse">
+      <LineId Id="24" Count="0" />
+      <LineId Id="6" Count="4" />
+      <LineId Id="20" Count="0" />
+      <LineId Id="11" Count="1" />
+      <LineId Id="28" Count="0" />
+      <LineId Id="32" Count="0" />
+      <LineId Id="13" Count="0" />
+      <LineId Id="22" Count="1" />
+      <LineId Id="27" Count="0" />
+      <LineId Id="33" Count="0" />
+      <LineId Id="21" Count="0" />
+      <LineId Id="14" Count="1" />
+      <LineId Id="17" Count="2" />
+      <LineId Id="26" Count="0" />
+      <LineId Id="25" Count="0" />
+      <LineId Id="5" Count="0" />
+    </LineIds>
+    <LineIds Name="ClearpathPositionABS.StopMove">
+      <LineId Id="39" Count="1" />
+      <LineId Id="46" Count="0" />
+      <LineId Id="69" Count="0" />
+      <LineId Id="55" Count="0" />
+      <LineId Id="47" Count="7" />
+      <LineId Id="44" Count="0" />
+      <LineId Id="71" Count="1" />
+      <LineId Id="70" Count="0" />
+      <LineId Id="73" Count="1" />
+      <LineId Id="57" Count="0" />
+      <LineId Id="78" Count="0" />
+      <LineId Id="58" Count="8" />
+      <LineId Id="68" Count="0" />
+      <LineId Id="67" Count="0" />
+      <LineId Id="79" Count="0" />
+      <LineId Id="81" Count="1" />
+      <LineId Id="89" Count="0" />
+      <LineId Id="75" Count="2" />
+      <LineId Id="56" Count="0" />
+      <LineId Id="45" Count="0" />
+      <LineId Id="41" Count="0" />
+      <LineId Id="24" Count="0" />
+    </LineIds>
+    <LineIds Name="ClearpathPositionABS.SuperJog">
+      <LineId Id="5" Count="0" />
+      <LineId Id="7" Count="0" />
+      <LineId Id="6" Count="0" />
+      <LineId Id="9" Count="1" />
+      <LineId Id="16" Count="0" />
+      <LineId Id="8" Count="0" />
+      <LineId Id="17" Count="0" />
+      <LineId Id="83" Count="0" />
+      <LineId Id="100" Count="19" />
+      <LineId Id="138" Count="0" />
+      <LineId Id="120" Count="17" />
+      <LineId Id="60" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

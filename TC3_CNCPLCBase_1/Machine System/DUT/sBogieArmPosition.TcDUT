@@ -1,0 +1,23 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+  <DUT Name="sBogieArmPosition" Id="{c39bb915-4a40-4420-b1f1-303cb59e8421}">
+    <Declaration><![CDATA[TYPE sBogieArmPosition :
+STRUCT
+	
+	nVertPos  : REAL;
+	nRotPos   : REAL;
+	nClampPos : REAL;
+	
+	nVertTolerance  : USINT := 5;
+	nRotTolerance	: USINT := 3;
+	nClampTolerance : USINT := 2;
+	
+	nVertCatch  : USINT := 75;
+	nRotCatch   : USINT := 40;
+	nClampCatch : USINT := 75;
+	
+END_STRUCT
+END_TYPE
+]]></Declaration>
+  </DUT>
+</TcPlcObject>

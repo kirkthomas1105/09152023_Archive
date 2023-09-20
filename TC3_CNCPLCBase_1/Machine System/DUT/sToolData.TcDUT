@@ -1,0 +1,45 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+  <DUT Name="sToolData" Id="{5a8d598a-77e0-4d7c-a483-5b063a24491a}">
+    <Declaration><![CDATA[TYPE sToolData :
+STRUCT
+	
+	nUniqueMoldID : INT; // The unique identifier for the tool.
+	
+	sCncFilepath : STRING(255);
+	
+	Length 	: INT; // The length of the tool.
+	Height	: INT; // The height of the tool.
+	Width 	: INT; // The width of the tool.
+	
+	Radius1 	 : INT; // The radius of the first end.
+	Radius2 	: INT; // The radius of the second end.
+	
+	EdgeHeight1 : INT; // The edge of the first side.
+	EdgeHeight2 : INT; // The edge of the secord height.
+	
+	FlangeHeight : INT; // The height of the flange.
+	SocketHeight : INT; // The height of the socket.
+	
+	TrenchWidth 	: INT; // The width of the trench.
+	GratingWidth 	: INT; // The width of the grating.
+	
+	RibRequired : INT; // The number of ribs required.
+	RibOffset 	: INT; // The spacing between each rib.
+	RibLength 	: INT; // the length of each rib.
+	
+	TrenchLength 	: INT; // The length of the trench.
+	GratingLength 	: INT; // The length of the grating.
+	
+	FirstRib 	: INT; // The position of the first rib.
+	RibSpacing 	: INT; // The spacing between each rib.
+	
+	Slope : INT; // The slope of the tool.
+	
+	HeaterRecipe : INT; // The recipe of the heater (Unknown).
+	
+END_STRUCT
+END_TYPE
+]]></Declaration>
+  </DUT>
+</TcPlcObject>

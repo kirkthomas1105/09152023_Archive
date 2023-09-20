@@ -1,0 +1,28 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+  <GVL Name="GVL_SAF" Id="{4ae7a02d-ec33-4ccc-b960-b16636622142}">
+    <Declaration><![CDATA[{attribute 'qualified_only'}
+VAR_GLOBAL
+	Estop1a 		AT %Q* : BOOL;
+	Estop1b 		AT %Q* : BOOL;
+	ErrorAcknowledgment AT %Q* : BOOL;
+	Run 			AT %Q* : BOOL;
+	InRun			AT %I* : BOOL;
+	ComErr			AT %I* : BOOL;
+	FbErr			AT %I* : BOOL;
+	EStopReset 		AT %Q* : BOOL;
+	EStopMCR 		AT %I* : BOOL;
+	EStopError 		AT %I* : BOOL;	//error from main estop safety fb block
+	EStopError1		AT %I* : BOOL;	//error from c4 estop safety fb block (same safe inputs as main estop)
+	EstopError2 	AT %I* : BOOL;	//error from c5 estop safety fb block (same safe inputs as main estop)
+	WX_On 			AT %Q* : BOOL;	//plc variable to drive safety outputs for c4 and c5 contactors (wx boxes)
+	EDM_Error_C4 	AT %I* : BOOL;
+	EDM_Error_C5 	AT %I* : BOOL;
+	EStopOK			AT %I* : BOOL;
+	DeadmanEnable	AT %I* : BOOL;  //from C3:SI1
+	
+	//plc flag
+	SafetyOk		AT %I* : BOOL;
+END_VAR]]></Declaration>
+  </GVL>
+</TcPlcObject>

@@ -1,0 +1,393 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+  <POU Name="WX_CP" Id="{9c8cf5a0-2a86-483b-90ac-559cf6887b7a}" SpecialFunc="None">
+    <Declaration><![CDATA[PROGRAM WX_CP
+VAR_INPUT
+		
+	// CPRot 		: ClearpathPosition;
+	WX1				: 	BogieComboWX;
+	WX2				: 	BogieComboWX;
+	WX3				: 	BogieComboWX;
+	WX4				: 	BogieComboWX;
+END_VAR
+
+VAR
+	ResetTrig 	: r_trig;
+	Reset_Req 	: BOOL;
+	testReset	: BOOL;
+	CpTime		: TIME;
+	WX4V_Trig 	: r_trig;		//delays the check for target position for a time M540
+	WX4R_Trig 	: r_trig; 	//delays the check for target position for a time M541
+	WX4C_Trig 	: r_trig;		//delays the check for target position for a time M542
+	WX4F_trig 	: r_trig;		//delays the check for target position for a time M549
+	WX3V_Trig 	: r_trig;		//delays the check for target position for a time M530
+	WX3R_Trig 	: r_trig; 	//delays the check for target position for a time M531
+	WX3C_Trig 	: r_trig;		//delays the check for target position for a time M532
+	WX3F_trig 	: r_trig;		//delays the check for target position for a time M539
+	
+		//HMI Visualization Inputs
+	VI_Selected_Rail 		: INT;
+	VI_Selected_WX 			: INT;
+	VI_Selected_Motion 		: STRING;
+	VI_Selected_Direction	: INT;
+	VI_Stop 				: BOOL;
+	VI_Reset 				: BOOL;
+	VI_ManualModeReq 		: BOOL;
+	VO_Mode 				: BOOL;
+	VI_VertJogExecute 		: BOOL;
+	VI_SuperJogExecute 		: BOOL;
+	VI_JogSlow 				: BOOL;
+	VI_CW 					: BOOL;
+	
+	//HMI Visualization Inputs
+	VO_Selected_Rail 		: INT;
+	VO_Selected_WX 			: INT;
+	VO_Selected_Motion 		: INT;
+	VO_Selected_Direction	: INT;
+
+
+	MDICase_0 		: INT;	//Spray Channel Gcode
+	MDICase_1 		: INT; 	//Roll Channel GCode
+	ClampHomeCase	: INT;
+
+	//CPVert1	: 	ClearpathPositionLinPPR ;
+	BogStart	: BOOL;
+	EnableM		: BOOL;	//motor enable
+
+	Stop 		: BOOL;
+	BeginHoming : BOOL;
+	degReq		: REAL;
+
+	enableTest 	 AT %Q*	: BOOL;
+	BoutTest	 AT %Q* : BOOL;
+	AoutTest	 AT %Q* : BOOL;
+	CPvert2Hi_NO AT %I* : BOOL;
+	CPvert2Lo_NO AT %I* : BOOL;
+
+END_VAR
+VAR PERSISTENT
+	cprot1Hi		: INT;			//software limit high
+	cprot1Lo		: INT;			//software limit low
+	CPVert1Lo		: INT := -125;	//software limit Low
+	CPVert1Hi		: INT := 0;		//software limit high
+	CPVert2Lo		: INT := -125;	//software limit Low
+	CPVert2Hi		: INT := 0;		//software limit high
+	Vert_ATrack5	: REAL;			//track the distance when not homed
+	Vert_BTrack5	: REAL;			//track the distance when not homed
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[ResetTrig(Clk:=WX4.Reset_VI, Q=>);
+CpTime:=T#100MS;
+WX3V_Trig(clk:=WX3.VertInTargetPos_PO);
+WX3R_Trig(clk:=WX3.RotInTargetPos_PO);
+WX3C_Trig(clk:=WX3.ClampInTargetPos_PO);
+WX3F_Trig(clk:=WX3.RotInTargetPos_PO);
+
+IF ResetTrig.Q THEN TestReset:=1; END_IF
+
+//WX1(Mode_PI:= GVL_HMI.Mode, (*Reset_VI:=TestReset,*)VertVE:=myVE_Vars.WX1Vert_Dis_NCtoPLC,RotVE:=myVE_Vars.WX1Rot_Dis_NCtoPLC,ClampVE:=myVE_Vars.WX1Clamp_Dis_NCtoPLC, Vert_A_CI:=GVL_CP.WX1A_CP1_CIn ,Vert_B_CI:=GVL_CP.WX1B_CP1_CIn ,Clamp_A_CI:= GVL_CP.WX1A_CP3_CI,Clamp_B_CI:= GVL_CP.WX1B_CP3_CI ,Rot_A_CI:=GVL_CP.WX1A_CP2_CIn, Rot_B_CI:=GVL_CP.WX1B_CP2_CI, PowerOn_PI:=GVL_HMI.EnableAll,Stop_pi:=stop ,VertSyncTolerance_CI :=20, RotSyncTolerance_CI:=10);
+
+WX2(Mode_PI:= GVL_HMI.Mode, Reset_VI:=GVL_HMI.MCR, VertVE:=myVE_Vars.WX2Vert_Dis_NCtoPLC,RotVE:=myVE_Vars.WX2Rot_Dis_NCtoPLC,ClampVE:=myVE_Vars.WX2Clamp_Dis_NCtoPLC, Vert_A_CI:=GVL_CP.WX2A_CP1_CI ,Vert_B_CI:=GVL_CP.WX2B_CP1_CIn ,Clamp_A_CI:= GVL_CP.WX2A_CP3_CI,Clamp_B_CI:= GVL_CP.WX2B_CP3_CI ,Rot_A_CI:=GVL_CP.WX2A_CP2_CI, Rot_B_CI:=GVL_CP.WX2B_CP2_CI, PowerOn_PI:=GVL_HMI.EnableAll,Stop_pi:=stop ,VertSyncTolerance_CI :=20, RotSyncTolerANce_CI:=10);
+WX3(Mode_PI:= GVL_HMI.Mode, (*Reset_VI:=TestReset,*)VertVE:=myVE_Vars.WX3Vert_Dis_NCtoPLC,RotVE:=myVE_Vars.WX3Rot_Dis_NCtoPLC,ClampVE:=myVE_Vars.WX3Clamp_Dis_NCtoPLC, Vert_A_CI:=GVL_CP.WX3A_CP1_CI ,Vert_B_CI:=GVL_CP.WX3B_CP1_CI ,Clamp_A_CI:= GVL_CP.WX3A_CP3_CI,Clamp_B_CI:= GVL_CP.WX3B_CP3_CI ,Rot_A_CI:=GVL_CP.WX3A_CP2_CI, Rot_B_CI:=GVL_CP.WX3B_CP2_CI, PowerOn_PI:=GVL_HMI.EnableAll,Stop_pi:=stop ,VertSyncTolerance_CI :=20, RotSyncTolerance_CI:=10);
+WX4(Mode_PI:= GVL_HMI.Mode, (*Reset_VI:=TestReset,*)VertVE:=myVE_Vars.WX4Vert_Dis_NCtoPLC,RotVE:=myVE_Vars.WX4Rot_Dis_NCtoPLC,ClampVE:=myVE_Vars.WX4Clamp_Dis_NCtoPLC, Vert_A_CI:=GVL_CP.WX4A_CP1_CI ,Vert_B_CI:=GVL_CP.WX4B_CP1_CI ,Clamp_A_CI:= GVL_CP.WX4A_CP3_CI,Clamp_B_CI:= GVL_CP.WX4B_CP3_CI ,Rot_A_CI:=GVL_CP.WX4A_CP2_CI, Rot_B_CI:=GVL_CP.WX4B_CP2_CI, PowerOn_PI:=GVL_HMI.EnableAll,Stop_pi:=stop ,VertSyncTolerance_CI :=20, RotSyncTolerANce_CI:=10);
+//handle visualiation selection to not have multiple axis selected
+	IF VI_Selected_WX <> 1 THEN WX1.AxisSel_VI:=0; END_IF
+	IF VI_Selected_WX <> 2 THEN WX2.AxisSel_VI:=0; END_IF
+	IF VI_Selected_WX <> 3 THEN WX3.AxisSel_VI:=0; END_IF
+	IF VI_Selected_WX <> 4 THEN WX4.AxisSel_VI:=0; END_IF
+//cprot(In:=GVL_CP.WX4A_CP2_CI,Poweron_PI:=EnableM,Stop_PI:=stop,);
+
+//WX AutoMode
+IF GVL_HMI.Mode = 1 AND PRG_CNCChannelHandler.CNCChannel[0].pChannel^.ActMode = 3  THEN  //change bogstart to a channel based variable for mdi
+	//cancel move or pause move [may want to capture current aux move in future to continue on after hitting start]
+	IF PRG_CNCChannelHandler.CNCChannel[0].pChannel^.ActStateString ='Hold' THEN
+		MDICase_0:=90; //go to stop condition for aux axes in chan[0] during cnc hmi stop command
+	END_IF
+	CASE MDICase_0 OF (* channel[0] spray *)
+	0: //read in VE Variable Requests from MDI Channel
+		IF GVL_HMI.Mode =1 AND PRG_CNCChannelHandler.CNCChannel[0].currentmode = 3 THEN //may add a check bit to look for channel selection [cnc auto, mdi, manual] and to confirm for ch 0
+			//add in all the other WX
+			 //read in variable from Gcode
+				
+			
+			MDICase_0:=10;
+		END_IF
+	10://Move MDI on MCode Click [can be multiple types depending on if line was called togther on Gcode]
+		//WX1
+			IF WX1.VertReadyForMove_PO AND WX1.VertInTargetPos_PO AND GVL_M.M510Latch THEN //if in MDI MODE for CP and on M510 use
+				WX1.VertDisReq_PI 	:= LREAL_TO_INT(myVE_Vars.WX1Vert_Dis_NCtoPLC);
+				WX1.bMoveVert_PI :=1;
+				GVL_M.M510Latch:=0;
+			END_IF
+			(* resync the rot follower if needed via gcode mdi *)
+			IF GVL_M.M519Latch  THEN
+				WX1.bFollowerIdleDisengage :=1;
+				WX1.JogSeparate_VI :=1;
+				WX1.Reset_VI:=1;
+				WX1.RotDegReq_PI := LREAL_TO_INT(WX1.Rot_A.Out.DistancePos_PO);
+				WX1.bMoveRot_PI:=1;
+				GVL_M.M519Latch:=0;
+			END_IF
+			IF WX1.RotReadyForMove_PO AND WX1.RotInTargetPos_PO AND GVL_M.M511Latch THEN
+				WX1.RotDegReq_PI 	:= LREAL_TO_INT(myVe_Vars.WX1Rot_Dis_NCtoPLC);
+				WX1.bMoveRot_PI := 1;
+				GVL_M.M511Latch:=0; 
+			END_IF
+			IF WX1.ClampReadyForMove_PO AND WX1.ClampinTargetPos_PO AND GVL_M.M512Latch THEN
+				WX1.ClampDisReq_PI	:= LREAL_TO_INT(myVe_Vars.WX1Clamp_Dis_NctoPLC);
+				WX1.bMoveClamp_PI :=1;
+				GVL_M.M512Latch:=0;
+			END_IF
+		//WX2
+			IF Wx2.VertReadyForMove_PO AND Wx2.VertInTargetPos_PO AND GVL_M.M520Latch THEN //if in MDI MODE for CP and on M510 use
+				Wx2.VertDisReq_PI 	:= LREAL_TO_INT(myVE_Vars.Wx2Vert_Dis_NCtoPLC);
+				WX2.bMoveVert_PI :=1;
+				GVL_M.M520Latch:=0;
+			END_IF
+			(* resync the rot follower if needed via gcode mdi *)
+			IF GVL_M.M529Latch  THEN
+				WX2.bFollowerIdleDisengage :=1;
+				WX2.JogSeparate_VI :=1;
+				WX2.Reset_VI:=1;
+				WX2.RotDegReq_PI := LREAL_TO_INT(WX2.Rot_A.Out.DistancePos_PO);
+				WX2.bMoveRot_PI:=1;
+				GVL_M.M529Latch:=0;
+			END_IF
+			IF Wx2.RotReadyForMove_PO AND Wx2.RotInTargetPos_PO AND GVL_M.M521Latch THEN
+				WX2.RotDegReq_PI 	:= LREAL_TO_INT(myVe_Vars.WX2Rot_Dis_NCtoPLC);
+				WX2.bMoveRot_PI := 1;
+				GVL_M.M521Latch:=0; 
+			END_IF
+			IF WX2.ClampReadyForMove_PO AND WX2.ClampinTargetPos_PO AND GVL_M.M522Latch THEN
+				WX2.ClampDisReq_PI	:= LREAL_TO_INT(myVe_Vars.WX2Clamp_Dis_NctoPLC);
+				Wx2.bMoveClamp_PI :=1;
+				GVL_M.M522Latch:=0;
+			END_IF
+		//WX3
+			IF WX3.VertReadyForMove_PO AND WX3.VertInTargetPos_PO AND GVL_M.M530Latch  THEN //if in MDI MODE for CP and on M510 use
+				WX3.VertDisReq_PI 	:= LREAL_TO_INT(myVE_Vars.WX3Vert_Dis_NCtoPLC);
+				WX3.bMoveVert_PI :=1;
+				GVL_M.M530Latch:=0;
+			END_IF
+			(* resync the rot follower if needed via gcode mdi *)
+			IF GVL_M.M539Latch  THEN
+				WX3.bFollowerIdleDisengage :=1;
+				WX3.JogSeparate_VI :=1;
+				WX3.Reset_VI:=1;
+				WX3.RotDegReq_PI := LREAL_TO_INT(WX3.Rot_A.Out.DistancePos_PO);
+				WX3.bMoveRot_PI:=1;
+				GVL_M.M539Latch:=0;
+			END_IF
+			IF WX3.RotReadyForMove_PO AND WX3.RotInTargetPos_PO AND GVL_M.M531Latch  THEN
+				WX3.RotDegReq_PI 	:= LREAL_TO_INT(myVe_Vars.WX3Rot_Dis_NCtoPLC);
+				WX3.bMoveRot_PI := 1;
+				GVL_M.M531Latch:=0; 
+			END_IF
+			IF WX3.ClampReadyForMove_PO AND WX3.ClampinTargetPos_PO AND GVL_M.M532Latch THEN
+				WX3.ClampDisReq_PI	:= LREAL_TO_INT(myVe_Vars.WX3Clamp_Dis_NctoPLC);
+				WX3.bMoveClamp_PI :=1;
+				GVL_M.M532Latch:=0;
+			END_IF
+		//WX4
+			IF WX4.VertReadyForMove_PO AND WX4.VertInTargetPos_PO AND GVL_M.M540Latch  THEN //if in MDI MODE for CP and on M510 use
+				WX4.VertDisReq_PI 	:= LREAL_TO_INT(myVE_Vars.WX4Vert_Dis_NCtoPLC);
+				WX4.bMoveVert_PI :=1;
+				GVL_M.M540Latch:=0;
+			END_IF
+			(* resync the rot follower if needed via gcode mdi *)
+			IF GVL_M.M549Latch  THEN
+				WX4.bFollowerIdleDisengage :=1;
+				WX4.JogSeparate_VI :=1;
+				WX4.Reset_VI:=1;
+				WX4.RotDegReq_PI := LREAL_TO_INT(WX4.Rot_A.Out.DistancePos_PO);
+				WX4.bMoveRot_PI:=1;
+				GVL_M.M549Latch:=0;
+			END_IF
+			IF WX4.RotReadyForMove_PO AND WX4.RotInTargetPos_PO AND GVL_M.M541Latch THEN
+				WX4.RotDegReq_PI 	:= LREAL_TO_INT(myVe_Vars.WX4Rot_Dis_NCtoPLC);
+				WX4.bMoveRot_PI := 1;
+				GVL_M.M541Latch:=0; 
+			END_IF
+			IF WX4.ClampReadyForMove_PO AND WX4.ClampinTargetPos_PO AND GVL_M.M542Latch THEN
+				WX4.ClampDisReq_PI	:= LREAL_TO_INT(myVe_Vars.WX4Clamp_Dis_NctoPLC);
+				WX4.bMoveClamp_PI :=1;
+				GVL_M.M542Latch:=0;
+			END_IF
+		//add timer buffer if needed
+		MDICase_0:=11; //go to wait for plc ack
+	11: MDICase_0:=12;
+	12: MDICase_0:=15;
+	15: //Wait for Move to complete before acknowledgme
+	//WX1
+		IF WX1.VertReadyForMove_PO AND WX1.VertInTargetPos_PO THEN
+			CNCSystem.Channel[0].M[510].bState_rw := FALSE; //M510 Ack to CNC - if it was triggered after reaching position
+		END_IF
+		IF WX1.RotReadyForMove_PO AND WX1.RotInTargetPos_PO THEN
+			CNCSystem.Channel[0].M[511].bState_rw := FALSE; //M511 Ack to CNC
+		END_IF
+		IF WX1.ClampReadyForMove_PO AND WX1.ClampInTargetPos_PO THEN
+			CNCSystem.Channel[0].M[512].bState_rw := FALSE; //M512 Ack to CNC
+		END_IF
+		IF ABS (WX1.Rot_A.Out.DistancePos_PO-WX1.Rot_B.Out.DistancePos_PO) <= WX1.RotSyncTolerance_CI THEN 
+			CNCSystem.Channel[0].M[519].bState_rw := FALSE; //M519 Ack to CNC
+			WX1.bFollowerIdleDisengage :=0;
+			WX1.JogSeparate_VI :=0;
+			WX1.Reset_VI:=0;
+		END_IF
+		
+	//WX2
+		IF WX2.VertReadyForMove_PO AND WX2.VertInTargetPos_PO THEN
+			CNCSystem.Channel[0].M[520].bState_rw := FALSE; //M520 Ack to CNC - if it was triggered after reaching position
+		END_IF
+		IF WX2.RotReadyForMove_PO AND WX2.RotInTargetPos_PO THEN
+			CNCSystem.Channel[0].M[521].bState_rw := FALSE; //M521 Ack to CNC
+		END_IF
+		IF WX2.ClampReadyForMove_PO AND WX2.ClampInTargetPos_PO THEN
+			CNCSystem.Channel[0].M[522].bState_rw := FALSE; //M522 Ack to CNC
+		END_IF
+		IF ABS (WX2.Rot_A.Out.DistancePos_PO-WX2.Rot_B.Out.DistancePos_PO) <= WX2.RotSyncTolerance_CI THEN 
+			CNCSystem.Channel[0].M[529].bState_rw := FALSE; //M529 Ack to CNC
+			WX2.bFollowerIdleDisengage :=0;
+			WX2.JogSeparate_VI :=0;
+			WX2.Reset_VI:=0;
+		END_IF
+		
+	//WX3
+		IF WX3.VertReadyForMove_PO AND WX3.VertIn_M_Pos_PO THEN
+			CNCSystem.Channel[0].M[530].bState_rw := FALSE; //M530 Ack to CNC - if it was triggered after reaching position
+		END_IF
+		IF WX3.RotReadyForMove_PO AND WX3.RotIn_M_Pos_PO THEN
+			CNCSystem.Channel[0].M[531].bState_rw := FALSE; //M531 Ack to CNC
+		END_IF
+		IF WX3.ClampReadyForMove_PO AND WX3.ClampIn_M_Pos_PO THEN
+			CNCSystem.Channel[0].M[532].bState_rw := FALSE; //M532 Ack to CNC
+		END_IF
+		IF ABS (WX3.Rot_A.Out.DistancePos_PO-WX3.Rot_B.Out.DistancePos_PO) <= WX3.RotSyncTolerance_CI THEN 
+			CNCSystem.Channel[0].M[539].bState_rw := FALSE; //M539 Ack to CNC
+			WX3.bFollowerIdleDisengage :=0;
+			WX3.JogSeparate_VI :=0;
+			WX3.Reset_VI:=0;
+		END_IF
+		
+	//WX4
+		IF WX4.VertReadyForMove_PO AND WX4.VertIn_M_Pos_PO THEN
+			CNCSystem.Channel[0].M[540].bState_rw := FALSE; //M540 Ack to CNC - if it was triggered after reaching position
+		END_IF
+		IF WX4.RotReadyForMove_PO AND WX4.RotIn_M_Pos_PO THEN
+			CNCSystem.Channel[0].M[541].bState_rw := FALSE; //M541 Ack to CNC
+		END_IF
+		IF WX4.ClampReadyForMove_PO AND WX4.ClampIn_M_Pos_PO THEN
+			CNCSystem.Channel[0].M[542].bState_rw := FALSE; //M542 Ack to CNC
+		END_IF
+		IF ABS (WX4.Rot_A.Out.DistancePos_PO-WX4.Rot_B.Out.DistancePos_PO) <= WX4.RotSyncTolerance_CI THEN 
+			CNCSystem.Channel[0].M[549].bState_rw := FALSE; //M549 Ack to CNC
+			WX4.bFollowerIdleDisengage :=0;
+			WX4.JogSeparate_VI :=0;
+			WX4.Reset_VI:=0;
+		END_IF
+		MDICase_0:=20;
+	20: MDICase_0 :=0;
+	90: //stop condition for cnc stop button
+		stop:=1;
+		MDICase_0:=91;
+	91: //await reset or start cmd from cnc/main hmi
+		
+		IF PRG_CNCChannelHandler.CNCChannel[0].pChannel^.ActStateString ='Active' OR GVL_HMI.MCR THEN
+			MDICase_0:=0;
+			Stop:=0;
+		END_IF
+		
+	END_CASE
+END_IF]]></ST>
+    </Implementation>
+    <LineIds Name="WX_CP">
+      <LineId Id="2065" Count="0" />
+      <LineId Id="2663" Count="0" />
+      <LineId Id="2669" Count="0" />
+      <LineId Id="2672" Count="1" />
+      <LineId Id="2895" Count="1" />
+      <LineId Id="2674" Count="0" />
+      <LineId Id="2822" Count="0" />
+      <LineId Id="2809" Count="0" />
+      <LineId Id="2970" Count="0" />
+      <LineId Id="2810" Count="0" />
+      <LineId Id="1773" Count="7" />
+      <LineId Id="2807" Count="0" />
+      <LineId Id="2344" Count="0" />
+      <LineId Id="2291" Count="0" />
+      <LineId Id="2448" Count="0" />
+      <LineId Id="2450" Count="2" />
+      <LineId Id="1835" Count="1" />
+      <LineId Id="1898" Count="0" />
+      <LineId Id="1837" Count="4" />
+      <LineId Id="1899" Count="0" />
+      <LineId Id="1842" Count="0" />
+      <LineId Id="2158" Count="0" />
+      <LineId Id="2178" Count="4" />
+      <LineId Id="2778" Count="7" />
+      <LineId Id="2777" Count="0" />
+      <LineId Id="2183" Count="8" />
+      <LineId Id="2177" Count="0" />
+      <LineId Id="2176" Count="0" />
+      <LineId Id="2193" Count="4" />
+      <LineId Id="2787" Count="7" />
+      <LineId Id="2786" Count="0" />
+      <LineId Id="2198" Count="8" />
+      <LineId Id="2192" Count="0" />
+      <LineId Id="2175" Count="0" />
+      <LineId Id="2161" Count="4" />
+      <LineId Id="2552" Count="7" />
+      <LineId Id="2551" Count="0" />
+      <LineId Id="2166" Count="8" />
+      <LineId Id="2160" Count="0" />
+      <LineId Id="2159" Count="0" />
+      <LineId Id="1843" Count="1" />
+      <LineId Id="2155" Count="0" />
+      <LineId Id="2068" Count="0" />
+      <LineId Id="1845" Count="0" />
+      <LineId Id="2346" Count="2" />
+      <LineId Id="2358" Count="0" />
+      <LineId Id="2350" Count="1" />
+      <LineId Id="2359" Count="0" />
+      <LineId Id="2357" Count="0" />
+      <LineId Id="2349" Count="0" />
+      <LineId Id="1846" Count="0" />
+      <LineId Id="2156" Count="0" />
+      <LineId Id="1847" Count="0" />
+      <LineId Id="2069" Count="0" />
+      <LineId Id="1848" Count="1" />
+      <LineId Id="2157" Count="0" />
+      <LineId Id="1850" Count="0" />
+      <LineId Id="2070" Count="0" />
+      <LineId Id="1851" Count="5" />
+      <LineId Id="2769" Count="0" />
+      <LineId Id="1857" Count="8" />
+      <LineId Id="2796" Count="4" />
+      <LineId Id="2795" Count="0" />
+      <LineId Id="2770" Count="1" />
+      <LineId Id="1866" Count="8" />
+      <LineId Id="2802" Count="4" />
+      <LineId Id="2801" Count="0" />
+      <LineId Id="2772" Count="1" />
+      <LineId Id="1875" Count="8" />
+      <LineId Id="2546" Count="4" />
+      <LineId Id="1884" Count="0" />
+      <LineId Id="2774" Count="1" />
+      <LineId Id="1885" Count="8" />
+      <LineId Id="2353" Count="1" />
+      <LineId Id="2361" Count="1" />
+      <LineId Id="2360" Count="0" />
+      <LineId Id="2355" Count="0" />
+      <LineId Id="1894" Count="1" />
+      <LineId Id="2453" Count="0" />
+      <LineId Id="2455" Count="2" />
+      <LineId Id="2459" Count="0" />
+      <LineId Id="2823" Count="0" />
+      <LineId Id="2460" Count="1" />
+      <LineId Id="2454" Count="0" />
+      <LineId Id="2825" Count="0" />
+      <LineId Id="1896" Count="0" />
+      <LineId Id="1211" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

@@ -1,0 +1,25 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+  <POU Name="F_IsEmpty" Id="{ee171399-c061-4b46-88d9-82ec799cfc05}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION F_IsEmpty : BOOL
+VAR_INPUT
+	WX : sBogie;
+END_VAR
+VAR
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[IF WX.A.bPP1_Input = 0 AND WX.A.bPP2_Input = 0 AND WX.B.bPP2_Input = 0 AND WX.B.bPP2_Input = 0 THEN
+	F_IsEmpty := 1;
+	ELSE 
+		F_IsEmpty := 0;
+END_IF]]></ST>
+    </Implementation>
+    <LineIds Name="F_IsEmpty">
+      <LineId Id="7" Count="0" />
+      <LineId Id="9" Count="0" />
+      <LineId Id="11" Count="1" />
+      <LineId Id="10" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

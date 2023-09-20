@@ -1,0 +1,138 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.11">
+  <POU Name="FB_SetAxisZero" Id="{e1d710b0-5d75-4782-989d-b2aed57b5375}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION_BLOCK FB_SetAxisZero
+VAR_INPUT
+	nHliAxisIdx: INT;
+	bExecute: BOOL;
+	bWriteOnStart: BOOL;
+END_VAR
+VAR_IN_OUT
+	rOffset: LREAL;
+END_VAR
+VAR_OUTPUT
+	bBusy: BOOL;
+	bDone: BOOL;
+	bError: BOOL;
+END_VAR
+VAR
+	fbHLI3_SetAxisReferenceOffset : HLI3_SetAxisReferenceOffset;
+	rtSetZero: R_TRIG;
+	nCase: INT;
+	rActPos: LREAL;
+	bWriteOffset: BOOL;
+	tmrWriteOffset: TON;
+	rtWriteOffset: R_TRIG;
+	rStartPos: LREAL;
+	rOffsetValue: LREAL;
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[IF bDone AND NOT bExecute THEN
+	bDone := FALSE;
+END_IF
+
+rtSetZero(CLK:= bExecute, Q=> );
+IF rtSetZero.Q THEN
+	bBusy := TRUE;
+	bDone := FALSE;
+	bError := FALSE;
+	nCase := 10;
+END_IF
+
+tmrWriteOffset(IN:= bWriteOnStart, PT:= T#1S, Q=> , ET=> );
+rtWriteOffset(CLK:= tmrWriteOffset.Q, Q=> );
+IF rtWriteOffset.Q THEN
+	IF rOffset <> 0 THEN
+		bBusy := TRUE;
+		bDone := FALSE;
+		bError := FALSE;
+		nCase := 110;
+	ELSE
+		nCase := 999;
+	END_IF
+END_IF
+
+CASE nCase OF
+	10:
+		rOffsetValue := 0;
+		bWriteOffset := TRUE;
+		nCase := 20;
+		
+	20:
+		IF NOT fbHLI3_SetAxisReferenceOffset.Error THEN
+			IF fbHLI3_SetAxisReferenceOffset.Done THEN
+				bWriteOffset := FALSE;
+				nCase := 30;
+			END_IF
+		ELSE
+			nCase := 999;
+		END_IF
+		
+	30:
+		rOffset := HLI3_GetActualAxisPos(nHliAxisIdx)*-0.0001;
+		rOffsetValue := rOffset;
+		nCase := 40;
+		
+	40:
+		bWriteOffset := TRUE;
+		nCase := 50;
+		
+	50:
+		IF NOT fbHLI3_SetAxisReferenceOffset.Error THEN
+			IF fbHLI3_SetAxisReferenceOffset.Done THEN
+				bWriteOffset := FALSE;
+				bBusy := FALSE;
+				bDone := TRUE;
+				nCase := 0;
+			END_IF
+		ELSE
+			nCase := 999;
+		END_IF
+		
+	999:
+		bWriteOffset := FALSE;
+		bBusy := FALSE;
+		bError := TRUE;
+		bDone := FALSE;
+END_CASE
+
+CASE nCase OF
+	110:
+		bWriteOffset := TRUE;
+		rStartPos := HLI3_GetActualAxisPos(nHliAxisIdx)*0.0001;
+		rOffsetValue := rOffset;
+		nCase := 120;
+		
+	120:
+		IF NOT fbHLI3_SetAxisReferenceOffset.Error THEN
+			IF fbHLI3_SetAxisReferenceOffset.Done THEN
+				bWriteOffset := FALSE;
+				bBusy := FALSE;
+				bError := FALSE;
+				bDone := TRUE;
+				nCase := 0;
+			END_IF
+		ELSE
+			nCase := 999;
+		END_IF
+	
+END_CASE
+
+fbHLI3_SetAxisReferenceOffset(
+	Execute:= bWriteOffset, 
+	nHliAxisIdx:= nHliAxisIdx, 
+	nOffset:= rOffsetValue, 
+	Busy=> , 
+	Done=> , 
+	Error=> , 
+	ErrorId=> );
+
+]]></ST>
+    </Implementation>
+    <LineIds Name="FB_SetAxisZero">
+      <LineId Id="3" Count="99" />
+      <LineId Id="2" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

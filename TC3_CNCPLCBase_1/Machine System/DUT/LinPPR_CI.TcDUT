@@ -1,0 +1,29 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.11">
+  <DUT Name="LinPPR_CI" Id="{554404e0-0b87-418a-8c10-1c11eb548d03}">
+    <Declaration><![CDATA[TYPE LinPPR_CI :		//Clearpath Lin PPR Configuration and Inputs
+STRUCT
+(***   Inputs   ***)
+	//CI (configuration input)
+		PPRset_CI			: 	INT;  	//ppr setting in clearpath
+		cntPulseSet_CI		: 	INT;	//cnts per pulse clearpath setting
+		HomingSet_CI		: 	INT;	// CP_FB homing settings - 0: disabled; 2: Home to low switch 3: home to hi switch
+		DistPerMRev_CI		:	INT;	//distance traveled per rev		(Calculate your own pitch and lead w/gearbox combo must set MechDriveType_CI to 8 to bypass internal calc)
+		DisPerFPulley_CI	:	INT;	//distance traveled per rev of final pulley (mm)
+		DisPerPulse_CI		: 	INT;	//distance on abs enc per clearpath pulse
+		GearRatio_CI		:	INT;	// GearRatio motor to moving part (XX:1) (gearbox and lead included in calc for vert axis) (use this for pulleys as well)j
+		Lead_CI				:	INT;	// Lead of Screw if used (mm)			(gearbox and lead included in calc for vert axis)
+		MechDriveType_CI	:	INT;	// 0: motor only(rot), 1: Motor and gear(rot), 2: Motor w/gear and screw(lin), 3: Motor w/screw only(lin), 4: Motor w/gear and pulley(lin),  5: Motor w/pulley(lin), 8: bypass mode
+		InputFilter_CI		: 	INT;	// 0: default and will not work (CP defaults to 20ms filter)  7: set filter to less than scan time to be sure to catch all pulses for a chained move
+		SWLimit_Hi_CI		: 	INT;	//software limit switch high (best to make this a retained or persistent variable) mm/deg
+		SWLimit_Lo_CI		: 	INT;	//Software limit switch low (best to make this a retained or persistent variable) mm/deg
+		Limit_NC_NO_CI 		: 	BOOL;	// Using NC limit switches =0; Using NO Limit switches =1; Not suggested to use NO switches		
+		MoveABSTol_CI		: 	Real;	//tolerance for a good absoulte move
+(***   Field   ***)
+(*in var section of FB *)
+
+END_STRUCT
+END_TYPE
+]]></Declaration>
+  </DUT>
+</TcPlcObject>

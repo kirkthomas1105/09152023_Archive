@@ -1,0 +1,286 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+  <DUT Name="sConveyor" Id="{a1fca1af-4fce-4d5d-b8dc-ba260e002ce7}">
+    <Declaration><![CDATA[TYPE sConveyor :
+	STRUCT
+		Conveyor_Type :  INT; // 1 = Transportation, 2= Accumulation, 3 = Shuttle induction
+		Fullness_Percent : REAL; // 25% 50 % 75% 100 % etc.
+		Mode : INT; // 1 = Transportation , 2 = Slug build, 3 = Accumulate
+		Run_Fwd : BOOL; // Run Clear Path CW
+		Run_Rev : BOOL; // Run Clear Path CCW
+		Ok_To_Run : BOOL; // Run permissive from safety routines
+		Occupied : BOOL; // Part is present on conveyor
+		PP_Enter_Switch_Is_On : BOOL; // Limit switch at entry position on
+		PP_Enter_Switch_Is_Off : BOOL; // Limit switch at entry position off
+		PP_Exit_Switch_Is_On : BOOL; // Limit switch at exit position on
+		PP_Exit_Switch_Is_Off : BOOL; // Limit switch at exit position off
+		PP_Load_Pos_1_Is_On : BOOL; // Limit switch at load position 1
+		PP_Load_Pos_1_Is_Off : BOOL; // Limit switch at load position 1
+		PP_Load_Pos_2_Is_On : BOOL; // Limit switch at load position 2
+		PP_Load_Pos_2_Is_Off : BOOL; // Limit switch at load position 2
+		Moving : BOOL; // Motor is moving (Encoder is providing pulses)
+		Transfer_Position : STRING; // Transfer position is which of the infeed or outfeed positions that the transfer can be at (GL1-12)
+		Infeed : BOOL; // Set a bit to show which way the transfer should be operating depending on where the tool came from.
+		Calling_For_Part : BOOL; // Conveyor is calling for part to be inducted
+		Calling_For_Pick_Up : BOOL; // Conveyor is calling for part to be picked up by transfer
+		Calling_For_Transfer : BOOL; //Conveyor has part waiting at exit end for transfer
+		Is_Homed : BOOL; // Motor has been homed
+		Current_Position : LREAL; // Current position encoder value
+		Motor_Fault : BOOL; // Motor requested to run, but no motion is seen from HLFB
+		Jam_Fault : BOOL; // Motor is running, case stop is retracted,  and sensor is still blocked
+		Limit_Low_On : BOOL; // Low limit debounce timer done, switch is made
+		Limit_High_On : BOOL; // High limit debounce timer done, switch is made
+		Limit_Low_Off : BOOL; // Low limit debounce timer done, switch is off
+		Limit_High_Off : BOOL; // High limit debounce timer done, switch is off
+		BOGIE_REQUEST_LOAD_POS_2:BOOL; // Bogie is requesting a part at position 2
+		BOGIE_REQUEST_LOAD_POS_1:BOOL; // Bogie is requesting a part at position 1
+		BOGIE_HAS_DROPPED:BOOL; // Bogie has dropped off a part and is clear of conveyor
+		
+		CaseStopRaisedSwitchIsOn: BOOL;
+		CaseStopLoweredSwitchIsOn: BOOL;
+		CaseStopRaisedSwitchIsOff: BOOL;
+		CaseStopLoweredSwitchIsOff: BOOL;
+		
+		CaseStop1RaisedSwitchIsOn: BOOL;
+		CaseStop1LoweredSwitchIsOn: BOOL;
+		CaseStop1RaisedSwitchIsOFF: BOOL;
+		CaseStop1LoweredSwitchIsOFF: BOOL;
+		
+		CaseStop2RaisedSwitchIsON: BOOL;
+		CaseStop2LoweredSwitchIsON: BOOL;
+		CaseStop2RaisedSwitchIsOFF: BOOL;
+		CaseStop2LoweredSwitchIsOFF: BOOL;
+		
+		Enable	AT %Q* :	BOOL;	//Green Output to enable motor
+		A		AT %Q* :	BOOL;	//Input A to send hi signal to clearpath to begin increment (triggers on hi trigger)
+		B		AT %Q* :	BOOL;	//Input B to send hi signal to clearpath to choose incremtent direction (false = CW , True = CCW)
+		HLFB	AT %I* :	BOOL;	//PPR from Clearpath encoder signal
+		Low_limit AT %I* :  BOOL;    // Negative travel limit switch
+		High_Limit AT %I* : BOOL;	// Positive travel limit switch
+		PP_Enter_Right AT %I* :   BOOL;	// Upstream entrance part present sensor
+		PP_Enter_Left AT %I* :   BOOL;	// Upstream entrance part present sensor
+		PP_Exit_Right AT %I* :    BOOL;	// Downstream exit part present sensor
+		PP_Exit_Left AT %I* :    BOOL;	// Downstream exit part present sensor
+		Load_Pos_1 AT %I* : BOOL;	// Prox or limit switch for PP at load position 1
+		Load_Pos_2 AT %I* : BOOL;	// Prox or limit switch for PP at load position 2
+		
+	 Case_Stop_Extended_Right AT %I* : BOOL; // Input from case stop extend solenoid
+	 Case_Stop_Retracted_Right AT %I* : BOOL; // Input from case stop retract solenoid
+	 Case_Stop_Extended_Left AT %I* : BOOL; // Input from case stop extend solenoid
+	 Case_Stop_Retracted_Left AT %I* : BOOL; // Input from case stop retract solenoid
+	 Case_Stop_Extend AT %Q* : BOOL; // Output to extend solenoid
+	 Case_Stop_Retract AT %Q* : BOOL; // Output to retract solenoid
+	 	
+	 Case_Stop_Load_1_Extended_Right AT %I* : BOOL; // Input from case stop extend solenoid
+	 Case_Stop_Load_1_Retracted_Right AT %I* : BOOL; // Input from case stop retract solenoid
+	 Case_Stop_Load_1_Extended_Left AT %I* : BOOL; // Input from case stop extend solenoid
+	 Case_Stop_Load_1_Retracted_Left AT %I* : BOOL; // Input from case stop retract solenoid
+	 Case_Stop_Load_1_Extend AT %Q* : BOOL; // Output to extend solenoid
+	 Case_Stop_Load_1_Retract AT %Q* : BOOL; // Output to retract solenoid
+	 
+	 Case_Stop_Load_2_Extended_Right AT %I* : BOOL; // Input from case stop extend solenoid
+	 Case_Stop_Load_2_Retracted_Right AT %I* : BOOL; // Input from case stop retract solenoid
+	 Case_Stop_Load_2_Extended_Left AT %I* : BOOL; // Input from case stop extend solenoid
+	 Case_Stop_Load_2_Retracted_Left AT %I* : BOOL; // Input from case stop retract solenoid
+	 Case_Stop_Load_2_Extend AT %Q* : BOOL; // Output to extend solenoid
+	 Case_Stop_Load_2_Retract AT %Q* : BOOL; // Output to retract solenoid
+	 
+			
+		MOTOR_FAULT_TimerOn : TON;
+		MOTOR_FAULT_TimerOn_Done_Bit: BOOL;
+    	MOTOR_FAULT_TimerOn_ELAPSED : TIME;
+		
+		JAM_FAULT_TimerOn : TON;
+		JAM_FAULT_TimerOn_Done_Bit: BOOL;
+    	JAM_FAULT_TimerOn_ELAPSED : TIME;
+		
+		Low_Limit_TimerOn : TON;
+		Low_Limit_TimerOn_Done_Bit: BOOL;
+		LOW_LIMIT_TIMER_ON_ELAPSED : TIME;
+		
+		HIGH_Limit_TimerOn : TON;
+		HIGH_Limit_TimerOn_Done_Bit: BOOL;
+		HIGH_LIMIT_TIMER_ON_ELAPSED : TIME;
+		
+		Low_Limit_TimerOff : TON;
+		Low_Limit_TimerOff_Done_Bit: BOOL;
+		LOW_LIMIT_TIMER_Off_ELAPSED : TIME;
+		
+		HIGH_Limit_TimerOff : TON;
+		HIGH_Limit_TimerOff_Done_Bit: BOOL;
+		HIGH_LIMIT_TIMER_Off_ELAPSED : TIME;
+		
+		PP_ENTER_ON_TimerOn : TON;
+		PP_ENTER_ON_TimerOn_Done_Bit: BOOL;
+		PP_ENTER_ON_TimerOn_ELAPSED : TIME;
+	
+		PP_ENTER_OFF_TimerOff : TON;
+		PP_ENTER_OFF_TimerOff_Done_Bit: BOOL;
+		PP_ENTER_OFF_TimerOff_ELAPSED : TIME;
+	
+		PP_EXIT_ON_TimerOn : TON;
+		PP_EXIT_ON_TimerOn_Done_Bit: BOOL;
+		PP_EXIT_ON_TimerOn_ELAPSED : TIME;
+	
+		PP_EXIT_OFF_TimerOff : TON;
+		PP_EXIT_OFF_TimerOff_Done_Bit: BOOL;
+		PP_EXIT_OFF_TimerOff_ELAPSED : TIME;
+		
+		PP_25_PERCENT_TimerOn : TON;
+		PP_25_PERCENT_TimerOn_Done_Bit: BOOL;
+		PP_25_PERCENT_TimerOn_ELAPSED : TIME;
+	
+		PP_25_PERCENT_TimerOff : TON;
+		PP_25_PERCENT_TimerOff_Done_Bit: BOOL;
+		PP_25_PERCENT_TimerOff_ELAPSED : TIME;
+		
+		PP_50_PERCENT_TimerOn : TON;
+		PP_50_PERCENT_TimerOn_Done_Bit: BOOL;
+		PP_50_PERCENT_TimerOn_ELAPSED : TIME;
+	
+		PP_50_PERCENT_TimerOff : TON;
+		PP_50_PERCENT_TimerOff_Done_Bit: BOOL;
+		PP_50_PERCENT_TimerOff_ELAPSED : TIME;
+		
+		PP_100_PERCENT_TimerOn : TON;
+		PP_100_PERCENT_TimerOn_Done_Bit: BOOL;
+		PP_100_PERCENT_TimerOn_ELAPSED : TIME;
+	
+		PP_100_PERCENT_TimerOff : TON;
+		PP_100_PERCENT_TimerOff_Done_Bit: BOOL;
+		PP_100_PERCENT_TimerOff_ELAPSED : TIME;
+		
+		LOAD_POS1_ON_TimerOn : TON;
+		LOAD_POS1_ON_TimerOn_Done_Bit: BOOL;
+		LOAD_POS1_ON_TimerOn_ELAPSED : TIME;
+	
+		LOAD_POS1_OFF_TimerOff : TON;
+		LOAD_POS1_OFF_TimerOff_Done_Bit: BOOL;
+		LOAD_POS1_OFF_TimerOff_ELAPSED : TIME;
+		
+		LOAD_POS2_ON_TimerOn : TON;
+		LOAD_POS2_ON_TimerOn_Done_Bit: BOOL;
+		LOAD_POS2_ON_TimerOn_ELAPSED : TIME;
+	
+		LOAD_POS2_OFF_TimerOff : TON;
+		LOAD_POS2_OFF_TimerOff_Done_Bit: BOOL;
+		LOAD_POS2_OFF_TimerOff_ELAPSED : TIME;
+		
+		PRX_AT_GL5A_POSITION_ON_TimerOn : TON;
+		PRX_AT_GL5A_POSITION_ON_TimerOn_Done_Bit: BOOL;
+		PRX_AT_GL5A_POSITION_ON_TimerOn_ELAPSED : TIME;
+	
+		PRX_AT_GL5A_POSITION_OFF_TimerOff : TON;
+		PRX_AT_GL5A_POSITION_OFF_TimerOff_Done_Bit: BOOL;
+		PRX_AT_GL5A_POSITION_OFF_TimerOff_ELAPSED : TIME;
+		
+		PRX_AT_GL5B_POSITION_ON_TimerOn : TON;
+		PRX_AT_GL5B_POSITION_ON_TimerOn_Done_Bit: BOOL;
+		PRX_AT_GL5B_POSITION_ON_TimerOn_ELAPSED : TIME;
+	
+		PRX_AT_GL5B_POSITION_OFF_TimerOff : TON;
+		PRX_AT_GL5B_POSITION_OFF_TimerOff_Done_Bit: BOOL;
+		PRX_AT_GL5B_POSITION_OFF_TimerOff_ELAPSED : TIME;
+	
+		PRX_AT_GL6_POSITION_ON_TimerOn : TON;
+		PRX_AT_GL6_POSITION_ON_TimerOn_Done_Bit: BOOL;
+		PRX_AT_GL6_POSITION_ON_TimerOn_ELAPSED : TIME;
+	
+		PRX_AT_GL6_POSITION_OFF_TimerOff : TON;
+		PRX_AT_GL6_POSITION_OFF_TimerOff_Done_Bit: BOOL;
+		PRX_AT_GL6_POSITION_OFF_TimerOff_ELAPSED : TIME;
+	
+		PRX_AT_GL8_POSITION_ON_TimerOn : TON;
+		PRX_AT_GL8_POSITION_ON_TimerOn_Done_Bit: BOOL;
+		PRX_AT_GL8_POSITION_ON_TimerOn_ELAPSED : TIME;
+	
+		PRX_AT_GL8_POSITION_OFF_TimerOff : TON;
+		PRX_AT_GL8_POSITION_OFF_TimerOff_Done_Bit: BOOL;
+		PRX_AT_GL8_POSITION_OFF_TimerOff_ELAPSED : TIME;
+	
+		PRX_AT_GL3_POSITION_ON_TimerOn : TON;
+		PRX_AT_GL3_POSITION_ON_TimerOn_Done_Bit: BOOL;
+		PRX_AT_GL3_POSITION_ON_TimerOn_ELAPSED : TIME;
+	
+		PRX_AT_GL3_POSITION_OFF_TimerOff : TON;
+		PRX_AT_GL3_POSITION_OFF_TimerOff_Done_Bit: BOOL;
+		PRX_AT_GL3_POSITION_OFF_TimerOff_ELAPSED : TIME;
+	
+		PRX_AT_GL7_POSITION_ON_TimerOn : TON;
+		PRX_AT_GL7_POSITION_ON_TimerOn_Done_Bit: BOOL;
+		PRX_AT_GL7_POSITION_ON_TimerOn_ELAPSED : TIME;
+	
+		PRX_AT_GL7_POSITION_OFF_TimerOff : TON;
+		PRX_AT_GL7_POSITION_OFF_TimerOff_Done_Bit: BOOL;
+		PRX_AT_GL7_POSITION_OFF_TimerOff_ELAPSED : TIME;
+	
+		PRX_AT_GL9_POSITION_ON_TimerOn : TON;
+		PRX_AT_GL9_POSITION_ON_TimerOn_Done_Bit: BOOL;
+		PRX_AT_GL9_POSITION_ON_TimerOn_ELAPSED : TIME;
+	
+		PRX_AT_GL9_POSITION_OFF_TimerOff : TON;
+		PRX_AT_GL9_POSITION_OFF_TimerOff_Done_Bit: BOOL;
+		PRX_AT_GL9_POSITION_OFF_TimerOff_ELAPSED : TIME;
+	
+		PRX_AT_GL12_POSITION_ON_TimerOn : TON;
+		PRX_AT_GL12_POSITION_ON_TimerOn_Done_Bit: BOOL;
+		PRX_AT_GL12_POSITION_ON_TimerOn_ELAPSED : TIME;
+	
+		PRX_AT_GL12_POSITION_OFF_TimerOff : TON;
+		PRX_AT_GL12_POSITION_OFF_TimerOff_Done_Bit: BOOL;
+		PRX_AT_GL12_POSITION_OFF_TimerOff_ELAPSED : TIME;
+		
+		CaseStopIsRaisedTimerOn : TON;
+		CaseStopIsRaisedTimerOnDoneBit: BOOL;
+		CaseStopIsRaisedTimerOnElapsedTime : TIME;
+	
+		CaseStopIsLoweredTimerOn : TON;
+		CaseStopIsLoweredTimerOnDoneBit: BOOL;
+		CaseStopIsLoweredTimerOnElapsedTime : TIME;
+		
+		CaseStopIsRaisedTimerOff : TON;
+		CaseStopIsRaisedTimerOffDoneBit: BOOL;
+		CaseStopIsRaisedTimerOffElapsedTime : TIME;
+	
+		CaseStopIsLoweredTimerOff : TON;
+		CaseStopIsLoweredTimerOffDoneBit: BOOL;
+		CaseStopIsLoweredTimerOffElapsedTime : TIME;
+	
+///////////////////////////////////////////////////// GL6 AND GL8 HAVE 2 CASE STOPS AT THE LOAD POSITIONS.	
+		CaseStop1IsRaisedTimerOn : TON;
+		CaseStop1IsRaisedTimerOnDoneBit: BOOL;
+		CaseStop1IsRaisedTimerOnElapsedTime : TIME;
+	
+		CaseStop1IsRAISEDTimerOFF : TON;
+		CaseStop1IsRAISEDTimerOFFDoneBit: BOOL;
+		CaseStop1IsRAISEDTimerOFFElapsedTime : TIME;
+		
+		CaseStop1IsLOWEREDTimerOn : TON;
+		CaseStop1IsLOWEREDTimerOnDoneBit: BOOL;
+		CaseStop1IsLOWEREDTimerOnElapsedTime : TIME;
+	
+		CaseStop1IsLOWEREDTimerOFF : TON;
+		CaseStop1IsLOWEREDTimerOFFDoneBit: BOOL;
+		CaseStop1IsLOWEREDTimerOFFElapsedTime : TIME;
+		
+		CaseStop2IsRaisedTimerOn : TON;
+		CaseStop2IsRaisedTimerOnDoneBit: BOOL;
+		CaseStop2IsRaisedTimerOnElapsedTime : TIME;
+	
+		CaseStop2IsRAISEDTimerOFF : TON;
+		CaseStop2IsRAISEDTimerOFFDoneBit: BOOL;
+		CaseStop2IsRAISEDTimerOFFElapsedTime : TIME;
+		
+		CaseStop2IsLOWEREDTimerOn : TON;
+		CaseStop2IsLOWEREDTimerOnDoneBit: BOOL;
+		CaseStop2IsLOWEREDTimerOnElapsedTime : TIME;
+	
+		CaseStop2IsLOWEREDTimerOFF : TON;
+		CaseStop2IsLOWEREDTimerOFFDoneBit: BOOL;
+		CaseStop2IsLOWEREDTimerOFFElapsedTime : TIME;
+	
+	END_STRUCT
+END_TYPE
+]]></Declaration>
+  </DUT>
+</TcPlcObject>

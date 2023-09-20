@@ -1,0 +1,90 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.11">
+  <POU Name="FB_EventAlarm" Id="{b404c3c7-1da2-45fe-b914-9309ca7884f3}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION_BLOCK FB_EventAlarm
+VAR_INPUT 
+	bEvent			: BOOL; 
+	nEventID		: UDINT; 
+	sSource			: STRING; 
+END_VAR 
+VAR_OUTPUT 
+END_VAR
+VAR 
+	bIsInitalized	: BOOL;
+	
+	fbSourceInfo 	: FB_TcSourceInfo;
+	fbAlarm 		: FB_TCAlarm;
+	eventEntry 		: TcEventEntry;
+	fbRtEvent 		: R_TRIG;
+	fbFtEvent		: F_TRIG;
+	
+	hr				: HRESULT; 
+	hrLastError 	: HRESULT;
+	
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[// Initialization 
+	IF NOT bIsInitalized THEN
+		bIsInitalized:= TRUE;
+		
+		eventEntry:= Tc_Events.myAlarmEventClass.x1000; 
+		eventEntry.nEventId:= nEventID;
+		
+		fbSourceInfo.Clear(); 
+		fbSourceInfo.sName:= sSource;
+		
+		hr:= fbAlarm.CreateEx(eventEntry, TRUE, ipSourceInfo:= fbSourceInfo); 
+		IF FAILED(hr) THEN
+			hrLastError:= hr; 
+		END_IF 
+	END_IF
+	
+// event trigger 
+	fbRtEvent(CLK:= bEvent); 
+	fbFtEvent (CLK:= bEvent);
+	
+// alarm raised 
+	IF  fbRtEvent.Q THEN
+		hr:= fbAlarm.Raise(0); 
+		IF FAILED(hr) THEN
+			hrLastError:= hr; 
+		END_IF
+	END_IF
+	
+// alarm cleared 
+	IF fbFtEvent.Q THEN
+		hr:= fbAlarm.Clear(0, bResetConfirmation:= TRUE); 
+		IF FAILED(hr) THEN
+			hrLastError:= hr; 
+		END_IF 
+	END_IF
+
+]]></ST>
+    </Implementation>
+    <LineIds Name="FB_EventAlarm">
+      <LineId Id="37" Count="0" />
+      <LineId Id="51" Count="0" />
+      <LineId Id="53" Count="0" />
+      <LineId Id="58" Count="0" />
+      <LineId Id="55" Count="2" />
+      <LineId Id="59" Count="5" />
+      <LineId Id="66" Count="0" />
+      <LineId Id="68" Count="1" />
+      <LineId Id="43" Count="0" />
+      <LineId Id="70" Count="2" />
+      <LineId Id="44" Count="0" />
+      <LineId Id="73" Count="0" />
+      <LineId Id="45" Count="0" />
+      <LineId Id="74" Count="1" />
+      <LineId Id="79" Count="0" />
+      <LineId Id="78" Count="0" />
+      <LineId Id="80" Count="0" />
+      <LineId Id="47" Count="0" />
+      <LineId Id="81" Count="1" />
+      <LineId Id="84" Count="1" />
+      <LineId Id="87" Count="1" />
+      <LineId Id="50" Count="0" />
+      <LineId Id="9" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

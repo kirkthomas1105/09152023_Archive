@@ -1,0 +1,23 @@
+{
+  "parameters": [
+    {
+      "name": "data-tchmi-enable-bit",
+      "displayName": "Enable-Bit",
+      "visible": true,
+      "type": "tchmi:general#/definitions/BOOL",
+      "category": "",
+      "description": "",
+      "requiredOnCompile": false,
+      "readOnly": false,
+      "bindable": true,
+      "heritable": true,
+      "propertyName": "Enable-Bit",
+      "propertySetterName": "setEnable-Bit",
+      "propertyGetterName": "getEnable-Bit",
+      "refTo": ""
+    }
+  ],
+  "virtualRights": [],
+  "$schema": "./../../../Packages/Beckhoff.TwinCAT.HMI.Framework.12.756.1/runtimes/native1.12-tchmi/Schema/UserControlConfig.Schema.json",
+  "description": ""
+}

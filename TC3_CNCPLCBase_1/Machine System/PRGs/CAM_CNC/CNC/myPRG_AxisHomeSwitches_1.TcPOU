@@ -1,0 +1,244 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.11">
+  <POU Name="myPRG_AxisHomeSwitches_1" Id="{f8ce3219-1772-4330-a4f1-6fff9693b6c2}" SpecialFunc="None">
+    <Declaration><![CDATA[PROGRAM myPRG_AxisHomeSwitches_1
+VAR
+	 
+	i: USINT;
+	xHomed_X: BOOL;
+	xHomed_Y: BOOL;
+	xHomed_Z: BOOL;
+	xHomed_A: BOOL;
+	xHomed_C: BOOL;
+	xHi_A: BOOL;
+	xLo_A: BOOL;
+	xHi_C: BOOL;
+	xLo_C: BOOL;
+	DriveTorque_A AT %I* : INT;
+	Drive_AFree : Bool;
+ 		
+	//fbSetOverride: MC_SetOverride;	
+	
+	
+
+
+ncase_A : INT;
+ncase_C : INT;
+
+
+END_VAR
+
+
+
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[
+HLI3_SetAxisReferenceCam(nHliAxisIdx := 0, bReferenceCam := bXHomeSwitch);
+HLI3_SetAxisReferenceCam(nHliAxisIdx := 1, bReferenceCam := bYHomeSwitch);
+HLI3_SetAxisReferenceCam(nHliAxisIdx := 2, bReferenceCam := bZHomeSwitch);
+HLI3_SetAxisReferenceCam(nHliAxisIdx := 3, bReferenceCam := DriveTorque_A>700);
+HLI3_SetAxisReferenceCam(nHliAxisIdx := 4, bReferenceCam := bCHomeSwitch);
+
+
+// Below sets all axis positions to zero and sets "homed" flag
+//HLI3_SetAxisReferencePosition(bSetRefpos:= bSet, nHliAxisIdx:= 0); // cannot be done in manual mode
+//HLI3_SetAxisReferencePosition(bSetRefpos:= bSet, nHliAxisIdx:= 1); // cannot be done in manual mode
+//HLI3_SetAxisReferencePosition(bSetRefpos:= bSet, nHliAxisIdx:=2); // cannot be done in manual mode
+
+		
+//Axis Home Status i.e. is the axis home
+xHomed_X := gpAx[0]^.lr_state.homing_done_r;
+xHomed_Y := gpAx[1]^.lr_state.homing_done_r;
+xHomed_Z := gpAx[2]^.lr_state.homing_done_r;
+xHomed_A := gpAx[3]^.lr_state.homing_done_r;
+xHomed_C := gpAx[4]^.lr_state.homing_done_r;
+
+IF xHomed_A = FALSE AND DriveTorque_A>900 THEN ncase_A := 20;
+	ELSIF xHomed_A = FALSE AND DriveTorque_A<-600 THEN ncase_A :=30;
+		ELSIF xHomed_A = TRUE AND DriveTorque_A > 2000 THEN ncase_A :=20;
+			ELSIF xHomed_A =TRUE AND DriveTorque_A<-2000 THEN ncase_A :=30;
+	 			ELSE ncase_A :=0;
+					//ELSIF Drive_AFree :=FALSE THEN ncase_A :=10;
+END_IF
+
+
+IF xHi_C = FALSE THEN ncase_c := 10;
+	ELSIF xLo_C = FALSE THEN ncase_C :=20;
+		ELSE ncase_C := 0;
+END_IF
+
+IF  DriveTorque_A >700 AND xHomed_A =FALSE AND Global_HMI.PLCMachineMode[0].ManualMode.bKeyNeg = TRUE THEN
+	ncase_A :=50;
+END_IF
+IF DriveTorque_A <-600 AND xHomed_A =FALSE AND Global_HMI.PLCMachineMode[0].ManualMode.bKeyPos = TRUE THEN
+	ncase_A :=60;
+END_IF
+IF  DriveTorque_A >1500 AND xHomed_A =TRUE AND Global_HMI.PLCMachineMode[0].ManualMode.bKeyNeg = TRUE THEN
+	ncase_A :=50;
+END_IF
+IF DriveTorque_A <-1500 AND xHomed_A =TRUE AND Global_HMI.PLCMachineMode[0].ManualMode.bKeyPos = TRUE THEN
+	ncase_A :=60;
+END_IF
+IF xHi_C = FALSE AND Global_HMI.PLCMachineMode[0].ManualMode.bKeyNeg = TRUE THEN
+	ncase_C :=30;
+END_IF
+IF xLo_C = FALSE AND Global_HMI.PLCMachineMode[0].ManualMode.bKeyPos = TRUE THEN
+	ncase_C :=40;
+END_IF
+IF xHi_C AND xLo_C = TRUE THEN 
+	ncase_C :=0;
+END_IF
+CASE ncase_C OF
+	0://C Axis Enable
+		//gpAx[4]^.ipo_mc_control.override.request_r := 1000;
+		gpAx[4]^.ipo_mc_control.override.command_w :=1000;
+		gpAx[4]^.ipo_mc_control.override.enable_w := 1;
+	10: // C Axis Hi Limit Overtravel
+		//gpAx[4]^.ipo_mc_control.override.request_r := 0;
+		gpAx[4]^.ipo_mc_control.override.command_w := 0;
+		//dialog comment for future to hmi (Hi Limit C Axis)
+	20: // C Axis Lo Limit Overtravel
+		//gpAx[4]^.ipo_mc_control.override.request_r := 0;
+		gpAx[4]^.ipo_mc_control.override.command_w := 0;
+		//dialog comment for future to hmi (Lo Limit C Axis)
+	30: // C Axis Jog Off Lo Limit
+		//gpAx[4]^.ipo_mc_control.override.request_r := 1000;
+		gpAx[4]^.ipo_mc_control.override.command_w :=1000;
+		gpAx[4]^.ipo_mc_control.override.enable_w := 1;
+	40: // C Axis Jog Off Hi Limit
+		//gpAx[4]^.ipo_mc_control.override.request_r := 1000;
+		gpAx[4]^.ipo_mc_control.override.command_w :=1000;
+		gpAx[4]^.ipo_mc_control.override.enable_w := 1;
+	90:
+END_CASE
+CASE ncase_A OF //Limit OverTravel Switches
+	0: //A Axis Enable					
+		//gpAx[3]^.ipo_mc_control.override.request_r := 1000;
+		gpAx[3]^.ipo_mc_control.override.command_w :=1000;
+		gpAx[3]^.ipo_mc_control.override.enable_w := 1;
+			
+	//		IF xHi_A = FALSE THEN ncase:=20;
+		//	ELSIF xLo_A = FALSE THEN ncase:=30;
+			//	END_IF	
+	10: //A axis no movement
+		
+			           
+	20:	//A Axis Hi Limit Switch Overtravel
+		//gpAx[3]^.ipo_mc_control.override.request_r := 0;
+		gpAx[3]^.ipo_mc_control.override.command_w := 0;		
+	30:	//A Axis Lo Limit Switch Overtravel
+		//gpAx[3]^.ipo_mc_control.override.request_r := 0;
+		gpAx[3]^.ipo_mc_control.override.command_w := 0;		
+	
+			           
+	50:	//enable jog away from Hi limit
+		//gpAx[3]^.ipo_mc_control.override.request_r := 1000;
+		gpAx[3]^.ipo_mc_control.override.command_w :=1000;
+		gpAx[3]^.ipo_mc_control.override.enable_w := 1;	  
+	60: //enable jog away from Lo limit
+		//gpAx[3]^.ipo_mc_control.override.request_r := 1000;
+		gpAx[3]^.ipo_mc_control.override.command_w :=1000;
+		gpAx[3]^.ipo_mc_control.override.enable_w := 1;	
+		
+
+END_CASE
+
+
+xHi_A := bHi_A;
+xLo_A := bLo_A;
+xHi_C := bHi_C;
+xLo_C := bLo_C;
+
+
+
+]]></ST>
+    </Implementation>
+    <LineIds Name="myPRG_AxisHomeSwitches_1">
+      <LineId Id="19" Count="1" />
+      <LineId Id="93" Count="1" />
+      <LineId Id="108" Count="0" />
+      <LineId Id="107" Count="0" />
+      <LineId Id="125" Count="0" />
+      <LineId Id="96" Count="0" />
+      <LineId Id="95" Count="0" />
+      <LineId Id="68" Count="0" />
+      <LineId Id="97" Count="1" />
+      <LineId Id="261" Count="0" />
+      <LineId Id="92" Count="0" />
+      <LineId Id="69" Count="3" />
+      <LineId Id="113" Count="1" />
+      <LineId Id="368" Count="0" />
+      <LineId Id="469" Count="4" />
+      <LineId Id="483" Count="0" />
+      <LineId Id="474" Count="0" />
+      <LineId Id="370" Count="0" />
+      <LineId Id="422" Count="0" />
+      <LineId Id="371" Count="0" />
+      <LineId Id="419" Count="1" />
+      <LineId Id="199" Count="0" />
+      <LineId Id="421" Count="0" />
+      <LineId Id="346" Count="1" />
+      <LineId Id="317" Count="0" />
+      <LineId Id="349" Count="2" />
+      <LineId Id="477" Count="4" />
+      <LineId Id="476" Count="0" />
+      <LineId Id="353" Count="4" />
+      <LineId Id="352" Count="0" />
+      <LineId Id="251" Count="0" />
+      <LineId Id="414" Count="0" />
+      <LineId Id="413" Count="0" />
+      <LineId Id="343" Count="0" />
+      <LineId Id="401" Count="0" />
+      <LineId Id="417" Count="1" />
+      <LineId Id="407" Count="0" />
+      <LineId Id="403" Count="0" />
+      <LineId Id="408" Count="0" />
+      <LineId Id="423" Count="0" />
+      <LineId Id="425" Count="0" />
+      <LineId Id="404" Count="0" />
+      <LineId Id="411" Count="0" />
+      <LineId Id="424" Count="0" />
+      <LineId Id="426" Count="0" />
+      <LineId Id="405" Count="0" />
+      <LineId Id="427" Count="1" />
+      <LineId Id="409" Count="1" />
+      <LineId Id="430" Count="1" />
+      <LineId Id="429" Count="0" />
+      <LineId Id="406" Count="0" />
+      <LineId Id="402" Count="0" />
+      <LineId Id="136" Count="0" />
+      <LineId Id="186" Count="0" />
+      <LineId Id="344" Count="1" />
+      <LineId Id="195" Count="0" />
+      <LineId Id="216" Count="0" />
+      <LineId Id="374" Count="1" />
+      <LineId Id="220" Count="0" />
+      <LineId Id="207" Count="0" />
+      <LineId Id="484" Count="0" />
+      <LineId Id="434" Count="0" />
+      <LineId Id="211" Count="0" />
+      <LineId Id="290" Count="0" />
+      <LineId Id="373" Count="0" />
+      <LineId Id="439" Count="2" />
+      <LineId Id="222" Count="0" />
+      <LineId Id="239" Count="1" />
+      <LineId Id="435" Count="1" />
+      <LineId Id="245" Count="1" />
+      <LineId Id="437" Count="1" />
+      <LineId Id="227" Count="0" />
+      <LineId Id="196" Count="0" />
+      <LineId Id="188" Count="0" />
+      <LineId Id="187" Count="0" />
+      <LineId Id="159" Count="0" />
+      <LineId Id="183" Count="0" />
+      <LineId Id="126" Count="0" />
+      <LineId Id="128" Count="0" />
+      <LineId Id="130" Count="0" />
+      <LineId Id="129" Count="0" />
+      <LineId Id="156" Count="0" />
+      <LineId Id="141" Count="0" />
+      <LineId Id="140" Count="0" />
+      <LineId Id="5" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

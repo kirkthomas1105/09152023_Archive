@@ -1,0 +1,197 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.11">
+  <POU Name="myPlcAxis" Id="{21d2b7ea-3fb7-4e86-b8f7-312ed7dea8a9}" SpecialFunc="None">
+    <Declaration><![CDATA[PROGRAM myPlcAxis
+VAR
+	fbAxis_X 					: FB_CNCAxis; 
+	fbMoveAbsolute 				: MC_MOVEAbsolute;	
+	fbSetOverride 				: MC_SetOverride;	
+	fbStop						: MC_Halt;	
+	bStop 						: BOOL;
+	bSetRefPos: BOOL;
+	bExecuteMoveAbsolute: BOOL;
+	rXposReq: LREAL;
+	rXvelReq: LREAL := 1000;
+	rtAxPlcMode: R_TRIG;
+	bEnterAxPlcMode: BOOL;
+	nCase: INT;
+	fbCSV: FB_CSV_RECIPE;
+	arrCSVData : ARRAY [0..1, 0..MAX_CSV_ROWS] OF STRING(MAX_CSV_FIELD_LENGTH);
+	bReadCsv : BOOL;
+	bWriteCsv : BOOL;
+	fbMoveRel: MC_MoveRelative;
+	bMoveRel : BOOL;
+	fbHome: MC_Home;
+	bHomeExe : BOOL;
+	bHomeSw : BOOL;
+	fbPower: MC_Power;
+	bEnable : bool;
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[// example of moving a CNC axis that is part of a channel with PLC Move Absolute.  
+// Note, this is absolute position of axis, no CNC offsets are applied!!!
+// When entering this "mode", the channel needs to be set to Select, then Ready before executing PLC moves
+// axis must be homed before PLC moves are allowed
+// When leaving this "mode", the channel needs to be Reset, or #CHANNEL INIT[CMDPOS] needs called from MDI or Auto in order for the position commands to be correct.
+// this code requires Tc2_CncBase and Tc2_CncPlcOpenP1 libraries to be added
+// Axis needs to have this parameter added "Kenngr.enable_single_axis    1    (P-AXIS-00457".  This allows the axis to be PLC controlled
+
+// only need to call this next FUN if the axis is not homed or not using abs encoders.  Must be homed for PLC axis to work.
+HLI3_SetAxisReferencePosition(bSetRefpos:= bSetRefPos, nHliAxisIdx:= 2);  // X axis example
+
+
+rtAxPlcMode(CLK:= bEnterAxPlcMode, Q=> );
+IF rtAxPlcMode.Q AND fbAxis_X.stStatus.bHomingDone AND fbAxis_X.stStatus.bIsEnabled THEN
+	nCase := 10;
+END_IF
+
+CASE nCase OF
+	10: // channel 0 to select, then wait for acutal state to be select
+		PLCMachineMode[0].Select := TRUE;
+		IF PRG_CNCChannelHandler.CNCChannel[0].currentstate = 2 THEN
+			nCase := 20;
+		END_IF
+		
+	20: // channel 0 to ready, then wait for acutal state to be ready
+		PLCMachineMode[0].Ready := TRUE;
+		IF PRG_CNCChannelHandler.CNCChannel[0].currentstate = 3 THEN
+			nCase := 0;
+		END_IF
+END_CASE
+
+fbHome(
+	Axis:= g_array_axis_ref[CNCSystem.LogAxisNo[3].nHliAxisIdx], 
+	Execute:= bHomeExe, 
+	CamSignal:= bHomeSw, 
+	Done=> , 
+	CommandAborted=> , 
+	Error=> , 
+	ErrorID=> );
+(*	
+fbPower(
+	Axis:= g_array_axis_ref[CNCSystem.LogAxisNo[3].nHliAxisIdx], 
+	Enable:= bEnable, 
+	Enable_Positive:= 1, 
+	Enable_Negative:= 1, 
+	PowerDefaultState:= , 
+	DriveEnabled=> , 
+	DriveReady=> , 
+	PowerState=> , 
+	Status=> , 
+	Error=> , 
+	ErrorID=> );
+*)
+fbAxis_X(
+	nLogAxisNo:= 3, 
+	bEnable:= PLCAxisEnable, 
+	bCalibrationCam:=, 
+	bSetRefOffset:= , 
+	fRefOffset:= , 
+	bFeedhold:= ,		 
+	stStatus=> );
+		
+fbSetOverride(
+	Axis:= g_array_axis_ref[CNCSystem.LogAxisNo[3].nHliAxisIdx],  
+	Enable:= bEnterAxPlcMode, //TRUE, 
+	VelFactor:= 1, 
+	VelFactorMaxShift:=1 , 
+	Enabled=> , 
+	Error=> , 
+	ErrorID=> );
+
+		
+fbMoveAbsolute(
+	Axis:= g_array_axis_ref[CNCSystem.LogAxisNo[3].nHliAxisIdx], 
+	Execute:= bExecuteMoveAbsolute AND (PRG_CNCChannelHandler.CNCChannel[0].currentstate = 3), 
+	Position:= rXposReq*10000, 
+	Velocity:= rXvelReq * 16.6666, 
+	Acceleration:= 200, // adj per application
+	Deceleration:= 200, // adj per application
+	Jerk:= 500,         // adj per application
+	Direction:= , 
+	Done=> , 
+	CommandAborted=> , 
+	Error=> , 
+	ErrorID=> );
+	
+fbMoveRel(
+	Axis:= g_array_axis_ref[CNCSystem.LogAxisNo[3].nHliAxisIdx], 
+	Execute:= bMoveRel, 
+	Distance:= 12.0*10000, 
+	Velocity:= rXvelReq * 16.6666, 
+	Acceleration:= 200, 
+	Deceleration:= 200, 
+	Jerk:= 500, 
+	Done=> , 
+	CommandAborted=> , 
+	Error=> , 
+	ErrorID=> );
+ 
+fbStop(
+	Axis:= g_array_axis_ref[CNCSystem.LogAxisNo[3].nHliAxisIdx], 
+	Execute:= bStop, 
+	Deceleration:= 1000, 
+	Jerk:= , 
+	Done=> , 
+	CommandAborted=> , 
+	Error=> , 
+	ErrorID=> );		
+	
+	
+PRG_CNCChannelHandler.CNCChannel[0].currentMode;
+
+Tc3_CNC.GLOBAL_CNC.cncsystem.channel[0].ActMode;
+
+fbCSV(
+	bReadCSV:= bReadCsv, 
+	bWriteCSV:= bWriteCsv, 
+	sFile:= 'C:\Temp\bacjunk_Units.csv', 
+	sDelimeter:= ',', 
+	bBusy=> , 
+	bErr=> , 
+	bReadingDone=> , 
+	bWritingDone=> , 
+	arrCSVData:= arrCSVData);]]></ST>
+    </Implementation>
+    <LineIds Name="myPlcAxis">
+      <LineId Id="83" Count="0" />
+      <LineId Id="92" Count="0" />
+      <LineId Id="85" Count="4" />
+      <LineId Id="84" Count="0" />
+      <LineId Id="11" Count="0" />
+      <LineId Id="5" Count="0" />
+      <LineId Id="190" Count="0" />
+      <LineId Id="61" Count="0" />
+      <LineId Id="60" Count="0" />
+      <LineId Id="64" Count="2" />
+      <LineId Id="69" Count="0" />
+      <LineId Id="68" Count="0" />
+      <LineId Id="70" Count="0" />
+      <LineId Id="72" Count="0" />
+      <LineId Id="74" Count="3" />
+      <LineId Id="79" Count="3" />
+      <LineId Id="78" Count="0" />
+      <LineId Id="71" Count="0" />
+      <LineId Id="179" Count="0" />
+      <LineId Id="181" Count="6" />
+      <LineId Id="178" Count="0" />
+      <LineId Id="191" Count="0" />
+      <LineId Id="194" Count="10" />
+      <LineId Id="192" Count="0" />
+      <LineId Id="15" Count="32" />
+      <LineId Id="143" Count="0" />
+      <LineId Id="146" Count="10" />
+      <LineId Id="144" Count="0" />
+      <LineId Id="48" Count="8" />
+      <LineId Id="14" Count="0" />
+      <LineId Id="12" Count="0" />
+      <LineId Id="108" Count="1" />
+      <LineId Id="112" Count="0" />
+      <LineId Id="111" Count="0" />
+      <LineId Id="129" Count="0" />
+      <LineId Id="131" Count="8" />
+      <LineId Id="128" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

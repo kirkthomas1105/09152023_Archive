@@ -1,0 +1,167 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.11">
+  <POU Name="myDistance" Id="{33fc2ba5-ac6a-4523-86ff-c9a44a3a7e2e}" SpecialFunc="None">
+    <Declaration><![CDATA[PROGRAM myDistance
+VAR
+	iBaseDist		:	INT;	//baseline distance for calibration 
+	iMeasure		:	INT;	//Measured distance
+	//prob only need to use the array and not toolmeasure all the time.  Or can push each new toolmeasure into aMeasureArr
+	ToolMeasure		: 	Measure;	// Structure of current points during measuring
+	aMeasureArr		:	ARRAY [1..2] OF Measure;
+	
+	myCSV: FB_CSV_RECIPE;
+	
+	myData :ARRAY [0..1, 0..MAX_CSV_ROWS] OF STRING(MAX_CSV_FIELD_LENGTH);
+	
+	
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[
+//Request z axis goes to home
+//Request x and y axis goes to home
+//Request a and c axis goes to home
+
+//calibrate sensor to known empty location at home
+//if all at home then do this   vvv 
+
+
+//move to center line of trunnion and Measure off the trunnion base plate
+//validate trunnion is centered
+
+//begin measuring tool
+
+//Manual Measure recording process
+IF GVL_HMI.MeasureNow = 1 THEN
+	GVL_HMI.MeasureNow :=0; //reset for one shot
+	ToolMeasure.Dist :=	GVL_io.iDistSens;   
+	ToolMeasure.XCur := PRG_CNCAxesHandler.fbCNC_Axis[0].stStatus.fSetPosACS;
+	ToolMeasure.YCur := PRG_CNCAxesHandler.fbCNC_Axis[1].stStatus.fSetPosACS;
+	ToolMeasure.ZCur := PRG_CNCAxesHandler.fbCNC_Axis[2].stStatus.fSetPosACS;
+	ToolMeasure.strX :=LREAL_TO_STRING(ToolMeasure.XCur);
+	ToolMeasure.strY :=LREAL_TO_STRING(ToolMeasure.YCur);
+	ToolMeasure.strZ :=LREAL_TO_STRING(ToolMeasure.ZCur);
+	ToolMeasure.strR :=LREAL_TO_STRING(ToolMeasure.RCur);
+	ToolMeasure.strV :=LREAL_TO_STRING(ToolMeasure.VCur);
+	GVL_Log.XCur := Toolmeasure.strX;
+	GVL_Log.YCur := Toolmeasure.strY;
+	GVL_Log.ZCur := Toolmeasure.strZ;
+	GVL_Log.RCur := Toolmeasure.strR;
+	GVL_Log.VCur := Toolmeasure.strV;
+	GVL_log.Dist := INT_TO_STRING(Toolmeasure.Dist);
+	GVL_HMI.sMeasurePointDis := Concat(Concat(Concat(ToolMeasure.strX,' , '),Concat(ToolMeasure.strY, ' , ')),(ToolMeasure.strZ));
+		GVL_HMI.sMeasurePointDis := concat(GVL_HMI.sMeasurePointDis, ' , ');
+		GVL_HMI.sMeasurePointDis := Concat(GVL_HMI.sMeasurePointDis, Concat(ToolMeasure.strR, ' , '));
+		GVL_HMI.sMeasurePointDis := Concat(GVL_HMI.sMeasurePointDis, Concat(ToolMeasure.strV, ' , '));
+		GVL_HMI.sMeasurePointDis := Concat(GVL_HMI.sMeasurePointDis, GVL_Log.Dist);
+	
+	GVL_log.NewMeasure :=1;	//log a new measure point it will be turned off in log function
+END_IF
+
+IF GVL_HMI.SetReferenceNow = 1 THEN
+	GVL_HMI.SetReferenceNow :=0;
+	iBaseDist := GVL_io.iDistSens; //Measure off ref surface in this case the round top tube at tallest point
+	ToolMeasure.XRef := PRG_CNCAxesHandler.fbCNC_Axis[0].stStatus.fSetPosACS;
+	ToolMeasure.YRef := PRG_CNCAxesHandler.fbCNC_Axis[1].stStatus.fSetPosACS;
+	ToolMeasure.ZRef := PRG_CNCAxesHandler.fbCNC_Axis[2].stStatus.fSetPosACS;
+	ToolMeasure.strX_Ref :=LREAL_TO_STRING(ToolMeasure.XCur);
+	ToolMeasure.strY_Ref :=LREAL_TO_STRING(ToolMeasure.YCur);
+	ToolMeasure.strZ_Ref :=LREAL_TO_STRING(ToolMeasure.ZCur);
+	GVL_HMI.sReferenceDis := Concat(Concat(Concat(ToolMeasure.strX,' , '),Concat(ToolMeasure.strY, ' , ')),(ToolMeasure.strZ));
+	GVL_Log.XRef := Toolmeasure.strX;
+	GVL_Log.YRef := Toolmeasure.strY;
+	GVL_Log.ZRef := Toolmeasure.strZ;
+	GVL_Log.RRef := Toolmeasure.strR;
+	GVL_Log.VRef := Toolmeasure.strV;
+	
+	GVL_log.DistRef := INT_TO_STRING(iBaseDist);
+	
+END_IF
+
+IF GVL_HMI.LogByDis =1 THEN
+	ToolMeasure.Dist :=	GVL_io.iDistSens;   
+	ToolMeasure.XCur := PRG_CNCAxesHandler.fbCNC_Axis[0].stStatus.fSetPosACS;
+	ToolMeasure.YCur := PRG_CNCAxesHandler.fbCNC_Axis[1].stStatus.fSetPosACS;
+	ToolMeasure.ZCur := PRG_CNCAxesHandler.fbCNC_Axis[2].stStatus.fSetPosACS;
+	ToolMeasure.strX :=LREAL_TO_STRING(ToolMeasure.XCur);
+	ToolMeasure.strY :=LREAL_TO_STRING(ToolMeasure.YCur);
+	ToolMeasure.strZ :=LREAL_TO_STRING(ToolMeasure.ZCur);
+	ToolMeasure.strR :=LREAL_TO_STRING(ToolMeasure.RCur);
+	ToolMeasure.strV :=LREAL_TO_STRING(ToolMeasure.VCur);
+	GVL_Log.XCur := Toolmeasure.strX;
+	GVL_Log.YCur := Toolmeasure.strY;
+	GVL_Log.ZCur := Toolmeasure.strZ;
+	GVL_Log.RCur := Toolmeasure.strR;
+	GVL_Log.VCur := Toolmeasure.strV;
+	GVL_log.Dist := INT_TO_STRING(Toolmeasure.Dist);
+	GVL_HMI.sMeasurePointDis := Concat(Concat(Concat(ToolMeasure.strX,' , '),Concat(ToolMeasure.strY, ' , ')),(ToolMeasure.strZ));
+		GVL_HMI.sMeasurePointDis := concat(GVL_HMI.sMeasurePointDis, ' , ');
+		GVL_HMI.sMeasurePointDis := Concat(GVL_HMI.sMeasurePointDis, Concat(ToolMeasure.strR, ' , '));
+		GVL_HMI.sMeasurePointDis := Concat(GVL_HMI.sMeasurePointDis, Concat(ToolMeasure.strV, ' , '));
+		GVL_HMI.sMeasurePointDis := Concat(GVL_HMI.sMeasurePointDis, GVL_Log.Dist);
+	
+END_IF
+myCSV(
+	bReadCSV:= , 
+	bWriteCSV:= , 
+	sFile:= 'C:\Users\administrator\Desktop\Testcsv.csv', 
+	sDelimeter:= , 
+	bBusy=> , 
+	bErr=> , 
+	bReadingDone=> , 
+	bWritingDone=>  , 
+	arrCSVData:= myData );]]></ST>
+    </Implementation>
+    <LineIds Name="myDistance">
+      <LineId Id="19" Count="0" />
+      <LineId Id="17" Count="0" />
+      <LineId Id="20" Count="2" />
+      <LineId Id="5" Count="0" />
+      <LineId Id="16" Count="0" />
+      <LineId Id="15" Count="0" />
+      <LineId Id="24" Count="0" />
+      <LineId Id="13" Count="0" />
+      <LineId Id="25" Count="0" />
+      <LineId Id="27" Count="0" />
+      <LineId Id="26" Count="0" />
+      <LineId Id="29" Count="0" />
+      <LineId Id="28" Count="0" />
+      <LineId Id="30" Count="0" />
+      <LineId Id="48" Count="0" />
+      <LineId Id="31" Count="0" />
+      <LineId Id="33" Count="2" />
+      <LineId Id="49" Count="0" />
+      <LineId Id="36" Count="0" />
+      <LineId Id="50" Count="0" />
+      <LineId Id="116" Count="1" />
+      <LineId Id="136" Count="4" />
+      <LineId Id="135" Count="0" />
+      <LineId Id="59" Count="0" />
+      <LineId Id="141" Count="0" />
+      <LineId Id="132" Count="2" />
+      <LineId Id="115" Count="0" />
+      <LineId Id="110" Count="0" />
+      <LineId Id="32" Count="0" />
+      <LineId Id="61" Count="0" />
+      <LineId Id="60" Count="0" />
+      <LineId Id="62" Count="0" />
+      <LineId Id="113" Count="0" />
+      <LineId Id="66" Count="1" />
+      <LineId Id="65" Count="0" />
+      <LineId Id="69" Count="1" />
+      <LineId Id="68" Count="0" />
+      <LineId Id="64" Count="0" />
+      <LineId Id="105" Count="3" />
+      <LineId Id="72" Count="0" />
+      <LineId Id="111" Count="1" />
+      <LineId Id="109" Count="0" />
+      <LineId Id="63" Count="0" />
+      <LineId Id="142" Count="0" />
+      <LineId Id="76" Count="0" />
+      <LineId Id="145" Count="19" />
+      <LineId Id="143" Count="1" />
+      <LineId Id="77" Count="8" />
+      <LineId Id="73" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

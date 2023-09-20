@@ -1,0 +1,15 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.11">
+  <POU Name="myCNC_Call_BogieIndex" Id="{d5095a9d-5bbc-4bff-9db1-1835808bbb83}" SpecialFunc="None">
+    <Declaration><![CDATA[PROGRAM myCNC_Call_BogieIndex
+VAR
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[]]></ST>
+    </Implementation>
+    <LineIds Name="myCNC_Call_BogieIndex">
+      <LineId Id="5" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

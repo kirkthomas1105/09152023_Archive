@@ -1,0 +1,340 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.11">
+  <POU Name="FB_StepperHomeToHardStop" Id="{4475a027-fca4-4865-8bd3-d065113af56d}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION_BLOCK FB_StepperHomeToHardStop
+VAR_IN_OUT
+	ax : axis_ref;
+END_VAR
+VAR_INPUT
+	sEcatNetId : T_AmsNetId;  			// address of EtherCAT master the terminal is attached to
+	nSlaveAddr: UINT;					// EtherCAT address of stepper terminal shown on EtherCAT tab of terminal
+	bStartHome : BOOL;					// rising edge triggered
+	iSetNormalMaxCurrent : INT;			// max current setting 
+	iSetMaxHomeCurrent : INT;			// max current setting to use during home
+	rHomePos: LREAL;					// positon of the axis when against the hard stop
+	rHomeLagErrLimit: LREAL;			// lag error value to detect axis is against hard stop.  suggest as low a number as functionally possible (+5-10%).  If a value too low is used, you may need to go into the CoE paramaters and manually enter a larger number as the axis can fail due to overcurrnt fault on terminal
+END_VAR
+VAR_OUTPUT
+	bBusy : BOOL;
+	bErr : BOOL;
+	bDone : BOOL;
+END_VAR
+VAR
+	fbHome: MC_Home;
+	fbReset: MC_Reset;
+	fbJog: MC_Jog;
+	fbSetPosition: MC_SetPosition;
+	fbCoEWrite: FB_EcCoESdoWrite;
+	fbCoERead: FB_EcCoESdoRead;
+	fbWriteLimtMonitoring: MC_WriteBoolParameter;
+	fbWriteLagMonitoring: MC_WriteBoolParameter;
+	tmrDelay: TON;
+	rtStartHome: R_TRIG;
+	eHomeMode: MC_HomingMode;
+	iMaxCurrentToSet : INT;
+	iActMaxCurrent : INT;
+	nCase: INT;
+	nLastCase: INT;
+	bResetAx: BOOL;
+	bJogRev: BOOL;
+	bJogFwd: BOOL;
+	bWriteMaxCurrent: BOOL;
+	bReadMaxCurrent: BOOL;
+	bWriteLimitMonitoringValue: BOOL;
+	bLimitMonitoringValue: BOOL;
+	bWriteLagMonitoringValue: BOOL;
+	bLagMonitoringValue: BOOL;
+	bSetAxPosition: BOOL;
+	bStartDelay: BOOL;
+	bExecuteAxHome: BOOL;
+	bJunkTrigger: BOOL;  // used for test when encoder was not present
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[(*
+	This code is meant for a stepper terminal like EL7037 that has an encoder.  This will NOT work without a working configured encoder.  
+	Use at your own risk....mechanical and electrical damage is possible!!
+	
+	This code will setp through homing a stepper motor to a hard stop.  Homing direction is negative (reverse).  Changing values in the NC axis for homing is ignored.
+	
+	Axis will move at the velocity set in axis parameter "Manual Velocity (Slow)" in NC configuration.
+	
+	Steps-
+	-Write a max current value (value from FB input) to the stepper terminal that is just high enought to make the move
+	-Disable lag error monitoring
+	-Disable negative limit monitoring
+	-Reset axis calibration flag to false
+	-Jog in negative direction until following error exceeds a limit (value from FB input).  Jogs at axis slow speed jog setting in NC config
+	-Stop
+	-Reset
+	-Write current position (value from FB input).  Recommend a value just less than zero, so axis can go to zero without risk of hitting hard stop
+	-Enable lag error monitoring
+	-Enable negative limit monitoring
+	-Set axis calbration flag to true
+	-Done
+	
+	If err occurs, look at nLastCase to determine what went wrong
+*)
+
+ax.ReadStatus();
+	
+tmrDelay(IN:= bStartDelay, PT:= T#500MS, Q=> , ET=> );
+
+rtStartHome(CLK:= bStartHome, Q=> );
+
+IF ax.Status.ControlLoopClosed AND rtStartHome.Q THEN
+	bWriteMaxCurrent := FALSE;
+	bReadMaxCurrent := FALSE;
+	bWriteLimitMonitoringValue := FALSE;
+	bWriteLagMonitoringValue := FALSE;
+	bExecuteAxHome := FALSE;
+	bStartDelay := FALSE;
+	bJogFwd := FALSE;
+	bJogRev := FALSE;
+	bResetAx := FALSE;
+	bSetAxPosition := FALSE;
+	iActMaxCurrent := 0;
+	bBusy := TRUE;
+	bErr := FALSE;
+	bDone := FALSE;
+	nCase := 10;
+END_IF
+
+CASE nCase OF
+	10:
+		iMaxCurrentToSet := iSetMaxHomeCurrent;
+		bWriteMaxCurrent := TRUE;
+		nCase := 20;
+		
+	20: 
+		IF NOT fbCoEWrite.bError THEN
+			IF NOT fbCoEWrite.bBusy THEN
+				bWriteMaxCurrent := FALSE;
+				nCase := 30;
+			END_IF
+		ELSE 
+			bErr := TRUE;
+			nLastCase := nCase;
+			nCase := 999;
+		END_IF
+		
+	30:
+		bReadMaxCurrent := TRUE;
+		nCase := 40;
+		
+	40:
+		IF NOT fbCoERead.bError THEN
+			IF NOT fbCoERead.bBusy THEN
+				bReadMaxCurrent := FALSE;
+				nCase := 50;
+			END_IF
+		ELSE 
+			bErr := TRUE;
+			nLastCase := nCase;
+			nCase := 999;
+		END_IF
+		
+	50: 
+		IF iSetMaxHomeCurrent = iActMaxCurrent THEN
+			nCase := 60;
+		ELSE 
+			bErr := TRUE;
+			nLastCase := nCase;
+			nCase := 999;
+		END_IF
+		
+	60:
+		bLimitMonitoringValue := FALSE;
+		bWriteLimitMonitoringValue := TRUE;
+		bLagMonitoringValue := FALSE;
+		bWriteLagMonitoringValue := TRUE;
+		eHomeMode := MC_ResetCalibration;
+		bExecuteAxHome := TRUE;
+		nCase := 70;
+		
+	70:
+		bWriteLimitMonitoringValue := FALSE;
+		bWriteLagMonitoringValue := FALSE;
+		bExecuteAxHome := FALSE;
+		bStartDelay := TRUE;
+		nCase := 80;
+		
+	80:
+		IF tmrDelay.Q THEN
+			bStartDelay := FALSE;
+			bJogRev := TRUE;
+			nCase := 90;
+		END_IF
+		
+	90:
+		IF (ABS(ax.NcToPlc.PosDiff) > rHomeLagErrLimit) OR bJunkTrigger THEN
+			bJunkTrigger := FALSE;
+			bJogRev := FALSE;
+			bResetAx := TRUE;
+			bStartDelay := TRUE;
+			nCase := 100;
+		END_IF
+		
+	100:
+		IF tmrDelay.Q THEN
+			bStartDelay := FALSE;
+			bResetAx := FALSE;
+			bSetAxPosition := TRUE;
+			nCase := 110;
+		END_IF
+		
+	110:
+		bSetAxPosition := FALSE;
+		nCase := 120;
+		
+	120:
+		nCase := 130;
+		
+	130:
+		IF (ax.NcToPlc.ActPos > (rHomePos - 0.005)) AND (ax.NcToPlc.ActPos < (rHomePos + 0.005)) THEN
+			nCase := 140;
+		END_IF
+		
+	140:
+		iMaxCurrentToSet := iSetNormalMaxCurrent;
+		bWriteMaxCurrent := TRUE;
+		nCase := 150;
+		
+	150: 
+		IF NOT fbCoEWrite.bError THEN
+			IF NOT fbCoEWrite.bBusy THEN 
+				bWriteMaxCurrent := FALSE;
+				nCase := 160;
+			END_IF
+		ELSE 
+			bErr := TRUE;
+			nLastCase := nCase;
+			nCase := 999;
+		END_IF
+		
+	160:
+		bReadMaxCurrent := TRUE;
+		nCase := 170;
+		
+	170:
+		IF NOT fbCoERead.bError THEN
+			IF NOT fbCoERead.bBusy THEN
+				bReadMaxCurrent := FALSE;
+				nCase := 180;
+			END_IF
+		ELSE 
+			bErr := TRUE;
+			nLastCase := nCase;
+			nCase := 999;
+		END_IF
+		
+	180: 
+		IF iMaxCurrentToSet = iActMaxCurrent THEN
+			nCase := 190;
+		ELSE 
+			bErr := TRUE;
+			nLastCase := nCase;
+			nCase := 999;
+		END_IF
+		
+	190:
+		bLimitMonitoringValue := TRUE;
+		bWriteLimitMonitoringValue := TRUE;
+		bLagMonitoringValue := TRUE;
+		bWriteLagMonitoringValue := TRUE;
+		eHomeMode := MC_ForceCalibration;
+		bExecuteAxHome := TRUE;
+		nCase := 200;
+		
+	200:
+		bWriteLimitMonitoringValue := FALSE;
+		bWriteLagMonitoringValue := FALSE;
+		bExecuteAxHome := FALSE;
+		bDone := TRUE;
+		IF NOT bStartHome THEN
+			bBusy := FALSE;
+			bDone := FALSE;
+			nCase := 0;
+		END_IF
+		
+	999:
+		bWriteMaxCurrent := FALSE;
+		bReadMaxCurrent := FALSE;
+		bWriteLimitMonitoringValue := FALSE;
+		bWriteLagMonitoringValue := FALSE;
+		bExecuteAxHome := FALSE;
+		bStartDelay := FALSE;
+		bJogFwd := FALSE;
+		bJogRev := FALSE;
+		bResetAx := FALSE;
+		bSetAxPosition := FALSE;
+		bErr := TRUE;
+		bDone := FALSE;
+		nCase := 0;
+		
+END_CASE
+
+fbCoEWrite(
+	sNetId:= sEcatNetId, 
+	nSlaveAddr:= nSlaveAddr, 
+	nSubIndex:= 1, 
+	nIndex:= 16#8010, 
+	pSrcBuf:= ADR(iMaxCurrentToSet), 
+	cbBufLen:= SIZEOF(iMaxCurrentToSet), 
+	bExecute:= bWriteMaxCurrent, 
+	tTimeout:= , 
+	bBusy=> , 
+	bError=> , 
+	nErrId=> );
+	
+fbCoERead(
+	sNetId:= sEcatNetId, 
+	nSlaveAddr:= nSlaveAddr, 
+	nSubIndex:= 1, 
+	nIndex:= 16#8010, 
+	pDstBuf:= ADR(iActMaxCurrent), 
+	cbBufLen:= SIZEOF(iActMaxCurrent), 
+	bExecute:= bReadMaxCurrent, 
+	tTimeout:= , 
+	bBusy=> , 
+	bError=> , 
+	nErrId=> );
+	
+fbWriteLimtMonitoring(
+	Axis:= ax, 
+	Execute:= bWriteLimitMonitoringValue, 
+	ParameterNumber:= MC_AxisParameter.EnableLimitNeg, 
+	Value:= bLimitMonitoringValue);
+	
+fbWriteLagMonitoring(
+	Axis:= ax, 
+	Execute:= bWriteLagMonitoringValue, 
+	ParameterNumber:= MC_AxisParameter.EnablePosLagMonitoring, 
+	Value:= bLagMonitoringValue);
+	
+fbSetPosition(
+	Axis:= ax, 
+	Execute:= bSetAxPosition, 
+	Position:= rHomePos);
+	
+fbReset(
+	Axis:= ax, 
+	Execute:= bResetAx);
+
+fbJog(
+	Axis:= ax, 
+	JogForward:= bJogFwd, 
+	JogBackwards:= bJogRev);	
+	
+fbHome(
+	Axis:= ax, 
+	Execute:= bExecuteAxHome, 
+	Position:= , 
+	HomingMode:= eHomeMode);]]></ST>
+    </Implementation>
+    <LineIds Name="FB_StepperHomeToHardStop">
+      <LineId Id="3" Count="278" />
+      <LineId Id="2" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

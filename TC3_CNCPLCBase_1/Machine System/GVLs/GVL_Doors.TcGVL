@@ -1,0 +1,13 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+  <GVL Name="GVL_Doors" Id="{274bb7fd-4db4-41ed-976d-c9cbe4efdb70}">
+    <Declaration><![CDATA[{attribute 'qualified_only'}
+VAR_GLOBAL
+	FQ1 : sRollerDoor;	//Smaller Roller Door - Input to Spray Zone
+	FQ2 : sRollerDoor;	//Larger Roller Door on SD1
+	FQ3 : sRollerDoor;	//Larger Roller Door on SD2
+	RibDoor: sRollerDoor; // Door to process enclosure to pass ribs through to pick and place
+	QQ1 : sPersonnelDoor; //Sliding Personnel Door
+END_VAR]]></Declaration>
+  </GVL>
+</TcPlcObject>

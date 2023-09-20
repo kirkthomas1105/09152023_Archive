@@ -1,0 +1,275 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+  <DUT Name="sTransfer" Id="{156bb6e0-5373-4f98-a545-61e3cb364558}">
+    <Declaration><![CDATA[TYPE sTransfer :
+STRUCT
+		Run_Fwd : BOOL; // Run Clear Path CW
+		Run_Rev : BOOL; // Run Clear Path CCW
+		Ok_To_Run : BOOL; // Run permissive from safety routines
+		Occupied : BOOL; // Part is present on transfer
+		Enter_Switch_is_On : BOOL; // Limit switch at entry position
+		Exit_Switch_is_On : BOOL; // Limit switch at exit position
+		Enter_Switch_is_Off : BOOL; // Limit switch at entry position
+		Exit_Switch_is_Off : BOOL; // Limit switch at exit position
+		CaseStopLoweredSwitchIsOn: BOOL;
+		CaseStopLoweredSwitchIsOff: BOOL;
+		CaseStopRaisedSwitchIsOn: BOOL;
+		CaseStopRaisedSwitchIsOff: BOOL;
+		Moving : BOOL; // Motor is moving (Encoder is providing pulses)
+		Transfer_Position : STRING; // Transfer position is which of the infeed or outfeed positions that the transfer can be at (GL1-12)
+		Infeed : BOOL; // Set a bit to show which way the transfer should be operating depending on where the tool came from.
+		Calling_For_Part : BOOL; // Transfer is calling for part 
+		Is_Homed : BOOL; // Motor has been homed
+		Current_Position : LREAL; // Current position encoder value
+		Motor_Fault : BOOL; // Motor requested to run, but no motion is seen from HLFB
+		Jam_Fault : BOOL; // Motor is running, case stop is retracted,  and sensor is still blocked
+		CASE_STOP_EXTEND_REQUEST:BOOL; // CLOSE CASE STOP TO CAPTURE PART IN PLACE
+		CASE_STOP_RETRACT_REQUEST:BOOL; // OPEN CASE STOP TO ALLOW PART TO GO PAST
+		Moving_to_GL5 : BOOL; // GL1/2 IN TRANSIT TO GL5 POSITION
+		Moving_to_GL6 : BOOL; // GL1/2 IN TRANSIT TO GL6 POSITION
+		Moving_to_GL8 : BOOL; // GL1/2 IN TRANSIT TO GL8 POSITION
+		Empty : BOOL; // TRANSFER IS NOT OCCUPIED
+		Moving_to_GL3 : BOOL;
+		Moving_to_GL7 : BOOL;
+		Moving_to_GL9 : BOOL;
+		Moving_to_GL12 : BOOL;
+		At_GL5B: BOOL;
+		At_GL6 : BOOL;
+		At_GL8 : BOOL;
+		At_GL3 : BOOL;
+		At_GL9 : BOOL;
+		AT_GL3_PROX_1_ON : BOOL;
+		AT_GL3_PROX_1_OFF : BOOL;
+		AT_GL3_PROX_2_ON : BOOL;
+		AT_GL3_PROX_2_OFF : BOOL;
+		AT_GL5B_PROX_1_ON : BOOL; // Most upstream location prox for GL5 position
+		AT_GL5B_PROX_1_OFF : BOOL;
+		AT_GL5B_PROX_2_ON : BOOL; // Most downstream location prox for GL5 position
+		AT_GL5B_PROX_2_OFF : BOOL;
+		AT_GL6_PROX_1_ON : BOOL; // Most upstream location prox for GL6 position
+		AT_GL6_PROX_1_OFF : BOOL;
+		AT_GL6_PROX_2_ON : BOOL; // Most downstream location prox for GL6 position
+		AT_GL6_PROX_2_OFF : BOOL;
+		AT_GL7_PROX_1_ON : BOOL; // Most upstream location prox for GL7 position
+		AT_GL7_PROX_1_OFF : BOOL;
+		AT_GL7_PROX_2_ON : BOOL; // Most downstream location prox for GL7 position
+		AT_GL7_PROX_2_OFF : BOOL;
+		AT_GL8_PROX_1_ON : BOOL;
+		AT_GL8_PROX_1_OFF : BOOL;
+		AT_GL8_PROX_2_ON : BOOL;
+		AT_GL8_PROX_2_OFF : BOOL;
+		AT_GL9_PROX_1_ON : BOOL;
+		AT_GL9_PROX_1_OFF : BOOL;
+		AT_GL9_PROX_2_ON : BOOL;
+		AT_GL9_PROX_2_OFF : BOOL;
+		AT_GL11_PROX_1_ON : BOOL;// Most upstream location prox for GL5 position
+		AT_GL11_PROX_1_OFF : BOOL;
+		AT_GL11_PROX_2_ON : BOOL;// Most downstream location prox for GL5 position
+		AT_GL11_PROX_2_OFF : BOOL;
+		AT_GL12_PROX_1_ON : BOOL;// Most upstream location prox for GL5 position
+		AT_GL12_PROX_1_OFF : BOOL;
+		AT_GL12_PROX_2_ON : BOOL;// Most downstream location prox for GL5 position
+		AT_GL12_PROX_2_OFF : BOOL;
+		
+		CaseStopIsRaisedTimerOn : TON;
+		CaseStopIsRaisedTimerOnDoneBit: BOOL;
+		CaseStopIsRaisedTimerOnElapsedTime : TIME;
+	
+		CaseStopIsLoweredTimerOn : TON;
+		CaseStopIsLoweredTimerOnDoneBit: BOOL;
+		CaseStopIsLoweredTimerOnElapsedTime : TIME;
+		
+		CaseStopIsRaisedTimerOff : TOF;
+		CaseStopIsRaisedTimerOffDoneBit: BOOL;
+		CaseStopIsRaisedTimerOffElapsedTime : TIME;
+	
+		CaseStopIsLoweredTimerOff : TOF;
+		CaseStopIsLoweredTimerOffDoneBit: BOOL;
+		CaseStopIsLoweredTimerOffElapsedTime : TIME;
+		
+		Enable	AT %Q* :	BOOL;	//Green Output to enable motor
+		A		AT %Q* :	BOOL;	//Input A to send hi signal to clearpath to begin increment (triggers on hi trigger)
+		B		AT %Q* :	BOOL;	//Input B to send hi signal to clearpath to choose incremtent direction (false = CW , True = CCW)
+		HLFB	AT %I* :	BOOL;	//PPR from Clearpath encoder signal
+		Low_limit AT %I* :  BOOL;    // Negative travel limit switch
+		High_Limit AT %I* : BOOL;	// Positive travel limit switch
+		PP_Enter_Right AT %I* :   BOOL;	// Upstream entrance part present sensor
+		PP_Enter_Left AT %I* :   BOOL;	// Upstream entrance part present sensor
+		PP_Exit_Right AT %I* :    BOOL;	// Downstream exit part present sensor
+		PP_Exit_Left AT %I* :    BOOL;	// Downstream exit part present sensor
+		PE_Occupied AT %I* :    BOOL;	// Downstream exit part present sensor
+		Case_Stop_Extended_Right AT %I* : BOOL; // Input from case stop extend solenoid
+	    Case_Stop_Retracted_Right AT %I* : BOOL; // Input from case stop retract solenoid
+		Case_Stop_Extended_Left AT %I* : BOOL; // Input from case stop extend solenoid
+	    Case_Stop_Retracted_Left AT %I* : BOOL; // Input from case stop retract solenoid
+		Case_Stop_Extend AT %Q* : BOOL; // Output to case stop extend solenoid
+		Case_Stop_Retract AT %Q* : BOOL; // Output to case stop retract solenoid
+		At_GL3_Prox_1 AT %I* : BOOL;  // Upstream position switch
+		At_GL3_Prox_2 AT %I* : BOOL;  // Downstream position switch
+		At_GL5B_Prox_1 AT %I* : BOOL;  // Upstream position switch
+		At_GL5B_Prox_2 AT %I* : BOOL;  // Downstream position switch
+		At_GL6_Prox_1 AT %I* : BOOL;  // Upstream position switch
+		At_GL6_Prox_2 AT %I* : BOOL;  // Downstream position switch
+		At_GL7_Prox_1 AT %I* : BOOL;  // Upstream position switch
+		At_GL7_Prox_2 AT %I* : BOOL;  // Downstream position switch
+		At_GL8_Prox_1 AT %I* : BOOL;  // Upstream position switch
+		At_GL8_Prox_2 AT %I* : BOOL;  // Downstream position switch
+		At_GL9_Prox_1 AT %I* : BOOL;  // Upstream position switch
+		At_GL9_Prox_2 AT %I* : BOOL;  // Downstream position switch
+		At_GL12_Prox_1 AT %I* : BOOL;  // Upstream position switch
+		At_GL12_Prox_2 AT %I* : BOOL;  // Downstream position switch
+		
+		MOTOR_FAULT_TimerOn : TON;
+		MOTOR_FAULT_TimerOn_Done_Bit: BOOL;
+    	MOTOR_FAULT_TimerOn_ELAPSED : TIME;
+		
+		JAM_FAULT_TimerOn : TON;
+		JAM_FAULT_TimerOn_Done_Bit: BOOL;
+    	JAM_FAULT_TimerOn_ELAPSED : TIME;
+		
+		PP_ENTER_ON_TimerOn : TON;
+		PP_ENTER_ON_TimerOn_Done_Bit: BOOL;
+		PP_ENTER_ON_TimerOn_ELAPSED : TIME;
+	
+		PP_ENTER_OFF_TimerOff : TOF;
+		PP_ENTER_OFF_TimerOff_Done_Bit: BOOL;
+		PP_ENTER_OFF_TimerOff_ELAPSED : TIME;
+	
+		PP_EXIT_ON_TimerOn : TON;
+		PP_EXIT_ON_TimerOn_Done_Bit: BOOL;
+		PP_EXIT_ON_TimerOn_ELAPSED : TIME;
+	
+		PP_EXIT_OFF_TimerOff : TON;
+		PP_EXIT_OFF_TimerOff_Done_Bit: BOOL;
+		PP_EXIT_OFF_TimerOff_ELAPSED : TIME;
+		
+		PE_OCCUPIED_ON_TimerOn : TON;
+		PE_OCCUPIED_ON_TimerOn_Done_Bit: BOOL;
+		PE_OCCUPIED_ON_TimerOn_ELAPSED : TIME;
+	
+		PE_OCCUPIED_OFF_TimerOff : TOF;
+		PE_OCCUPIED_OFF_TimerOff_Done_Bit: BOOL;
+		PE_OCCUPIED_OFF_TimerOff_ELAPSED : TIME;
+		
+		AT_GL3_PROX_1_ON_TimerOn : TON;
+		AT_GL3_PROX_1_ON_TimerOn_Done_Bit: BOOL;
+		AT_GL3_PROX_1_ON_TimerOn_ELAPSED : TIME;
+	
+		AT_GL3_PROX_1_OFF_TimerOff : TOF;
+		AT_GL3_PROX_1_OFF_TimerOff_Done_Bit: BOOL;
+		AT_GL3_PROX_1_OFF_TimerOff_ELAPSED : TIME;
+		
+		AT_GL3_PROX_2_ON_TimerOn : TON;
+		AT_GL3_PROX_2_ON_TimerOn_Done_Bit: BOOL;
+		AT_GL3_PROX_2_ON_TimerOn_ELAPSED : TIME;
+	
+		AT_GL3_PROX_2_OFF_TimerOff : TOF;
+		AT_GL3_PROX_2_OFF_TimerOff_Done_Bit: BOOL;
+		AT_GL3_PROX_2_OFF_TimerOff_ELAPSED : TIME;
+		
+
+			
+		AT_GL5B_PROX_1_ON_TimerOn : TON;
+		AT_GL5B_PROX_1_ON_TimerOn_Done_Bit: BOOL;
+		AT_GL5B_PROX_1_ON_TimerOn_ELAPSED : TIME;
+	
+		AT_GL5B_PROX_1_OFF_TimerOff : TOF;
+		AT_GL5B_PROX_1_OFF_TimerOff_Done_Bit: BOOL;
+		AT_GL5B_PROX_1_OFF_TimerOff_ELAPSED : TIME;
+		
+		AT_GL5B_PROX_2_ON_TimerOn : TON;
+		AT_GL5B_PROX_2_ON_TimerOn_Done_Bit: BOOL;
+		AT_GL5B_PROX_2_ON_TimerOn_ELAPSED : TIME;
+	
+		AT_GL5B_PROX_2_OFF_TimerOff : TOF;
+		AT_GL5B_PROX_2_OFF_TimerOff_Done_Bit: BOOL;
+		AT_GL5B_PROX_2_OFF_TimerOff_ELAPSED : TIME;
+		
+				
+		AT_GL6_PROX_1_ON_TimerOn : TON;
+		AT_GL6_PROX_1_ON_TimerOn_Done_Bit: BOOL;
+		AT_GL6_PROX_1_ON_TimerOn_ELAPSED : TIME;
+	
+		AT_GL6_PROX_1_OFF_TimerOff : TOF;
+		AT_GL6_PROX_1_OFF_TimerOff_Done_Bit: BOOL;
+		AT_GL6_PROX_1_OFF_TimerOff_ELAPSED : TIME;
+		
+		AT_GL6_PROX_2_ON_TimerOn : TON;
+		AT_GL6_PROX_2_ON_TimerOn_Done_Bit: BOOL;
+		AT_GL6_PROX_2_ON_TimerOn_ELAPSED : TIME;
+	
+		AT_GL6_PROX_2_OFF_TimerOff : TOF;
+		AT_GL6_PROX_2_OFF_TimerOff_Done_Bit: BOOL;
+		AT_GL6_PROX_2_OFF_TimerOff_ELAPSED : TIME;
+		
+		
+		AT_GL7_PROX_1_ON_TimerOn : TON;
+		AT_GL7_PROX_1_ON_TimerOn_Done_Bit: BOOL;
+		AT_GL7_PROX_1_ON_TimerOn_ELAPSED : TIME;
+	
+		AT_GL7_PROX_1_OFF_TimerOff : TOF;
+		AT_GL7_PROX_1_OFF_TimerOff_Done_Bit: BOOL;
+		AT_GL7_PROX_1_OFF_TimerOff_ELAPSED : TIME;
+		
+		AT_GL7_PROX_2_ON_TimerOn : TON;
+		AT_GL7_PROX_2_ON_TimerOn_Done_Bit: BOOL;
+		AT_GL7_PROX_2_ON_TimerOn_ELAPSED : TIME;
+	
+		AT_GL7_PROX_2_OFF_TimerOff : TOF;
+		AT_GL7_PROX_2_OFF_TimerOff_Done_Bit: BOOL;
+		AT_GL7_PROX_2_OFF_TimerOff_ELAPSED : TIME;
+		
+		
+		AT_GL8_PROX_1_ON_TimerOn : TON;
+		AT_GL8_PROX_1_ON_TimerOn_Done_Bit: BOOL;
+		AT_GL8_PROX_1_ON_TimerOn_ELAPSED : TIME;
+	
+		AT_GL8_PROX_1_OFF_TimerOff : TOF;
+		AT_GL8_PROX_1_OFF_TimerOff_Done_Bit: BOOL;
+		AT_GL8_PROX_1_OFF_TimerOff_ELAPSED : TIME;
+		
+		AT_GL8_PROX_2_ON_TimerOn : TON;
+		AT_GL8_PROX_2_ON_TimerOn_Done_Bit: BOOL;
+		AT_GL8_PROX_2_ON_TimerOn_ELAPSED : TIME;
+	
+		AT_GL8_PROX_2_OFF_TimerOff : TOF;
+		AT_GL8_PROX_2_OFF_TimerOff_Done_Bit: BOOL;
+		AT_GL8_PROX_2_OFF_TimerOff_ELAPSED : TIME;
+		
+		
+		AT_GL9_PROX_1_ON_TimerOn : TON;
+		AT_GL9_PROX_1_ON_TimerOn_Done_Bit: BOOL;
+		AT_GL9_PROX_1_ON_TimerOn_ELAPSED : TIME;
+	
+		AT_GL9_PROX_1_OFF_TimerOff : TOF;
+		AT_GL9_PROX_1_OFF_TimerOff_Done_Bit: BOOL;
+		AT_GL9_PROX_1_OFF_TimerOff_ELAPSED : TIME;
+		
+		AT_GL9_PROX_2_ON_TimerOn : TON;
+		AT_GL9_PROX_2_ON_TimerOn_Done_Bit: BOOL;
+		AT_GL9_PROX_2_ON_TimerOn_ELAPSED : TIME;
+	
+		AT_GL9_PROX_2_OFF_TimerOff : TOF;
+		AT_GL9_PROX_2_OFF_TimerOff_Done_Bit: BOOL;
+		AT_GL9_PROX_2_OFF_TimerOff_ELAPSED : TIME;
+		
+		AT_GL12_PROX_1_ON_TimerOn : TON;
+		AT_GL12_PROX_1_ON_TimerOn_Done_Bit: BOOL;
+		AT_GL12_PROX_1_ON_TimerOn_ELAPSED : TIME;
+	
+		AT_GL12_PROX_1_OFF_TimerOff : TOF;
+		AT_GL12_PROX_1_OFF_TimerOff_Done_Bit: BOOL;
+		AT_GL12_PROX_1_OFF_TimerOff_ELAPSED : TIME;
+		
+		AT_GL12_PROX_2_ON_TimerOn : TON;
+		AT_GL12_PROX_2_ON_TimerOn_Done_Bit: BOOL;
+		AT_GL12_PROX_2_ON_TimerOn_ELAPSED : TIME;
+	
+		AT_GL12_PROX_2_OFF_TimerOff : TOF;
+		AT_GL12_PROX_2_OFF_TimerOff_Done_Bit: BOOL;
+		AT_GL12_PROX_2_OFF_TimerOff_ELAPSED : TIME;
+END_STRUCT
+END_TYPE
+]]></Declaration>
+  </DUT>
+</TcPlcObject>

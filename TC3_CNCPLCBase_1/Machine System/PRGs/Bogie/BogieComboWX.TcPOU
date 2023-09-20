@@ -1,0 +1,954 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+  <POU Name="BogieComboWX" Id="{ddec1289-5da0-41cf-b22f-5b808a13c74d}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION_BLOCK BogieComboWX
+VAR_INPUT
+	//Configuration Inputs
+	VertSyncTolerance_CI 	: INT;
+	RotSyncTolerance_CI		: INT;
+	Vert_A_CI				: CpABS_CI;
+	Vert_B_CI				: CpABS_CI;
+	Clamp_A_CI				: CpABS_CI;
+	Clamp_B_CI				: CpABS_CI;
+	Rot_A_CI				: CpABS_CI;
+	Rot_B_CI				: CpABS_CI;
+	//VI (visualization input/hmi input)
+	AxisSel_VI				: INT;		//selection of Axis for jog[0=none, 1=Vert_Sync, 2=Rot_Sync, 3=Clamp_Sync, 4=Vert_A, 5=Vert_B, 6=Rot_A, 7=Rot_B, 8=Clamp_A, 9=Clamp_B]
+	Reset_VI				: BOOL;		//reset button	
+	ReSync_VI				: BOOL;		//request resync of dual axis	
+	JogSeparate_VI			: BOOL;		//Jog Separate
+	A_Select_VI				: BOOL;		//A selected
+	B_Select_VI				: BOOL;		//B selectd
+	JogNeg_VI				: BOOL;
+	JogPos_VI				: BOOL;
+	SJogNeg_VI				: BOOL;
+	SJogPos_VI				: BOOL;
+	JogVertAExecute_VI		: BOOL;		//Call manual vert move method if true
+	JogVertBExecute_VI		: BOOL;		//Call manual vert move method if true
+	JogClampAExecute_VI		: BOOL;		//Call manual Clamp move method if true
+	JogClampBExecute_VI		: BOOL;		//Call manual Clamp move method if true
+	JogRotAExecute_VI		: BOOL;		//Call manual Rot Move method if true
+	JogRotBExecute_VI		: BOOL;		//Call manual Rot Move method if true
+	SyncVertSuperJogExecute_VI	: BOOL;		//sync superjog vert manual move action bit
+	SyncRotSuperJogExecute_VI	: BOOL;
+	SyncClampSuperJogExecute_VI	: BOOL;
+	SuperJogMode_VI			: BOOL;		//Superjog mode enable bit
+	(* just use the vert_A. etc
+	VertASuperJog_VI		: BOOL;
+	VertBSuperJog_VI		: BOOL;	
+	RotASuperJog_VI			: BOOL;
+	RotBSuperJog_VI			: BOOL;
+	ClampASuperJog_VI		: BOOL;
+	ClampBSuperJog_VI		: BOOL;	
+	*)
+	JogSlow_VI				: BOOL;		//slow manual move [default to 1 on init]
+	CW_VI					: BOOL;		//Set Direction for requested move (does not apply to absolute move) True = Clockwise
+	SyncVertJogExecute_VI 	: BOOL;
+	SyncClampJogExecute_VI 	: BOOL;
+	SyncRotJogExecute_VI	: BOOL;
+
+	//Program Inputs
+	Mode_PI					: INT;		//1:auto, 0:no mode, 2:manual
+	ReSync_PI				: BOOL; 	//trigger this to begin a resync process [used after slippage or after individual jogging]
+	PowerOn_PI				: BOOL;
+	VertDisReq_PI			: INT;
+	bMoveVert_PI			: BOOL;		//trigger command for ABSMove [vert]
+	bMoveVert_A_PI			: BOOL;	
+	bMoveVert_B_PI			: BOOL;
+	ClampDisReq_PI			: INT;
+	bMoveClamp_PI			: BOOL;		//trigger command for ABSMove [clamp]
+	RotDegReq_PI			: INT;
+	bMoveRot_PI				: BOOL;		//Trigger command for ABSMove [rot]
+	bFollowerIdleDisengage	: BOOL;		//Disconnect sync when idler motor not engaged
+	HomeWithPartStart_PI	: BOOL;		//set this true in program with oneshot to start homing, do not hold true in program as FB.Home() will continue to start at step 1
+	SyncAbsDisReq_PI		: REAL;
+	Stop_PI					: BOOL;		//stop command from program
+	bPresetMoveTrigger		: BOOL;		//JOSEPHBARTONCHANGE3-28-2023 This allows for tracking when it is a preset position move
+		//VE Req Vars
+		ClampVE	: LREAL;
+		RotVE	: LREAL;
+		VertVE	: LREAL;
+	//Field Inputs
+	PartPres_A_Hi			: BOOL;
+	PartPres_A_Lo			: BOOL;
+	PartPres_B_Hi			: BOOL;
+	PartPres_B_Lo			: BOOL;
+	
+	Vert_A					: ClearpathPositionABS;
+	Vert_B					: ClearpathPositionABS;
+	Clamp_A 				: ClearpathPositionABS;
+	Clamp_B					: ClearpathPositionABS;
+	Rot_A					: ClearpathPositionABS;		//may need to change to a degree based system
+	Rot_B					: ClearpathPositionABS;		//may need to change to a degree based system
+	
+END_VAR
+VAR_OUTPUT
+	//Program OutPuts
+	Homed_PO				: BOOL;	
+	VertReadyForMove_PO		: BOOL;		//ready for vert ABSMove Command
+	VertInPosition_PO		: BOOL;		//both vert a and b are in req position
+	VertInTargetPos_PO		: BOOL;		//current pos is at last req pos
+	VertIn_M_Pos_PO			: BOOL;		//out.pos matches req VE Pos
+	VertMoving_PO			: BOOL;		//vert moving in auto mode
+	MCodeRec_Vert			: BOOL;		//MCode Command Received [vert]
+	McodeComp_vert			: BOOL;		//MCode Command complete [vert]
+
+	RotReadyForMove_PO		: BOOL;		//ready for rot ABSMove command
+	RotInPosition_PO		: BOOL;
+	RotInTargetPos_PO		: BOOL;
+	RotIn_M_Pos_PO			: BOOL; 	//out.pos matches req VE Pos
+	RotMoving_PO			: BOOL;		//rot moving in auto mode
+	MCodeRec_Rot			: BOOL;		//MCode Command Received [rot]
+	MCodeComp_Rot			: BOOL;		//Mcode Command Complet [rot]
+	
+	ClampReadyForMove_PO	: BOOL;		//ready for clamp absmove command
+	ClampInPosition_PO		: BOOL;
+	ClampInTargetPos_PO		: BOOL;
+	ClampIn_M_Pos_PO		: BOOL;		//out.pos matches req VE Pos
+	ClampMoving_PO			: BOOL;		//clamp moving in auto mode
+	MCodeRec_Clamp			: BOOL;		//MCode Command Received [clamp]
+	MCodeComp_Clamp			: BOOL;		//MCode Command Completed [clamp]
+	Msg						: STRING;	//debug message
+	Msg_Mode				: STRING; 	//mode message (what mode)
+	//Visualization Outputs
+	ErrorMsg_VO				: STRING;
+	SyncVertMsg_VO			: STRING;
+	SyncRotMsg_VO			: STRING;
+	SyncClampMsg_VO			: STRING;
+	ReadyForMoveMSg_VO		: STRING;
+	
+END_VAR
+VAR
+	synctestbit				: BOOL;
+    SyncVertCase			: INT;
+	SyncRotCase				: INT;
+	SyncClampCase			: INT;
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[//initialize the fb for bogie clearpaths bog[1-4 (vert, rot, clamp)
+Clamp_A	(IN:=Clamp_A_CI, Mode_PI:=Mode_PI,VEReq:=ClampVE, DisReq_VI:=ClampDisReq_PI, Poweron_PI:=Poweron_pi, Stop_PI:=Stop_PI, Reset_VI:=Reset_VI, SuperJogMode_VI:=SuperJogMode_VI, JogExecute_VI:=JogClampAExecute_VI, JogSlow_VI:=JogSlow_VI, CW_VI:=CW_VI);
+Clamp_B	(IN:=Clamp_B_CI, Mode_PI:=Mode_PI,VEReq:=ClampVE, DisReq_VI:=ClampDisReq_PI, Poweron_PI:=Poweron_pi, Stop_PI:=Stop_PI, Reset_VI:=Reset_VI, SuperJogMode_VI:=SuperJogMode_VI, JogExecute_VI:=JogClampBExecute_VI, JogSlow_VI:=JogSlow_VI, CW_VI:=CW_VI);
+Vert_A	(IN:=Vert_A_CI,  Mode_PI:=Mode_PI,VEReq:=VertVE,  DisReq_VI:=VertDisReq_PI,  Poweron_PI:=Poweron_pi, Stop_PI:=Stop_PI, Reset_VI:=Reset_VI, SuperJogMode_VI:=SuperJogMode_VI, JogExecute_VI:=JogVertAExecute_VI,  JogSlow_VI:=JogSlow_VI, CW_VI:=CW_VI);
+Vert_B	(IN:=Vert_B_CI,  Mode_PI:=Mode_PI,VEReq:=VertVE,  DisReq_VI:=VertDisReq_PI,  Poweron_PI:=Poweron_pi, Stop_PI:=Stop_PI, Reset_VI:=Reset_VI, SuperJogMode_VI:=SuperJogMode_VI, JogExecute_VI:=JogVertBExecute_VI,  JogSlow_VI:=JogSlow_VI, CW_VI:=CW_VI);
+Rot_A	(IN:=Rot_A_CI, 	 Mode_PI:=Mode_PI,VEReq:=RotVE,   DisReq_VI:=RotDegReq_PI,   Poweron_PI:=Poweron_PI, Stop_PI:=Stop_PI, Reset_VI:=Reset_VI, SuperJogMode_VI:=SuperJogMode_VI, JogExecute_VI:=JogRotAExecute_VI,   JogSlow_VI:=JogSlow_VI, CW_VI:=CW_VI);
+Rot_B	(IN:=Rot_B_CI, 	 Mode_PI:=Mode_PI,VEReq:=RotVE,   DisReq_VI:=RotDegReq_PI,   Poweron_PI:=Poweron_PI, Stop_PI:=Stop_PI, Reset_VI:=Reset_VI, SuperJogMode_VI:=SuperJogMode_VI, JogExecute_VI:=JogRotBExecute_VI,   JogSlow_VI:=JogSlow_VI, CW_VI:=CW_VI);
+//intialize the fb for bogie servo axis 1 and axis 2 in main pou	
+//enable motors with enable hmi variable
+IF Vert_A.Out.Homed_PO=0 OR Vert_B.Out.Homed_PO=0 OR Rot_A.Out.Homed_PO=0 OR Rot_B.Out.Homed_PO=0 OR Clamp_A.Out.Homed_PO=0 OR Clamp_B.Out.Homed_PO=0 THEN  
+	Homed_PO:=0;
+	ELSE Homed_PO:=1; END_IF
+IF Mode_PI =1 THEN	
+	SyncVertABSLin();
+	SyncRotABS();
+	SyncClampABSLin();
+	msg_mode := 'Auto Mode Engaged no Jogging';
+	
+		// JOSEPHBARTONCHANG2-15-2023
+
+	IF bPresetMoveTrigger THEN
+		Vert_A.bPresetMoveTrigger  := TRUE;
+		Rot_A.bPresetMoveTrigger   := TRUE;
+		Clamp_A.bPresetMoveTrigger := TRUE;
+		
+		Vert_B.bPresetMoveTrigger  := TRUE;
+		Rot_B.bPresetMoveTrigger   := TRUE;
+		Clamp_B.bPresetMoveTrigger := TRUE;	
+	
+		Vert_A.bMove_PI  := TRUE;
+		Rot_A.bMove_PI   := TRUE;
+		Clamp_A.bMove_PI := TRUE;
+		
+		Vert_B.bMove_PI  := TRUE;
+		Rot_B.bMove_PI   := TRUE;
+		Clamp_B.bMove_PI := TRUE;
+	END_IF
+END_IF
+
+
+IF Mode_PI =2 THEN
+	SuperMode(); 
+	Syncvertjog();
+	SyncRotJog();
+	IF ReSync_VI THEN
+		
+		//ReSync();
+		//ReSyncFollow();
+	END_IF
+	msg_mode := 'Manual Mode Engaged no Auto';
+END_IF
+//ready to receive move command
+Reset();	//just turns button on and off currently
+//move to request if above is met
+IF InSync() = FALSE THEN
+	IF JogSeparate_VI =FALSE THEN	//if superjog mode is not enabled stop all moves if out of sync
+		
+	synctestbit :=1;
+	//Vert_A.CancelMove(); JOSEPHBARTONCHANGE I HAVE TO PUT THIS BACK.
+	//Vert_B.CancelMove();
+	//Clamp_A.CancelMove();
+	//Clamp_B.CancelMove();
+	//Rot_A.CancelMove(); JOSEPHBARTONCHANGE Once the clamps are in synch, then i can uncomment these lines.
+	//Rot_B.CancelMove();
+	msg := 'Not in Sync, Move Canceled, Reset and retry home';
+	ELSE
+		msg := ' SuperJog Mode in Progress, Caution';
+	END_IF
+END_IF]]></ST>
+    </Implementation>
+    <Method Name="InSync" Id="{ce1f85ab-acc0-4bc5-96ff-6dc0cff1be45}">
+      <Declaration><![CDATA[METHOD PRIVATE InSync : BOOL
+VAR_INPUT
+END_VAR
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[
+IF Homed_PO THEN
+	IF ABS(Vert_A.Out.DistancePos_PO - Vert_B.Out.DistancePos_PO) <= VertSyncTolerance_CI AND 
+	ABS(Clamp_A.Out.DistancePos_PO - Clamp_B.Out.DistancePos_PO) <= VertSyncTolerance_CI  AND
+  ((ABS(Rot_A.Out.DistancePos_PO - Rot_B.Out.DistancePos_PO) <= RotSyncTolerance_CI) OR bFollowerIdleDisengage) THEN
+		InSync := TRUE;
+	ELSE 
+		InSync := TRUE; //:= FALSE; JOSEPHBARTONCHANGE3-24-2023 Change this back when needed.
+		ErrorMsg_VO := 'A and B are not in Sync, check A or B for encoder slippage.';
+		//IF ABS(Vert_A.Out.DistancePos_PO - Vert_B.Out.DistancePos_PO) >= VertSyncTolerance_CI THEN
+		//	SyncVertMsg_VO := 'Vert: A and B not inSync'; Else SyncVertMsg_VO:='';
+		//END_IF
+		//IF ABS(Clamp_A.Out.DistancePos_PO - Clamp_B.Out.DistancePos_PO) >= VertSyncTolerance_CI THEN JOSEPHBARTONCHANGE
+		//	SyncClampMsg_VO := 'Clamp: A and B not inSync'; ELSE SyncClampMsg_VO:='';
+		//END_IF
+		//IF ABS(Rot_A.Out.DistancePos_PO - Rot_B.Out.DistancePos_PO) >= RotSyncTolerance_CI THEN
+		//	SyncRotMsg_VO := 'Rot: A and B not inSync'; ELSE SyncRotMsg_VO:= '';
+		//END_IF
+	END_IF
+
+END_IF
+]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="Reset" Id="{38b6cb45-0171-4c61-9906-abe048b1480d}">
+      <Declaration><![CDATA[METHOD Reset : BOOL
+VAR_INPUT
+END_VAR
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[
+IF Reset_Vi = TRUE THEN
+	Reset_Vi := FALSE; 
+	bMoveVert_PI:=0;
+	bMoveRot_PI:=0;
+	bMoveClamp_PI:=0;
+	SyncVertCase :=0;
+	SyncRotCase :=0;
+	SyncClampCase :=0;
+END_IF]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="ReSync" Id="{e79bd42d-bb9f-4704-8acd-b5cea2bff524}">
+      <Declaration><![CDATA[METHOD ReSync : BOOL
+VAR_INPUT
+	
+END_VAR
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[IF Homed_PO  THEN
+	if Resync_VI then Resync_PI:=1; end_if
+	IF ABS(Vert_A.Out.DistancePos_PO - Vert_B.Out.DistancePos_PO) <= VertSyncTolerance_CI AND 
+	   ABS(Clamp_A.Out.DistancePos_PO - Clamp_B.Out.DistancePos_PO) <= VertSyncTolerance_CI THEN
+		//insync is true
+		//message no resync is necessary
+		//when resynced reset ReSync_PI Var
+		ReSync_PI :=0;
+	ELSE 
+		//insync is false
+		//check for resync
+		IF ReSync_PI THEN
+			//resync requested
+			JogSeparate_VI := TRUE;
+			//check for part present?
+			//Find A and Find B which is bigger
+			IF Vert_A.Out.DistancePos_PO > Vert_B.Out.DistancePos_PO THEN
+				
+				CW_VI := 1;
+				JogVertBExecute_VI := TRUE;
+				
+	
+			ELSIF Vert_B.Out.DistancePos_PO > Vert_A.Out.DistancePos_PO THEN
+				
+				CW_VI := 0;
+				JogVertBExecute_VI := TRUE;
+				
+			ELSE
+					ReSync_PI := 0;
+				
+			END_IF
+			
+			//move the biggest down 1 pulse and move the smallest up 1 until equal
+		ELSE
+			JogVertBExecute_VI := FALSE;
+			JogSeparate_VI := FALSE;
+			
+		END_IF
+		
+		ErrorMsg_VO := 'A and B are not in Sync, check A or B for encoder slippage.';
+	END_IF
+	//get closer on resync
+	IF ABS(Vert_A.Out.DistancePos_PO - Vert_B.Out.DistancePos_PO) <= 2 AND ABS(Clamp_A.Out.DistancePos_PO - Clamp_B.Out.DistancePos_PO) <= 2 THEN
+		//in sync
+	ELSE 
+		//insync is false
+		//check for resync
+		IF ReSync_PI THEN
+			//resync requested
+			//check for part present?
+			//Find A and Find B which is bigger
+			//will need a bmove execute button
+			IF Vert_A.Out.DistancePos_PO > Vert_B.Out.DistancePos_PO THEN
+				Vert_A.DistancePosReq_PI :=(Vert_A.Out.DistancePos_PO-1);
+				Vert_B.DistancePosReq_PI :=(Vert_B.Out.DistancePos_PO+1);
+			END_IF
+			IF Vert_B.Out.DistancePos_PO > Vert_A.Out.DistancePos_PO THEN
+				Vert_A.DistancePosReq_PI :=(Vert_A.Out.DistancePos_PO+1);
+				Vert_B.DistancePosReq_PI :=(Vert_B.Out.DistancePos_PO-1);
+			END_IF
+			
+			//move the biggest down 1 pulse and move the smallest up 1 until equal
+			
+		END_IF
+		
+		ErrorMsg_VO := 'A and B are not in Sync, check A or B for encoder slippage.';
+	END_IF
+	
+	ReSync_VI := 0;
+END_IF]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="ReSyncFollow" Id="{d62f205c-eb3a-4bde-a1d0-94534a94b4f5}">
+      <Declaration><![CDATA[METHOD ReSyncFollow : BOOL
+VAR_INPUT
+END_VAR
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[IF Homed_PO THEN
+	IF Resync_VI THEN 
+		Resync_PI:=1;
+	ELSIF GVL_HMI.MCR THEN
+		Resync_PI:=0;
+		Resync_VI:=0;
+	END_IF
+	
+	IF ABS(Rot_A.Out.DistancePos_PO - Rot_B.Out.DistancePos_PO) <= RotSyncTolerance_CI THEN
+		//insync is true
+		//message no resync is necessary
+		//when resynced reset ReSync_PI Var
+		ReSync_PI :=0;
+	ELSE 
+		IF ReSync_PI THEN
+			//resync requested
+			//check for part present?
+			//Find A and Find B which is bigger
+			IF Rot_A.Out.DistancePos_PO > Rot_B.Out.DistancePos_PO THEN
+				Rot_A.DistancePosReq_PI :=(Rot_A.Out.DistancePos_PO-1);
+				Rot_B.DistancePosReq_PI :=(Rot_B.Out.DistancePos_PO+1);
+				bMoveRot_PI :=TRUE;
+				
+
+			ELSIF Rot_B.Out.DistancePos_PO > Rot_A.Out.DistancePos_PO THEN
+				Rot_A.DistancePosReq_PI := (Rot_A.Out.DistancePos_PO+1);
+				Rot_B.DistancePosReq_PI := (Rot_B.Out.DistancePos_PO-1);
+				bMoveRot_PI :=TRUE;
+			
+			ELSE
+				JogRotAExecute_VI :=FALSE;
+				JogRotBExecute_VI :=FALSE;
+				ReSync_PI:=0;
+			END_IF
+			
+			//move the biggest down 1 pulse and move the smallest up 1 until equal
+			
+		END_IF
+		
+		ErrorMsg_VO := 'A and B are not in Sync, check A or B for encoder slippage.';
+	END_IF
+	
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+//get closer on resync
+	IF ABS(Rot_A.Out.DistancePos_PO - Rot_B.Out.DistancePos_PO) <= 2 THEN
+		//in sync
+	ELSE 
+		//insync is false
+		//check for resync
+		IF ReSync_PI THEN
+			//resync requested
+			//check for part present?
+			//Find A and Find B which is bigger
+			//will need a bmove execute button
+			IF Rot_A.Out.DistancePos_PO > Rot_B.Out.DistancePos_PO THEN
+				Rot_A.DistancePosReq_PI :=(Rot_A.Out.DistancePos_PO-1);
+				Rot_B.DistancePosReq_PI :=(Rot_B.Out.DistancePos_PO+1);
+			END_IF
+			IF Rot_B.Out.DistancePos_PO > Rot_A.Out.DistancePos_PO THEN
+				Rot_A.DistancePosReq_PI :=(Rot_A.Out.DistancePos_PO+1);
+				Rot_B.DistancePosReq_PI :=(Rot_B.Out.DistancePos_PO-1);
+			END_IF
+			
+			//move the biggest down 1 pulse and move the smallest up 1 until equal
+			
+		END_IF
+		
+		ErrorMsg_VO := 'A and B are not in Sync, check A or B for encoder slippage.';
+	END_IF
+	
+	
+END_IF]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="SuperMode" Id="{024aa03f-9d49-4ba1-bb1a-7d921df7803a}">
+      <Declaration><![CDATA[METHOD SuperMode : BOOL
+VAR_INPUT
+END_VAR
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[IF (*InSync()=TRUE AND *) SyncVertSuperJogExecute_VI AND SuperJogMode_VI THEN
+	//jogs are canceled in 'ClearpathLinPPR' FB when SuperJogExecute is set to 0.
+	Vert_A.SuperJogExecute_VI :=1;
+	Vert_B.SuperJogExecute_VI :=1;
+ELSE
+	IF JogSeparate_VI = 0 THEN
+		Vert_A.SuperJogExecute_VI :=0;
+		Vert_B.SuperJogExecute_VI :=0;
+	END_IF
+END_IF
+
+IF SuperJogMode_VI AND SyncVertSuperJogExecute_VI =0 THEN 	//sync move has to be off to move an individual
+	//Vert_A.SuperJogExecute_VI :=VertASuperJog_VI;
+	//Vert_B.SuperJogExecute_VI :=VertBSuperJog_VI;
+
+END_IF]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="SyncClampAbsLin" Id="{a1698e2e-e72b-42ef-956f-0af7e703ca8e}">
+      <Declaration><![CDATA[METHOD SyncClampAbsLin : BOOL
+VAR_INPUT
+END_VAR
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[IF Clamp_A.Out.InPosition AND Clamp_B.Out.InPosition THEN
+	ClampInPosition_PO :=1;
+	ELSE ClampInPosition_PO :=0;
+END_IF
+IF Clamp_A.Out.InTargetPosition AND Clamp_B.Out.InTargetPosition THEN
+	ClampInTargetPos_PO :=1;
+	else ClampInTargetPos_PO :=0;
+END_IF
+IF Clamp_A.Out.InMPos AND Clamp_B.Out.InMPos THEN
+	ClampIn_M_Pos_PO:=1;
+	else ClampIn_M_Pos_PO:=0;
+END_IF
+CASE SyncClampCase OF
+	0: //Ready for move
+		IF InSync()=TRUE THEN
+			IF Clamp_A.Out.ReadyForMove_PO AND Clamp_B.Out.ReadyForMove_PO THEN
+				ClampReadyForMove_PO := TRUE;
+				ELSE
+					//Msg A or B not readyto move
+				END_IF
+			ELSE //msg not insync cant move
+		END_IF
+		IF ClampReadyForMove_PO AND ClampInPosition_PO THEN
+			//set request and await execute
+			IF bMoveClamp_PI THEN
+				Clamp_A.DistancePosReq_PI := ClampDisReq_PI;
+				Clamp_B.DistancePosReq_PI := ClampDisReq_PI;
+				Clamp_A.bMove_PI :=1;
+				Clamp_B.bMove_PI :=1;
+				SyncClampCase :=10;
+			END_IF
+		END_IF
+	10: //monitor insync
+		bMoveClamp_PI :=0;
+		ClampReadyForMove_PO :=FALSE; //step thru case before being able to send again
+		IF InSync()=FALSE THEN
+			Clamp_A.CancelMove();
+			Clamp_B.CancelMove();
+			//msg not insync
+			SyncClampCase :=90; //syncerror
+		END_IF
+		//COnfirm Position
+		IF ClampInTargetPos_PO THEN
+			SyncClampCase:=20;
+			ELSE //waiting for move to finish
+		END_IF
+	20: //Set Ready to Move
+		IF InSync()=TRUE THEN
+			IF Clamp_A.Out.ReadyForMove_PO AND Clamp_B.Out.ReadyForMove_PO THEN
+				ClampReadyForMove_PO := TRUE;
+				ELSE
+					//Msg A or B not readyto move
+				END_IF
+			ELSE //msg not insync cant move
+		END_IF
+		IF ClampReadyForMove_PO THEN SyncClampCase := 0; END_IF
+	90: //SyncError
+		SyncClampMsg_VO := 'Not in sync abs move was canceld, reset req';
+	
+END_CASE
+]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="SyncRotABS" Id="{f352dd4b-ab6a-42bc-b63f-cde6a00253a9}">
+      <Declaration><![CDATA[METHOD SyncRotABS : BOOL
+VAR_INPUT
+END_VAR
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[IF Rot_A.Out.InPosition AND (Rot_B.Out.InPosition or bFollowerIdleDisengage) THEN
+	RotInPosition_PO :=1;
+	ELSE RotInPosition_PO :=0;
+END_IF
+IF Rot_A.Out.InTargetPosition AND (Rot_B.Out.InTargetPosition OR bFollowerIdleDisengage) THEN
+	RotInTargetPos_PO :=1;
+	ELSE RotInTargetPos_PO :=0;
+END_IF
+IF Rot_A.Out.InMPos AND Rot_B.Out.InMPos THEN
+	RotIn_M_Pos_PO:=1;
+	Else RotIn_M_Pos_PO:=0;
+END_IF
+CASE SyncRotCase OF
+	0: //Ready for move
+		IF InSync()=TRUE THEN
+			IF Rot_A.Out.ReadyForMove_PO AND (Rot_B.Out.ReadyForMove_PO OR bFollowerIdleDisengage) THEN
+				RotReadyForMove_PO := TRUE;
+				ELSE
+					//Msg A or B not readyto move
+				END_IF
+			ELSE //msg not insync cant move
+		END_IF
+		IF RotReadyForMove_PO AND RotInPosition_PO THEN
+			//set request and await execute
+			IF bMoveRot_PI THEN
+				Rot_A.DistancePosReq_PI := RotDegReq_PI;
+				Rot_B.DistancePosReq_PI := RotDegReq_PI;
+				Rot_A.bMove_PI :=1;
+				Rot_B.bMove_PI :=1;
+				SyncRotCase :=10;
+			END_IF
+		END_IF
+	10: //monitor insync
+		bMoveRot_PI :=0;
+		RotReadyForMove_PO :=FALSE;	//step thru case before being able to send again
+		IF InSync()=FALSE THEN
+			Rot_A.CancelMove();
+			Rot_B.CancelMove();
+			//msg not insync
+			SyncRotCase :=90; //syncerror
+		END_IF
+		//COnfirm Position
+		IF RotInTargetPos_PO  THEN
+			SyncRotCase:=20;
+			ELSE //waiting for move to finish
+		END_IF
+	20: //Set Ready to Move
+		IF InSync()=TRUE THEN
+			IF Rot_A.Out.ReadyForMove_PO AND (Rot_B.Out.ReadyForMove_PO or bFollowerIdleDisengage) THEN
+				RotReadyForMove_PO := TRUE;
+				ELSE
+					//Msg A or B not readyto move
+				END_IF
+			ELSE //msg not insync cant move
+		END_IF
+		IF RotReadyForMove_PO THEN SyncRotCase := 0; END_IF
+	90: //SyncError
+		SyncRotMsg_VO := 'Not in sync abs move was canceld, reset req';
+	
+END_CASE
+
+]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="SyncRotJog" Id="{ed624c1a-72c4-445c-85b0-0dc8ca5c0174}">
+      <Declaration><![CDATA[METHOD SyncRotJog : BOOL
+VAR_INPUT
+END_VAR
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[
+IF JogSeparate_VI = FALSE THEN
+	IF SyncRotJogExecute_VI THEN //JOSEPHBARTONCHANGE IF InSync()=TRUE AND SyncRotJogExecute_VI THEN
+		JogRotAExecute_VI :=1;
+		JogRotBExecute_VI :=1;
+	ELSE
+		JogRotAExecute_VI :=0;
+		JogRotBExecute_VI :=0;
+	END_IF
+	ELSE
+		//use the jog a or b vi to move items
+	
+END_IF]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="SyncVertAbsLin" Id="{faf2b4ca-631d-4358-ab32-c1820a416836}">
+      <Declaration><![CDATA[METHOD PUBLIC SyncVertAbsLin : BOOL
+VAR_INPUT
+END_VAR
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[IF Vert_A.Out.InPosition AND Vert_B.Out.InPosition THEN
+	VertInPosition_PO :=1;
+	else VertInPosition_PO :=0;
+END_IF
+IF Vert_A.Out.InTargetPosition AND Vert_B.Out.InTargetPosition THEN
+	VertInTargetPos_PO :=1;
+	ELSE VertInTargetPos_PO :=0;
+END_IF
+IF Vert_A.Out.InMPos AND Vert_B.Out.InMPos THEN
+	VertIn_M_Pos_PO :=1;
+	ELSE VertIn_M_Pos_PO:=0;
+END_IF
+CASE SyncVertCase OF
+	0: //Ready for move
+		IF InSync()=TRUE THEN
+			IF Vert_A.Out.ReadyForMove_PO AND Vert_B.Out.ReadyForMove_PO THEN
+				VertReadyForMove_PO := TRUE;
+				ELSE
+					//Msg A or B not readyto move
+				END_IF
+			ELSE //msg not insync cant move
+		END_IF
+		IF VertReadyForMove_PO AND VertInPosition_PO THEN
+			//set request and await execute
+			IF bMoveVert_PI THEN
+				Vert_A.DistancePosReq_PI := VertDisReq_PI;
+				Vert_B.DistancePosReq_PI := VertDisReq_PI;
+				Vert_A.bMove_PI :=1;
+				Vert_B.bMove_PI :=1;
+				SyncVertCase :=10;
+			END_IF
+		END_IF
+	10: //monitor insync
+		bMoveVert_PI :=0;
+		VertReadyForMove_PO :=FALSE; //step thru case before being able to send again
+		IF InSync()=FALSE THEN
+			Vert_A.CancelMove();
+			Vert_B.CancelMove();
+			//msg not insync
+			SyncVertCase :=90; //syncerror
+		END_IF
+		//Confirm Position
+		IF VertInTargetPos_PO THEN
+			SyncVertCase:=20;
+			ELSE //waiting for move to finish
+		END_IF
+	20: //Set Ready to Move
+		IF InSync()=TRUE THEN
+			IF Vert_A.Out.ReadyForMove_PO AND Vert_B.Out.ReadyForMove_PO THEN
+				VertReadyForMove_PO := TRUE;
+				ELSE
+					//Msg A or B not readyto move
+				END_IF
+			ELSE //msg not insync cant move
+		END_IF
+		IF VertReadyForMove_PO THEN SyncVertCase := 0; END_IF
+	90: //SyncError
+		SyncVertMsg_VO := 'Not in sync abs move was canceld, reset req';
+	
+END_CASE
+
+]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="SyncVertJog" Id="{dba1e511-1759-409b-a051-d146d1054106}">
+      <Declaration><![CDATA[METHOD PRIVATE SyncVertJog : BOOL
+VAR_INPUT
+END_VAR
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[
+IF JogSeparate_VI = FALSE THEN
+	IF SyncVertJogExecute_VI THEN //IF InSync()=TRUE AND SyncVertJogExecute_VI THEN
+		JogVertAExecute_VI :=1;	//JOSEPHBARTONCHANGE1-27-2023 Removed checking in Clamp and Rotary are in synch for vert movement.
+		JogVertBExecute_VI :=1;
+	ELSE
+		JogVertAExecute_VI :=0;
+		JogVertBExecute_VI :=0;
+	END_IF
+	IF InSync()=TRUE AND SyncClampJogExecute_VI THEN
+		JogClampAExecute_VI :=1;
+		JogClampBExecute_VI :=1;
+	ELSE
+		JogClampAExecute_VI :=0;
+		JogClampBExecute_VI :=0;
+	END_IF
+	ELSE
+		
+	//use the jog a or b vi to move items
+END_IF
+]]></ST>
+      </Implementation>
+    </Method>
+    <LineIds Name="BogieComboWX">
+      <LineId Id="283" Count="0" />
+      <LineId Id="286" Count="8" />
+      <LineId Id="493" Count="1" />
+      <LineId Id="647" Count="0" />
+      <LineId Id="297" Count="0" />
+      <LineId Id="878" Count="0" />
+      <LineId Id="985" Count="0" />
+      <LineId Id="875" Count="0" />
+      <LineId Id="1223" Count="1" />
+      <LineId Id="1649" Count="0" />
+      <LineId Id="1373" Count="0" />
+      <LineId Id="1788" Count="5" />
+      <LineId Id="1786" Count="1" />
+      <LineId Id="1376" Count="0" />
+      <LineId Id="1393" Count="0" />
+      <LineId Id="1519" Count="0" />
+      <LineId Id="1656" Count="0" />
+      <LineId Id="1654" Count="1" />
+      <LineId Id="1653" Count="0" />
+      <LineId Id="1919" Count="0" />
+      <LineId Id="872" Count="0" />
+      <LineId Id="1387" Count="0" />
+      <LineId Id="1386" Count="0" />
+      <LineId Id="873" Count="0" />
+      <LineId Id="298" Count="0" />
+      <LineId Id="300" Count="0" />
+      <LineId Id="563" Count="0" />
+      <LineId Id="301" Count="0" />
+      <LineId Id="2043" Count="0" />
+      <LineId Id="720" Count="0" />
+      <LineId Id="1102" Count="0" />
+      <LineId Id="721" Count="0" />
+      <LineId Id="877" Count="0" />
+      <LineId Id="874" Count="0" />
+      <LineId Id="302" Count="4" />
+      <LineId Id="317" Count="1" />
+      <LineId Id="307" Count="1" />
+      <LineId Id="370" Count="1" />
+      <LineId Id="561" Count="1" />
+      <LineId Id="309" Count="4" />
+    </LineIds>
+    <LineIds Name="BogieComboWX.InSync">
+      <LineId Id="36" Count="0" />
+      <LineId Id="13" Count="0" />
+      <LineId Id="21" Count="0" />
+      <LineId Id="44" Count="1" />
+      <LineId Id="14" Count="2" />
+      <LineId Id="40" Count="0" />
+      <LineId Id="46" Count="8" />
+      <LineId Id="28" Count="0" />
+      <LineId Id="25" Count="0" />
+      <LineId Id="7" Count="0" />
+      <LineId Id="20" Count="0" />
+    </LineIds>
+    <LineIds Name="BogieComboWX.Reset">
+      <LineId Id="5" Count="0" />
+      <LineId Id="11" Count="0" />
+      <LineId Id="9" Count="0" />
+      <LineId Id="21" Count="2" />
+      <LineId Id="15" Count="2" />
+      <LineId Id="10" Count="0" />
+    </LineIds>
+    <LineIds Name="BogieComboWX.ReSync">
+      <LineId Id="6" Count="0" />
+      <LineId Id="76" Count="0" />
+      <LineId Id="7" Count="0" />
+      <LineId Id="80" Count="0" />
+      <LineId Id="8" Count="0" />
+      <LineId Id="16" Count="0" />
+      <LineId Id="24" Count="1" />
+      <LineId Id="9" Count="0" />
+      <LineId Id="14" Count="1" />
+      <LineId Id="17" Count="1" />
+      <LineId Id="92" Count="0" />
+      <LineId Id="20" Count="1" />
+      <LineId Id="26" Count="0" />
+      <LineId Id="88" Count="0" />
+      <LineId Id="90" Count="0" />
+      <LineId Id="89" Count="0" />
+      <LineId Id="102" Count="0" />
+      <LineId Id="87" Count="0" />
+      <LineId Id="31" Count="0" />
+      <LineId Id="93" Count="2" />
+      <LineId Id="99" Count="2" />
+      <LineId Id="91" Count="0" />
+      <LineId Id="34" Count="0" />
+      <LineId Id="30" Count="0" />
+      <LineId Id="22" Count="1" />
+      <LineId Id="96" Count="0" />
+      <LineId Id="98" Count="0" />
+      <LineId Id="97" Count="0" />
+      <LineId Id="19" Count="0" />
+      <LineId Id="10" Count="1" />
+      <LineId Id="5" Count="0" />
+      <LineId Id="67" Count="0" />
+      <LineId Id="41" Count="0" />
+      <LineId Id="45" Count="7" />
+      <LineId Id="72" Count="0" />
+      <LineId Id="53" Count="13" />
+      <LineId Id="40" Count="0" />
+      <LineId Id="39" Count="0" />
+      <LineId Id="38" Count="0" />
+      <LineId Id="12" Count="0" />
+    </LineIds>
+    <LineIds Name="BogieComboWX.ReSyncFollow">
+      <LineId Id="5" Count="0" />
+      <LineId Id="62" Count="0" />
+      <LineId Id="80" Count="2" />
+      <LineId Id="84" Count="0" />
+      <LineId Id="83" Count="0" />
+      <LineId Id="79" Count="0" />
+      <LineId Id="8" Count="4" />
+      <LineId Id="6" Count="0" />
+      <LineId Id="15" Count="6" />
+      <LineId Id="66" Count="0" />
+      <LineId Id="68" Count="0" />
+      <LineId Id="22" Count="3" />
+      <LineId Id="69" Count="4" />
+      <LineId Id="78" Count="0" />
+      <LineId Id="26" Count="6" />
+      <LineId Id="13" Count="0" />
+      <LineId Id="34" Count="0" />
+      <LineId Id="86" Count="14" />
+      <LineId Id="85" Count="0" />
+      <LineId Id="35" Count="26" />
+      <LineId Id="33" Count="0" />
+    </LineIds>
+    <LineIds Name="BogieComboWX.SuperMode">
+      <LineId Id="6" Count="0" />
+      <LineId Id="21" Count="0" />
+      <LineId Id="7" Count="1" />
+      <LineId Id="19" Count="0" />
+      <LineId Id="26" Count="0" />
+      <LineId Id="20" Count="0" />
+      <LineId Id="11" Count="0" />
+      <LineId Id="27" Count="0" />
+      <LineId Id="5" Count="0" />
+      <LineId Id="13" Count="0" />
+      <LineId Id="12" Count="0" />
+      <LineId Id="14" Count="0" />
+      <LineId Id="22" Count="0" />
+      <LineId Id="18" Count="0" />
+      <LineId Id="15" Count="0" />
+    </LineIds>
+    <LineIds Name="BogieComboWX.SyncClampAbsLin">
+      <LineId Id="76" Count="1" />
+      <LineId Id="79" Count="0" />
+      <LineId Id="78" Count="0" />
+      <LineId Id="80" Count="1" />
+      <LineId Id="83" Count="0" />
+      <LineId Id="82" Count="0" />
+      <LineId Id="87" Count="1" />
+      <LineId Id="90" Count="0" />
+      <LineId Id="89" Count="0" />
+      <LineId Id="25" Count="21" />
+      <LineId Id="75" Count="0" />
+      <LineId Id="47" Count="24" />
+      <LineId Id="5" Count="0" />
+    </LineIds>
+    <LineIds Name="BogieComboWX.SyncRotABS">
+      <LineId Id="76" Count="1" />
+      <LineId Id="79" Count="0" />
+      <LineId Id="78" Count="0" />
+      <LineId Id="80" Count="1" />
+      <LineId Id="83" Count="0" />
+      <LineId Id="82" Count="0" />
+      <LineId Id="87" Count="1" />
+      <LineId Id="90" Count="0" />
+      <LineId Id="89" Count="0" />
+      <LineId Id="24" Count="21" />
+      <LineId Id="75" Count="0" />
+      <LineId Id="46" Count="25" />
+      <LineId Id="5" Count="0" />
+    </LineIds>
+    <LineIds Name="BogieComboWX.SyncRotJog">
+      <LineId Id="23" Count="0" />
+      <LineId Id="16" Count="0" />
+      <LineId Id="6" Count="1" />
+      <LineId Id="14" Count="0" />
+      <LineId Id="8" Count="1" />
+      <LineId Id="15" Count="0" />
+      <LineId Id="10" Count="0" />
+      <LineId Id="17" Count="2" />
+      <LineId Id="5" Count="0" />
+    </LineIds>
+    <LineIds Name="BogieComboWX.SyncVertAbsLin">
+      <LineId Id="83" Count="0" />
+      <LineId Id="125" Count="0" />
+      <LineId Id="127" Count="0" />
+      <LineId Id="126" Count="0" />
+      <LineId Id="128" Count="1" />
+      <LineId Id="131" Count="0" />
+      <LineId Id="130" Count="0" />
+      <LineId Id="135" Count="0" />
+      <LineId Id="139" Count="0" />
+      <LineId Id="141" Count="0" />
+      <LineId Id="140" Count="0" />
+      <LineId Id="37" Count="1" />
+      <LineId Id="85" Count="6" />
+      <LineId Id="84" Count="0" />
+      <LineId Id="59" Count="0" />
+      <LineId Id="68" Count="0" />
+      <LineId Id="70" Count="0" />
+      <LineId Id="72" Count="1" />
+      <LineId Id="99" Count="1" />
+      <LineId Id="79" Count="1" />
+      <LineId Id="69" Count="0" />
+      <LineId Id="40" Count="0" />
+      <LineId Id="97" Count="0" />
+      <LineId Id="123" Count="0" />
+      <LineId Id="94" Count="0" />
+      <LineId Id="96" Count="0" />
+      <LineId Id="46" Count="0" />
+      <LineId Id="101" Count="0" />
+      <LineId Id="103" Count="0" />
+      <LineId Id="102" Count="0" />
+      <LineId Id="109" Count="0" />
+      <LineId Id="104" Count="1" />
+      <LineId Id="108" Count="0" />
+      <LineId Id="106" Count="0" />
+      <LineId Id="41" Count="0" />
+      <LineId Id="111" Count="6" />
+      <LineId Id="110" Count="0" />
+      <LineId Id="118" Count="0" />
+      <LineId Id="43" Count="0" />
+      <LineId Id="119" Count="0" />
+      <LineId Id="107" Count="0" />
+      <LineId Id="39" Count="0" />
+      <LineId Id="65" Count="0" />
+      <LineId Id="19" Count="0" />
+    </LineIds>
+    <LineIds Name="BogieComboWX.SyncVertJog">
+      <LineId Id="19" Count="0" />
+      <LineId Id="46" Count="0" />
+      <LineId Id="21" Count="1" />
+      <LineId Id="42" Count="0" />
+      <LineId Id="24" Count="0" />
+      <LineId Id="26" Count="0" />
+      <LineId Id="43" Count="0" />
+      <LineId Id="20" Count="0" />
+      <LineId Id="31" Count="1" />
+      <LineId Id="44" Count="0" />
+      <LineId Id="33" Count="1" />
+      <LineId Id="45" Count="0" />
+      <LineId Id="30" Count="0" />
+      <LineId Id="48" Count="2" />
+      <LineId Id="47" Count="0" />
+      <LineId Id="38" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

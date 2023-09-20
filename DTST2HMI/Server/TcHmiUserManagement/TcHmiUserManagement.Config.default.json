@@ -1,0 +1,46 @@
+{
+    "USERS": {
+        "Brian": {
+            "ALGORITHM": 1,
+            "ENABLED": true,
+            "PASSWORD": "c1f2c69204a66fa07056898e37aaf7020684bd5aea19491e1d786f7b1b690a104b208000c4d23231120aba9a052188f35f36f50836a4896014d3bd63d0effcdf",
+            "SALT": "nywXEUTBOSPku6HOMP9kly/Pl5E5hNn8xzfuK2FzWTCYIt6dKi+t/1w9pkOn+3F/RXjLfxNLoHLpnnG6thnWnw=="
+        },
+        "Kirk": {
+            "ALGORITHM": 1,
+            "ENABLED": true,
+            "PASSWORD": "6ab91e17e601ab8afab761f7eedd71946150e0101b5b8569697f460e20e37653cc63f86c32ac612b4a29c5f58b5494f80b51532a21598c6f6b4663c1e6169610",
+            "SALT": "RquuQH4FeI434ZULqndxwI7PkYhbO5UZlXR2BPJcDqb8HSPf5ch+2Sbv3tdJFtmkND0Z79oULOVDr+4h/QdctQ=="
+        },
+        "Maintenance": {
+            "ALGORITHM": 1,
+            "ENABLED": true,
+            "PASSWORD": "efe808c35da3cbfe18aec9a0dc6e0ad88987139835fc9dde72cc6b032481c82e160bf25b1c9acee5a0b31034a7f683670c78e129d232848650511a8a66c4f3b9",
+            "SALT": "EZwF7hXho8en0/+vcYhnftJrb1VcD45/Y+hBV3/7bYmEk4gQC9UEyuDFpp8EZRXkt00BBA3UTGZvCnfbydpEzg=="
+        },
+        "Operator 1": {
+            "ALGORITHM": 1,
+            "ENABLED": true,
+            "PASSWORD": "114e0fc32cac8cee1b13a4b1bc1e060c62f2048ac87e2f10c14f1dbf960eb6da47a5c500c159dfb43e803bc9b401663d50afa8eec6eeb1b2a0ccc55b4f5a0ecd",
+            "SALT": "OyCDxDpXPDwByd70J4dVJHPSACGgTQ/1H5HALJyfKI+2cipxL0dJTNw5XPBnGed9/a+wDBEoJwfgEyWsgFtJOQ=="
+        },
+        "__SystemAdministrator": {
+            "ALGORITHM": 1,
+            "ENABLED": true,
+            "PASSWORD": "be6ff6535eb2eaa6b27d803a3af8e113948862318a5c143efbd4905096188acf0cfc378636157ec759554201c4c3be17a2726f0956013e7b457c4126b6a123aa",
+            "SALT": "tswJfC/TXC405/Ijn4c2qA0T5oxQameFR7JQMJaZONyzUZXRVu3MK9qccCHP47HvycVOoHCxss/rI+92zZcHhg=="
+        },
+        "__SystemGuest": {
+            "ALGORITHM": 0,
+            "ENABLED": true,
+            "PASSWORD": "",
+            "SALT": ""
+        },
+        "__SystemUser": {
+            "ALGORITHM": 0,
+            "ENABLED": true,
+            "PASSWORD": "",
+            "SALT": ""
+        }
+    }
+}

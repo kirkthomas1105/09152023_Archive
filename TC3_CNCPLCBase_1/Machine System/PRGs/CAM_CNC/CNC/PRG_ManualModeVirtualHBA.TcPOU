@@ -1,0 +1,124 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.11">
+  <POU Name="PRG_ManualModeVirtualHBA" Id="{f6aa5df9-6889-4573-b537-3e6aedd2bf3f}" SpecialFunc="None">
+    <Declaration><![CDATA[PROGRAM PRG_ManualModeVirtualHBA
+VAR_INPUT
+	nChanIdx						: UDINT;			(* Number of channel *)
+	bEnable 					: BOOL;
+END_VAR
+
+VAR_IN_OUT
+	stManualModeParameter 		: ST_ManualModeParameter;
+	stManualModeControlElements : ST_ManualModeControlElements;
+END_VAR
+
+VAR
+	RTRIG_RapidKey : R_TRIG;
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[stManualModeParameter.stChannelParameter.nChanIdx							:= 0;       (* Kanal 1 *)
+stManualModeParameter.stChannelParameter.nInc					:= 1;
+
+(*  Manual Type Selection*)
+IF (stVirtualHBA[nChanIdx].KeyHW.bKey) THEN
+	stManualModeParameter.stChannelParameter.eManualType := 1;
+END_IF
+
+IF (stVirtualHBA[nChanIdx].KeyTipp.bKey) THEN
+	stManualModeParameter.stChannelParameter.eManualType := 2;
+END_IF
+
+IF (stVirtualHBA[nChanIdx].KeyJog.bKey) THEN
+	stManualModeParameter.stChannelParameter.eManualType := 3;
+END_IF
+
+IF (stVirtualHBA[nChanIdx].KeyJS.bKey) THEN
+	stManualModeParameter.stChannelParameter.eManualType := 4;
+END_IF
+
+stVirtualHBA[nChanIdx].KeyTipp.bLED 	:= FALSE;
+stVirtualHBA[nChanIdx].KeyJog.bLED 	:= FALSE;
+stVirtualHBA[nChanIdx].KeyHW.bLED 	:= FALSE;
+stVirtualHBA[nChanIdx].KeyJS.bLED 	:= FALSE;
+
+IF NOT bEnable OR stVirtualHBA[nChanIdx].nLogAxisId = 0 THEN
+	RETURN;
+END_IF
+
+
+
+
+CASE CNCSystem.Channel[nChanIdx].ActMode OF
+
+HLI_IMCM_MANUAL_MODE:
+	CASE stManualModeParameter.stChannelParameter.eManualType OF
+		1: stVirtualHBA[nChanIdx].KeyHW.bLED 		:= TRUE;
+		2: stVirtualHBA[nChanIdx].KeyTipp.bLED 	:= TRUE;
+		3: stVirtualHBA[nChanIdx].KeyJog.bLED 		:= TRUE;
+		4: stVirtualHBA[nChanIdx].KeyJS.bLED 		:= TRUE;
+	END_CASE
+END_CASE
+
+(*  AxisID Selection*)
+stManualModeParameter.stAxisParameter.stControlUnit[0].nLogAxisNr := UINT_TO_INT(stVirtualHBA[nChanIdx].nLogAxisId);
+
+(* Handwheel Inc *)
+stManualModeControlElements.nHandwheelInc[0] := stVirtualHBA[nChanIdx].nHandwheelInc;
+
+(* Jog Increments *)
+stManualModeParameter.stChannelParameter.nInc := stVirtualHBA[nChanIdx].nJogInc;
+
+(* Axis Speed *)
+stManualModeParameter.stAxisParameter.stControlUnit[0].nSpeed := stVirtualHBA[nChanIdx].nSpeed;
+stManualModeParameter.stAxisParameter.stControlUnit[1].nSpeed := stVirtualHBA[nChanIdx].nSpeed;
+
+(* Manual Mode initialization Parameter *)
+stManualModeParameter.stChannelParameter.strInitParameter := stVirtualHBA[nChanIdx].strInitParameter;
+
+(* Joystick *)
+stManualModeControlElements.stControlJoystickValue[0] := stVirtualHBA[nChanIdx].nJoystickValue1;
+stManualModeControlElements.stControlJoystickValue[1] := stVirtualHBA[nChanIdx].nJoystickValue2;
+
+IF (stManualModeParameter.stChannelParameter.eManualType = 4) THEN
+	stManualModeParameter.stAxisParameter.stControlUnit[0].nLogAxisNr := 1;
+	stManualModeParameter.stAxisParameter.stControlUnit[1].nLogAxisNr := 2;
+ELSE
+	stManualModeParameter.stAxisParameter.stControlUnit[1].nLogAxisNr := 0;
+END_IF
+
+
+(* Handwheel and Joystick settings *)
+stManualModeParameter.stChannelParameter.nHandwheelResolution 		:= stVirtualHBA[nChanIdx].nHandwheelResolution;
+stManualModeParameter.stJoystickParameter.AnalogValueZeroDeadBand 	:= stVirtualHBA[nChanIdx].nAnalogValueZeroDeadBand;
+stManualModeParameter.stJoystickParameter.AnalogValueMax 			:= stVirtualHBA[nChanIdx].nAnalogValueMax;
+stManualModeParameter.stJoystickParameter.AnalogValueMin 			:= stVirtualHBA[nChanIdx].nAnalogValueMin;
+
+(* Direction key_s *)				
+stManualModeControlElements.stControlKeys[0].bKeyNeg := stVirtualHBA[nChanIdx].KeyNeg.bKey;
+stManualModeControlElements.stControlKeys[0].bKeyPos := stVirtualHBA[nChanIdx].KeyPos.bKey;
+
+(* Rapid key *)
+RTRIG_RapidKey(CLK:= stVirtualHBA[nChanIdx].KeyRapid.bKey);
+
+IF RTRIG_RapidKey.Q AND NOT stManualModeControlElements.stControlKeys[0].bKeyRapid THEN
+	stManualModeControlElements.stControlKeys[1].bKeyRapid := TRUE;
+ELSIF RTRIG_RapidKey.Q AND stManualModeControlElements.stControlKeys[0].bKeyRapid THEN
+	  stManualModeControlElements.stControlKeys[1].bKeyRapid := FALSE;
+END_IF
+
+stVirtualHBA[nChanIdx].KeyRapid.bLED := stManualModeControlElements.stControlKeys[0].bKeyRapid AND
+								(CNCSystem.Channel[nChanIdx].ActMode = HLI_IMCM_MANUAL_MODE);
+
+stVirtualHBA[nChanIdx].KeyNeg.bLED := stManualModeControlElements.stControlKeys[0].bKeyNeg;
+stVirtualHBA[nChanIdx].KeyPos.bLED := stManualModeControlElements.stControlKeys[0].bKeyPos;
+
+
+(* Status *)
+stVirtualHBA[nChanIdx].nStatusManualType := stManualModeParameter.stChannelParameter.eManualType;]]></ST>
+    </Implementation>
+    <LineIds Name="PRG_ManualModeVirtualHBA">
+      <LineId Id="3" Count="97" />
+      <LineId Id="2" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

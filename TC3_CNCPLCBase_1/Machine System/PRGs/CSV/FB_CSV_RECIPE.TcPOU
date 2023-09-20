@@ -1,0 +1,279 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.11">
+  <POU Name="FB_CSV_RECIPE" Id="{8e75c30a-0dff-40db-8e66-e844c9dcff5e}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION_BLOCK FB_CSV_RECIPE
+VAR_INPUT
+	bReadCSV : BOOL;
+	bWriteCSV  : BOOL;
+	sFile : STRING(255);
+	sDelimeter : STRING;
+END_VAR
+VAR_OUTPUT
+	bBusy : BOOL;
+	bErr : BOOL;
+	bReadingDone : BOOL;
+	bWritingDone : BOOL;
+END_VAR
+VAR
+	fbFileOpen: FB_FileOpen;
+	eOpenMode : UDINT;
+	bOpen : BOOL;
+	fbFileClose: FB_FileClose;
+	bClose: BOOL;
+	fbFilePuts: FB_FilePuts;
+	bWriteLine: BOOL;
+	fbFileGets: FB_FileGets;
+	bGetLine: BOOL;
+	sLine2Write: T_MaxString;
+	sLastLineRead: T_MaxString;
+	hFile: UINT;
+	i: UDINT;
+	rtRead: R_TRIG;
+	rtWrite: R_TRIG;
+	step: INT;
+	n: UDINT;
+	iCommaPos: INT;
+	sColumn: ARRAY [0..MAX_CSV_COLUMNS] OF STRING(MAX_CSV_FIELD_LENGTH);
+	iStringLen: INT;
+	bWritingBusy : BOOL;
+	bReadingBusy : BOOL;
+	sTempString: STRING(MAX_CSV_FIELD_LENGTH);
+END_VAR
+
+VAR_IN_OUT
+	arrCSVData : ARRAY [0..1, 0..MAX_CSV_ROWS] OF STRING(MAX_CSV_FIELD_LENGTH);
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[(* this code requires that these global constants are declared......as "VAR_GLOBAL CONSTANT"
+VAR_GLOBAL CONSTANT
+	MAX_CSV_ROWS 			: UDINT := 100;
+	MAX_CSV_COLUMNS 		: UDINT := 5;
+	MAX_CSV_FIELD_LENGTH	: UDINT := 100;
+END_VAR
+*)
+IF bReadingDone AND NOT bReadCSV THEN
+	bReadingDone := FALSE;
+END_IF
+IF bWritingDone AND NOT bWriteCSV THEN
+	bWritingDone := FALSE;
+END_IF
+
+rtRead(CLK:= bReadCSV, Q=> );
+rtWrite(CLK:= bWriteCSV, Q=> );
+
+IF rtRead.Q AND NOT bWriteCSV THEN
+	bReadingBusy := TRUE;
+	step := 10;
+END_IF
+
+IF rtWrite.Q AND NOT bReadCSV THEN
+	bWritingBusy := TRUE;
+	step := 110;
+END_IF
+
+
+	CASE step OF
+		10: (* set to init values *)
+			bOpen := FALSE; bClose := FALSE; bWriteLine := FALSE; bGetLine := FALSE; bErr := FALSE; bReadingDone := FALSE; bWritingDone := FALSE;
+			bBusy := TRUE;
+			n := 0;
+			step := 20;
+
+		20:	(* set mode for reading *)
+			eOpenMode := FOPEN_MODEAPPEND OR FOPEN_MODEPLUS;
+			bOpen := TRUE;
+			IF fbFileOpen.bBusy THEN
+				bOpen := FALSE;
+				step := 30;
+			END_IF
+		30:
+			IF NOT fbFileOpen.bBusy THEN
+				IF NOT fbFileOpen.bError THEN
+					step := 40;
+				ELSE
+					step := 999;
+				END_IF
+			END_IF
+		40:
+			bGetLine := TRUE;
+			IF fbFileGets.bBusy THEN
+				bGetLine := FALSE;
+				step := 50;
+			END_IF
+		50:
+			IF NOT fbFileGets.bBusy THEN
+				IF NOT fbFileGets.bError THEN
+					step := 60;
+				ELSE
+					step := 999;
+				END_IF
+			END_IF
+		60:
+			A_ParseCSV();
+			FOR i := 0 TO MAX_CSV_COLUMNS BY 1 DO
+				arrCSVData[i,n] := sColumn[i];
+			END_FOR
+			n := n + 1;
+			step := 70;
+		70:
+			IF n >= MAX_CSV_ROWS THEN
+				step := 200;
+			ELSE
+				step := 40;
+			END_IF
+
+
+		(* writing *)
+		110:
+			bOpen := FALSE; bClose := FALSE; bWriteLine := FALSE; bGetLine := FALSE; bErr := FALSE;
+			bBusy := TRUE;
+			n := 0;
+			step := 120;
+
+		120:
+			eOpenMode := FOPEN_MODEWRITE;
+			bOpen := TRUE;
+			IF fbFileOpen.bBusy THEN
+				bOpen := FALSE;
+				step := 130;
+			END_IF
+		130:
+			IF NOT fbFileOpen.bBusy THEN
+				IF NOT fbFileOpen.bError THEN
+					step := 140;
+				ELSE
+					step := 999;
+				END_IF
+			END_IF
+		140:
+			sLine2Write := CONCAT(arrCSVData[0,n],sDelimeter);
+			FOR i := 1 TO MAX_CSV_COLUMNS-1 BY 1 DO
+				sLine2Write := CONCAT(sLine2Write,arrCSVData[i,n]);
+				sLine2Write := CONCAT(sLine2Write,sDelimeter);
+			END_FOR
+			sLine2Write := CONCAT(sLine2Write,arrCSVData[MAX_CSV_COLUMNS,n]);
+			sLine2Write := CONCAT(sLine2Write, '$N');
+			bWriteLine := TRUE;
+			step := 150;
+		150:
+			IF fbFilePuts.bBusy THEN
+				bWriteLine := FALSE;
+				step := 160;
+			END_IF
+		160:
+			IF NOT fbFilePuts.bBusy THEN
+				IF NOT fbFilePuts.bError THEN
+					step := 170;
+				ELSE
+					step := 999;
+				END_IF
+			END_IF
+		170:
+			n := n + 1;
+			IF n >= MAX_CSV_ROWS THEN
+				step := 200;
+			ELSE
+				step := 140;
+			END_IF
+
+
+		(* close file *)
+		200:
+			bClose := TRUE;
+			IF fbFileClose.bBusy THEN
+				bClose := FALSE;
+				step := 210;
+			END_IF
+		210:
+			IF NOT fbFileClose.bError THEN
+				IF bWritingBusy THEN
+					bWritingBusy := FALSE;
+					bWritingDone := TRUE;
+				ELSIF bReadingBusy THEN
+					bReadingBusy := FALSE;
+					bReadingDone := TRUE;
+				END_IF
+				bBusy := FALSE;
+				step := 0;
+			END_IF
+
+		999:
+			bOpen := FALSE;  bWriteLine := FALSE; bGetLine := FALSE; bReadingDone := FALSE; bWritingDone := FALSE; bBusy := FALSE;
+			bErr := TRUE;
+			bClose := TRUE;
+	END_CASE
+
+
+fbFileOpen(
+	sNetId:= ,
+	sPathName:= sFile,
+	nMode:= eOpenMode,
+	ePath:= ,
+	bExecute:= bOpen,
+	tTimeout:= ,
+	bBusy=> ,
+	bError=> ,
+	nErrId=> ,
+	hFile=> hFile);
+
+fbFilePuts(
+	sNetId:= ,
+	hFile:= hFile,
+	sLine:= sLine2Write,
+	bExecute:= bWriteLine,
+	tTimeout:= ,
+	bBusy=> ,
+	bError=> ,
+	nErrId=> );
+
+fbFileGets(
+	sNetId:= ,
+	hFile:= hFile,
+	bExecute:= bGetLine,
+	tTimeout:= ,
+	bBusy=> ,
+	bError=> ,
+	nErrId=> ,
+	sLine=> sLastLineRead,
+	bEOF=> );
+
+fbFileClose(
+	sNetId:= ,
+	hFile:= hFile,
+	bExecute:= bClose,
+	tTimeout:= ,
+	bBusy=> ,
+	bError=> ,
+	nErrId=> );
+
+IF fbFileOpen.bError OR fbFilePuts.bError OR fbFileGets.bError OR fbFileClose.bError THEN
+	bErr := TRUE;
+	bOpen := FALSE;  bWriteLine := FALSE; bGetLine := FALSE; bReadingDone := FALSE; bWritingDone := FALSE; bBusy := FALSE;
+	IF hFile <> 0 THEN
+		bClose := TRUE;
+	END_IF
+END_IF]]></ST>
+    </Implementation>
+    <Action Name="A_ParseCSV" Id="{c0fbb9c0-563d-432e-9c4c-9b9f582e72ec}">
+      <Implementation>
+        <ST><![CDATA[sTempString := sLastLineRead;
+ 
+FOR i := 0 TO MAX_CSV_COLUMNS BY 1 DO
+                                iCommaPos:= FIND(STR1:= sTempString, STR2:= sDelimeter);
+                                iStringLen := LEN(STR:= sTempString);
+                                sColumn[i] := MID(STR:= sTempString, LEN:= iCommaPos-1, POS:= 1);
+                                sTempString := MID(STR:= sTempString, LEN:= iStringLen - iCommaPos, POS:= iCommaPos+1);
+END_FOR
+]]></ST>
+      </Implementation>
+    </Action>
+    <LineIds Name="FB_CSV_RECIPE">
+      <LineId Id="51" Count="207" />
+      <LineId Id="9" Count="0" />
+    </LineIds>
+    <LineIds Name="FB_CSV_RECIPE.A_ParseCSV">
+      <LineId Id="2" Count="7" />
+      <LineId Id="1" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

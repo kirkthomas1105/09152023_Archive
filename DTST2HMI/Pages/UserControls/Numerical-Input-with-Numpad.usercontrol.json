@@ -1,0 +1,71 @@
+{
+  "parameters": [
+    {
+      "name": "data-tchmi-timertag",
+      "displayName": "TimerTag",
+      "visible": true,
+      "type": "tchmi:general#/definitions/TIME",
+      "category": "",
+      "description": "",
+      "requiredOnCompile": false,
+      "readOnly": false,
+      "bindable": true,
+      "heritable": true,
+      "propertyName": "TimerTag",
+      "propertySetterName": "setTimerTag",
+      "propertyGetterName": "getTimerTag",
+      "refTo": ""
+    },
+    {
+      "name": "data-tchmi-numpad_left",
+      "displayName": "NumPad_Left",
+      "visible": true,
+      "type": "tchmi:general#/definitions/INT",
+      "category": "",
+      "description": "",
+      "requiredOnCompile": false,
+      "readOnly": false,
+      "bindable": true,
+      "heritable": true,
+      "propertyName": "NumPad_Left",
+      "propertySetterName": "setNumPad_Left",
+      "propertyGetterName": "getNumPad_Left",
+      "refTo": ""
+    },
+    {
+      "name": "data-tchmi-numpad_top",
+      "displayName": "NumPad_Top",
+      "visible": true,
+      "type": "tchmi:general#/definitions/INT",
+      "category": "",
+      "description": "",
+      "requiredOnCompile": false,
+      "readOnly": false,
+      "bindable": true,
+      "heritable": true,
+      "propertyName": "NumPad_Top",
+      "propertySetterName": "setNumPad_Top",
+      "propertyGetterName": "getNumPad_Top",
+      "refTo": ""
+    },
+    {
+      "name": "data-tchmi-maxtime",
+      "displayName": "MaxTime",
+      "visible": true,
+      "type": "tchmi:general#/definitions/INT",
+      "category": "",
+      "description": "",
+      "requiredOnCompile": false,
+      "readOnly": false,
+      "bindable": true,
+      "heritable": true,
+      "propertyName": "MaxTime",
+      "propertySetterName": "setMaxTime",
+      "propertyGetterName": "getMaxTime",
+      "refTo": ""
+    }
+  ],
+  "virtualRights": [],
+  "$schema": "./../../../Packages/Beckhoff.TwinCAT.HMI.Framework.12.756.1/runtimes/native1.12-tchmi/Schema/UserControlConfig.Schema.json",
+  "description": ""
+}

@@ -1,0 +1,19 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+  <DUT Name="eMoveState" Id="{75455210-daf9-4199-b540-4ea8cf30821b}">
+    <Declaration><![CDATA[{attribute 'strict'}
+TYPE eMoveState :
+(
+	INIT_MOVESTATE,
+	ENABLE_MOVESTATE,
+	WAITING_FOR_COMMAND_MOVESTATE,
+	NEWTARGETPOSITION_MOVESTATE,
+	ERROR_MOVESTATE,
+	RESET_MOVESTATE
+	
+	
+) UDINT;
+END_TYPE
+]]></Declaration>
+  </DUT>
+</TcPlcObject>

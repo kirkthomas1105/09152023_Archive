@@ -1,0 +1,238 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+  <POU Name="Light" Id="{8f74943f-80ce-4d90-82de-cf5f5d0bf7fd}" SpecialFunc="None">
+    <Declaration><![CDATA[PROGRAM Light
+VAR
+	Bulk1LightFB : LightFB;
+	Bulk2LightFB : LightFB;
+	BulkResinLightFB : LightFB;
+	Filter1LightFB : LightFB;
+	Filter2LightFB : LightFB;
+	Filter3LightFB : LightFB;
+	Filter4LightFB : LightFB;
+	
+	//Lights
+	Bulk1Light : StackLight;
+	Bulk2Light : StackLight;
+	BulkResinLight : StackLight;
+	Filter1Light : StackLight;
+	Filter2Light : StackLight;
+	Filter3Light : StackLight;
+	Filter4Light : StackLight;
+	
+
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[Bulk1LightFB(
+	Red := Bulk1Light.Red,
+	Yellow := Bulk1Light.Yellow,
+	Green := Bulk1Light.Green,
+	BuzzerOnInput := Bulk1Light.BuzzerOnInput,
+	BuzzerStyleInput := Bulk1Light.BuzzerStyleInput
+	);
+	
+	Bulk1Light.LED_A := Bulk1LightFB.LED_A;
+	Bulk1Light.LED_B := Bulk1LightFB.LED_B;
+	Bulk1Light.LED_C := Bulk1LightFB.LED_C;
+	Bulk1Light.BuzzerOnOutput := Bulk1LightFB.BuzzerOnOutput;
+	Bulk1Light.BuzzerStyleOutput := Bulk1LightFB.BuzzerStyleOutput;
+	
+Bulk2LightFB(
+	Red := Bulk2Light.Red,
+	Yellow := Bulk2Light.Yellow,
+	Green := Bulk2Light.Green,
+	BuzzerOnInput := Bulk2Light.BuzzerOnInput,
+	BuzzerStyleInput := Bulk2Light.BuzzerStyleInput
+	);
+	
+	Bulk2Light.LED_A := Bulk2LightFB.LED_A;
+	Bulk2Light.LED_B := Bulk2LightFB.LED_B;
+	Bulk2Light.LED_C := Bulk2LightFB.LED_C;
+	Bulk2Light.BuzzerOnOutput := Bulk2LightFB.BuzzerOnOutput;
+	Bulk2Light.BuzzerStyleOutput := Bulk2LightFB.BuzzerStyleOutput;
+
+BulkResinLightFB(
+	Red := BulkResinLight.Red,
+	Yellow := BulkResinLight.Yellow,
+	Green := BulkResinLight.Green,
+	BuzzerOnInput := BulkResinLight.BuzzerOnInput,
+	BuzzerStyleInput := BulkResinLight.BuzzerStyleInput
+	);
+	
+	BulkResinLight.LED_A := BulkResinLightFB.LED_A;
+	BulkResinLight.LED_B := BulkResinLightFB.LED_B;
+	BulkResinLight.LED_C := BulkResinLightFB.LED_C;
+	BulkResinLight.BuzzerOnOutput := BulkResinLightFB.BuzzerOnOutput;
+	BulkResinLight.BuzzerStyleOutput := BulkResinLightFB.BuzzerStyleOutput;
+
+Filter1LightFB(
+	Red := Filter1Light.Red,
+	Yellow := Filter1Light.Yellow,
+	Green := Filter1Light.Green,
+	BuzzerOnInput := Filter1Light.BuzzerOnInput,
+	BuzzerStyleInput := Filter1Light.BuzzerStyleInput
+	);
+	
+	Filter1Light.LED_A := Filter1LightFB.LED_A;
+	Filter1Light.LED_B := Filter1LightFB.LED_B;
+	Filter1Light.LED_C := Filter1LightFB.LED_C;
+	Filter1Light.BuzzerOnOutput := Filter1LightFB.BuzzerOnOutput;
+	Filter1Light.BuzzerStyleOutput := Filter1LightFB.BuzzerStyleOutput;
+
+Filter2LightFB(
+	Red := Filter2Light.Red,
+	Yellow := Filter2Light.Yellow,
+	Green := Filter2Light.Green,
+	BuzzerOnInput := Filter2Light.BuzzerOnInput,
+	BuzzerStyleInput := Filter2Light.BuzzerStyleInput
+	);
+	
+	Filter2Light.LED_A := Filter2LightFB.LED_A;
+	Filter2Light.LED_B := Filter2LightFB.LED_B;
+	Filter2Light.LED_C := Filter2LightFB.LED_C;
+	Filter2Light.BuzzerOnOutput := Filter2LightFB.BuzzerOnOutput;
+	Filter2Light.BuzzerStyleOutput := Filter2LightFB.BuzzerStyleOutput;
+
+Filter3LightFB(
+	Red := Filter3Light.Red,
+	Yellow := Filter3Light.Yellow,
+	Green := Filter3Light.Green,
+	BuzzerOnInput := Filter3Light.BuzzerOnInput,
+	BuzzerStyleInput := Filter3Light.BuzzerStyleInput
+	);
+	
+	Filter3Light.LED_A := Filter3LightFB.LED_A;
+	Filter3Light.LED_B := Filter3LightFB.LED_B;
+	Filter3Light.LED_C := Filter3LightFB.LED_C;
+	Filter3Light.BuzzerOnOutput := Filter3LightFB.BuzzerOnOutput;
+	Filter3Light.BuzzerStyleOutput := Filter3LightFB.BuzzerStyleOutput;
+
+Filter4LightFB(
+	Red := Filter4Light.Red,
+	Yellow := Filter4Light.Yellow,
+	Green := Filter4Light.Green,
+	BuzzerOnInput := Filter4Light.BuzzerOnInput,
+	BuzzerStyleInput := Filter4Light.BuzzerStyleInput
+	);
+	
+	Filter4Light.LED_A := Filter4LightFB.LED_A;
+	Filter4Light.LED_B := Filter4LightFB.LED_B;
+	Filter4Light.LED_C := Filter4LightFB.LED_C;
+	Filter4Light.BuzzerOnOutput := Filter4LightFB.BuzzerOnOutput;
+	Filter4Light.BuzzerStyleOutput := Filter4LightFB.BuzzerStyleOutput;
+	
+	
+	
+	
+IF NewBatch.ResinTote.ActualScaleWeight < 400 AND NewBatch.ResinTote.ActualScaleWeight > 50 THEN
+	BulkResinLight.Green := 0;
+	BulkResinLight.Yellow := 1;
+END_IF
+
+IF NewBatch.ResinTote.ActualScaleWeight < 210 THEN
+	BulkResinLight.Yellow := 0;
+	BulkResinLight.Red := 1;
+END_IF
+
+IF NewBatch.ResinTote.ActualScaleWeight > 400 THEN
+	BulkResinLight.Yellow := 0;
+	BulkResinLight.Red := 0;
+	BulkResinLight.Green := 1;
+END_IF
+
+//Filter 1 Light Control
+	IF HMI.Filter1Runtime >= HMI.FilterRuntimeAlarmTimeInput THEN
+		//Raise Filter 1 Alarm
+		Filter1Light.Red := 1; //Turn Red Light on 
+		Filter1Light.BuzzerOnInput := 1; // Turn Buzzer On
+		Filter1Light.Yellow := 0;
+	ELSIF TIME_TO_DINT(HMI.Filter1Runtime) > TIME_TO_DINT(HMI.FilterRuntimeAlarmTimeInput)*3/4 AND TIME_TO_DINT(HMI.Filter1Runtime) < TIME_TO_DINT(HMI.FilterRuntimeAlarmTimeInput) THEN
+		Filter1Light.Yellow := 1; //Turn Yellow Light on at 75% filter usage
+	ELSE
+		Filter1Light.Red := 0; 
+		Filter1Light.BuzzerOnInput := 0; 
+		Filter1Light.Yellow := 0; 
+	END_IF
+	
+//Filter 2 Light Control
+	IF HMI.Filter2Runtime >= HMI.FilterRuntimeAlarmTimeInput THEN
+		//Raise Filter 2 Alarm
+		Filter2Light.Red := 1; //Turn Red Light on 
+		Filter2Light.BuzzerOnInput := 1; // Turn Buzzer On
+		Filter2Light.Yellow := 0;
+	ELSIF TIME_TO_DINT(HMI.Filter2Runtime) > TIME_TO_DINT(HMI.FilterRuntimeAlarmTimeInput)*3/4 AND TIME_TO_DINT(HMI.Filter2Runtime) < TIME_TO_DINT(HMI.FilterRuntimeAlarmTimeInput) THEN
+		Filter2Light.Yellow := 1; //Turn Yellow Light on at 75% filter usage
+	ELSE
+		Filter2Light.Red := 0; 
+		Filter2Light.BuzzerOnInput := 0; 
+		Filter2Light.Yellow := 0; 
+	END_IF	
+	
+//Filter 3 Light Control
+	IF HMI.Filter3Runtime >= HMI.FilterRuntimeAlarmTimeInput THEN
+		//Raise Filter 3 Alarm
+		Filter3Light.Red := 1; //Turn Red Light on 
+		Filter3Light.BuzzerOnInput := 1; // Turn Buzzer On
+		Filter3Light.Yellow := 0;
+	ELSIF TIME_TO_DINT(HMI.Filter3Runtime) > TIME_TO_DINT(HMI.FilterRuntimeAlarmTimeInput)*3/4 AND TIME_TO_DINT(HMI.Filter3Runtime) < TIME_TO_DINT(HMI.FilterRuntimeAlarmTimeInput) THEN
+		Filter3Light.Yellow := 1; //Turn Yellow Light on at 75% filter usage
+	ELSE
+		Filter3Light.Red := 0; 
+		Filter3Light.BuzzerOnInput := 0; 
+		Filter3Light.Yellow := 0; 
+	END_IF	
+//Filter 4 Light Control
+	IF HMI.Filter4Runtime >= HMI.FilterRuntimeAlarmTimeInput THEN
+		//Raise Filter 4 Alarm
+		Filter4Light.Red := 1; //Turn Red Light on 
+		Filter4Light.BuzzerOnInput := 1; // Turn Buzzer On
+		Filter4Light.Yellow := 0;
+	ELSIF TIME_TO_DINT(HMI.Filter4Runtime) > TIME_TO_DINT(HMI.FilterRuntimeAlarmTimeInput)*3/4 AND TIME_TO_DINT(HMI.Filter4Runtime) < TIME_TO_DINT(HMI.FilterRuntimeAlarmTimeInput) THEN
+		Filter4Light.Yellow := 1; //Turn Yellow Light on at 75% filter usage
+	ELSE
+		Filter4Light.Red := 0; 
+		Filter4Light.BuzzerOnInput := 0; 
+		Filter4Light.Yellow := 0; 
+	END_IF	]]></ST>
+    </Implementation>
+    <LineIds Name="Light">
+      <LineId Id="14" Count="0" />
+      <LineId Id="20" Count="0" />
+      <LineId Id="22" Count="1" />
+      <LineId Id="25" Count="0" />
+      <LineId Id="32" Count="5" />
+      <LineId Id="39" Count="0" />
+      <LineId Id="42" Count="0" />
+      <LineId Id="41" Count="0" />
+      <LineId Id="43" Count="82" />
+      <LineId Id="154" Count="4" />
+      <LineId Id="320" Count="0" />
+      <LineId Id="162" Count="0" />
+      <LineId Id="161" Count="0" />
+      <LineId Id="168" Count="3" />
+      <LineId Id="167" Count="0" />
+      <LineId Id="315" Count="1" />
+      <LineId Id="323" Count="0" />
+      <LineId Id="322" Count="0" />
+      <LineId Id="318" Count="0" />
+      <LineId Id="314" Count="0" />
+      <LineId Id="216" Count="0" />
+      <LineId Id="229" Count="0" />
+      <LineId Id="217" Count="3" />
+      <LineId Id="231" Count="0" />
+      <LineId Id="221" Count="2" />
+      <LineId Id="226" Count="1" />
+      <LineId Id="225" Count="0" />
+      <LineId Id="215" Count="0" />
+      <LineId Id="253" Count="0" />
+      <LineId Id="255" Count="11" />
+      <LineId Id="254" Count="0" />
+      <LineId Id="267" Count="0" />
+      <LineId Id="269" Count="11" />
+      <LineId Id="268" Count="0" />
+      <LineId Id="281" Count="11" />
+      <LineId Id="5" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

@@ -1,0 +1,22 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+  <POU Name="WX_CP_Simple" Id="{b343d1dc-837f-4a71-8ef3-3d0cc6e5233f}" SpecialFunc="None">
+    <Declaration><![CDATA[PROGRAM WX_CP_Simple
+VAR
+	WX1B_Clamp : SimpleClamp;
+	WX2A_Clamp : SimpleClamp;
+	WX3A_Clamp : SimpleClamp;
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[WX1B_Clamp(Limit_NC_NO_CI := 0);
+WX2A_Clamp(Limit_NC_NO_CI := 0);
+WX3A_Clamp(Limit_NC_NO_CI := 0);]]></ST>
+    </Implementation>
+    <LineIds Name="WX_CP_Simple">
+      <LineId Id="5" Count="0" />
+      <LineId Id="9" Count="0" />
+      <LineId Id="11" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>
